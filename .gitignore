@@ -9,3 +9,4 @@ __pycache__
 .pytest_cache
 backend/.env
 .env
+frontend/.tmp-pkgs/

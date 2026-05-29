@@ -1,16 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
-  corePlugins: {
-    preflight: false,
-  },
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Inter"', "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+        sans: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ['"Plus Jakarta Sans"', "ui-sans-serif", "sans-serif"],
+        mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
       },
       colors: {
-        /** AI Architect 稿：薄荷绿主色 + 深绿文字 + 浅灰绿画布 */
+        primary: "#00a67e",
         arch: {
           canvas: "#F7F9F8",
           surface: "#ffffff",

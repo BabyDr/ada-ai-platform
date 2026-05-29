@@ -29,6 +29,13 @@ from pydantic import BaseModel, Field
 from adaagent.db import connect, row_to_message, row_to_session
 from adaagent.gemini_agent import gemini_api_key_configured, run_gemini_agent
 from adaagent.glm_agent import DEFAULT_GLM_MODEL, glm_api_key_configured, run_glm_agent
+from adaagent.linguist_service import (
+    add_log,
+    list_logs,
+    summarize_text,
+    translate_text,
+    update_log,
+)
 from adaagent.mock_agent import run_mock_agent
 from adaagent.ws_hub import ChatHub
 
@@ -55,6 +62,38 @@ class ChatRequestBody(BaseModel):
     session_id: str = Field(..., description="会话 ID")
     message: str = Field(..., description="用户消息")
     model_id: str = Field(..., description="当前模型 ID")
+
+
+class TranslateRequest(BaseModel):
+    text: str
+    sourceLang: str = "auto"
+    targetLang: str = "zh"
+    tone: str = "Professional"
+
+
+class SummarizeRequest(BaseModel):
+    text: str
+    keyPointsCount: int = 5
+    wordLimit: int = 250
+    tone: str = "Professional"
+
+
+class LogAddRequest(BaseModel):
+    type: str
+    input: str
+    output: str = ""
+    duration: str = "--"
+    status: str = "processing"
+    error: str | None = None
+    details: dict[str, Any] | None = None
+
+
+class LogUpdateRequest(BaseModel):
+    id: str
+    status: str | None = None
+    output: str | None = None
+    duration: str | None = None
+    error: str | None = None
 
 
 def create_app(db_path: Path | None = None) -> FastAPI:
@@ -194,9 +233,69 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             hub.disconnect(session_id, websocket)
 
     @app.get("/api/health")
-    async def health() -> dict[str, str]:
-        """健康检查；`llm` 为 glm / gemini / mock。"""
-        return {"status": "ok", "llm": _active_llm_mode()}
+    async def health() -> dict[str, Any]:
+        """健康检查；`llm` 为 glm / gemini / mock；`keyLoaded` 供 Linguist 前端使用。"""
+        key_loaded = glm_api_key_configured() or gemini_api_key_configured()
+        return {
+            "status": "ok",
+            "llm": _active_llm_mode(),
+            "keyLoaded": key_loaded,
+        }
+
+    @app.get("/api/logs")
+    async def get_logs() -> list[dict[str, Any]]:
+        """获取翻译/总结操作日志（内存）。"""
+        return list_logs()
+
+    @app.post("/api/logs/add")
+    async def post_log_add(body: LogAddRequest) -> dict[str, Any]:
+        """追加操作日志。"""
+        return add_log(body.model_dump(exclude_none=True))
+
+    @app.post("/api/logs/update-status")
+    async def post_log_update(body: LogUpdateRequest) -> dict[str, Any]:
+        """更新日志状态。"""
+        updates = body.model_dump(exclude={"id"}, exclude_none=True)
+        updated = update_log(body.id, updates)
+        if updated is None:
+            raise HTTPException(status_code=404, detail="Log not found")
+        return updated
+
+    @app.post("/api/translate")
+    async def post_translate(body: TranslateRequest) -> dict[str, Any]:
+        """GLM 文本翻译。"""
+        if not body.text.strip():
+            raise HTTPException(status_code=400, detail="Input text is required")
+        if not glm_api_key_configured():
+            raise HTTPException(status_code=503, detail="GLM_API_KEY 未配置")
+        try:
+            text, duration = await translate_text(
+                body.text,
+                body.sourceLang,
+                body.targetLang,
+                body.tone,
+            )
+            return {"text": text, "duration": duration}
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=500, detail=str(e)[:800]) from e
+
+    @app.post("/api/summarize")
+    async def post_summarize(body: SummarizeRequest) -> dict[str, Any]:
+        """GLM 文档总结（结构化 JSON）。"""
+        if not body.text.strip():
+            raise HTTPException(status_code=400, detail="Input content is required")
+        if not glm_api_key_configured():
+            raise HTTPException(status_code=503, detail="GLM_API_KEY 未配置")
+        try:
+            result, duration = await summarize_text(
+                body.text,
+                body.keyPointsCount,
+                body.wordLimit,
+                body.tone,
+            )
+            return {"result": result, "duration": duration}
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=500, detail=str(e)[:800]) from e
 
     return app
 

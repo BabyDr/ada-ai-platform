@@ -4,7 +4,6 @@ import { ref } from "vue";
 const text = ref("");
 const emit = defineEmits<{ submit: [value: string] }>();
 
-/** 底部模式占位：尚未接后端，仅 UI 状态 */
 const modeWeb = ref(false);
 const modeLocal = ref(true);
 const modeCode = ref(false);
@@ -15,16 +14,19 @@ function onSubmit() {
   emit("submit", v);
   text.value = "";
 }
+
+const modeActive = "bg-[#00a67e]/10 text-[#00a67e] ring-1 ring-[#00a67e]/30";
+const modeIdle = "text-[#acb5c9] hover:bg-[#162537]/50 hover:text-white";
 </script>
 
 <template>
   <div>
     <div
-      class="flex items-end gap-2 rounded-2xl border border-arch-border bg-arch-surface p-2 shadow-arch-lg sm:gap-3"
+      class="flex items-end gap-2 rounded-2xl border border-[#26384d] bg-[#0c1622] p-2 sm:gap-3"
     >
       <button
         type="button"
-        class="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-arch-muted transition hover:bg-arch-think hover:text-arch-primary"
+        class="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#acb5c9] transition hover:bg-[#162537]/50 hover:text-[#00a67e]"
         title="附件（占位）"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -37,12 +39,12 @@ function onSubmit() {
         v-model:value="text"
         :auto-size="{ minRows: 1, maxRows: 6 }"
         placeholder="输入消息… Enter 发送，Shift+Enter 换行"
-        class="!min-h-[44px] flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-2 !text-arch-ink !shadow-none focus:!ring-0"
+        class="chat-input !min-h-[44px] flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-2 !text-[#d4e4fa] !shadow-none focus:!ring-0"
         @keydown.enter.exact.prevent="onSubmit"
       />
       <button
         type="button"
-        class="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-arch-primary text-white shadow-arch transition hover:bg-arch-primaryDark"
+        class="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00a67e] text-white transition hover:bg-[#008f6c]"
         title="发送"
         @click="onSubmit"
       >
@@ -55,7 +57,7 @@ function onSubmit() {
       <button
         type="button"
         class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition sm:text-sm"
-        :class="modeWeb ? 'bg-arch-think text-arch-primary ring-1 ring-arch-thinkBorder' : 'text-arch-muted hover:bg-arch-think/50'"
+        :class="modeWeb ? modeActive : modeIdle"
         @click="modeWeb = !modeWeb"
       >
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -67,7 +69,7 @@ function onSubmit() {
       <button
         type="button"
         class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition sm:text-sm"
-        :class="modeLocal ? 'bg-arch-think text-arch-primary ring-1 ring-arch-thinkBorder' : 'text-arch-muted hover:bg-arch-think/50'"
+        :class="modeLocal ? modeActive : modeIdle"
         @click="modeLocal = !modeLocal"
       >
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -79,7 +81,7 @@ function onSubmit() {
       <button
         type="button"
         class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition sm:text-sm"
-        :class="modeCode ? 'bg-arch-think text-arch-primary ring-1 ring-arch-thinkBorder' : 'text-arch-muted hover:bg-arch-think/50'"
+        :class="modeCode ? modeActive : modeIdle"
         @click="modeCode = !modeCode"
       >
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -90,3 +92,9 @@ function onSubmit() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.chat-input::placeholder {
+  color: rgba(188, 202, 194, 0.45);
+}
+</style>

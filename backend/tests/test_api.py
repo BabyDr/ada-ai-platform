@@ -26,6 +26,16 @@ def test_health(client: TestClient) -> None:
     data = r.json()
     assert data["status"] == "ok"
     assert data["llm"] in ("glm", "gemini", "mock")
+    assert "keyLoaded" in data
+    assert isinstance(data["keyLoaded"], bool)
+
+
+def test_linguist_logs(client: TestClient) -> None:
+    r = client.get("/api/logs")
+    assert r.status_code == 200
+    logs = r.json()
+    assert isinstance(logs, list)
+    assert len(logs) >= 1
 
 
 def test_sessions_crud_and_messages(client: TestClient) -> None:
