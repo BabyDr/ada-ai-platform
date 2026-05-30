@@ -13,16 +13,17 @@
 | 模块 | 说明 |
 |------|------|
 | **文本处理主线** | 工作台 → 翻译 / 总结 → 流式结果 → 停止生成 → 历史记录 |
-| **Agent Chat（加分）** | WebSocket 多轮对话，ReAct 步骤展示，与会话持久化 |
+| **Agent Chat（加分）** | WebSocket 多轮对话，ReAct 步骤展示，与会话持久化（SQLite） |
 
 ### 功能一览
 
-- **工作台**：双卡片入口（文本翻译、智能要点总结）+ 快捷输入智能跳转
+- **工作台**：双卡片入口（文本翻译、智能要点总结）+ 快捷输入智能跳转 + Mock 模式徽章
 - **文本翻译**：10 种源/目标语言、5 种语调、双栏对照、SSE 打字机 + 停止生成
 - **智能要点总结**：要点数 / 字数上限 / 语调、文件导入、概述 + 要点结构化展示
-- **运行日志**：记录每次调用的输入、输出、耗时与状态
+- **运行日志**：记录每次调用的输入、输出、耗时与状态（内存环形缓冲，分页查询）
 - **智能体对话**：GLM/Gemini/Mock Agent，WebSocket 流式回复
 - **CLI + skill.md**：`ai-app translate` / `summarize` / `list`，供 Claude Code 等 Agent 调用
+- **工程加分**：明暗主题（Ant Design + `theme.css` 语义变量）、响应式布局、任务刷新恢复、16ms 流式渲染缓冲、统一错误处理与 Request ID
 
 ### CLI 演示
 
@@ -44,13 +45,14 @@ $ ai-app summarize --text "长文本..." --max-points 3
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| 前端 | Vue 3 + TypeScript + Vite | Composition API、useSSE / useTask |
-| UI | Ant Design Vue + Tailwind CSS v4 | ConfigProvider 明暗主题 |
+| 前端 | Vue 3 + TypeScript + Vite | Composition API、Vue Router 4 |
+| UI | Ant Design Vue + Tailwind CSS v4 | `a-config-provider` + `theme.css` 语义色板 |
 | 状态 | Pinia | `workspace`（跨页）+ `chat`（Agent） |
+| 流式 | `useSSE` / `useTask` / `useStreamBuffer` | fetch SSE 解析、16ms 批量渲染、取消闭环 |
 | 导航 | Vue Router 4 | `/dashboard` `/translation` `/summarization` 等 |
 | 后端 | Python FastAPI + Uvicorn | Sidecar 端口 **18765** |
 | LLM | 智谱 GLM / Gemini / Mock | `LLM_MODE=mock\|real`；密钥 `GLM_*` |
-| 持久化 | SQLite + 内存日志 | Agent 会话 SQLite；翻译/总结日志内存 |
+| 持久化 | SQLite + 内存日志 | Agent 会话 SQLite；翻译/总结日志内存（max 500 条） |
 | CLI | Python Click + httpx | `cli/ai_app.py` |
 | 测试 | pytest + vitest | `make test` 一键运行 |
 
@@ -60,17 +62,22 @@ $ ai-app summarize --text "长文本..." --max-points 3
 AdaAgent/
 ├── frontend/src/
 │   ├── components/          # DashboardView, TranslationView, SummarizationView, ...
-│   ├── composables/         # useSSE.ts, useTask.ts, useChatStream.ts
+│   ├── composables/         # useSSE, useTask, useStreamBuffer, useTaskRecovery, ...
 │   ├── services/            # linguistApi.ts（SSE task）, api.ts（Chat REST）
 │   ├── stores/              # workspace.ts, chat.ts
-│   └── router/
+│   ├── router/              # 路由表 + 流式任务离开守卫
+│   └── styles/theme.css     # 明/暗语义 CSS 变量
 ├── backend/adaagent/
 │   ├── main.py              # FastAPI 入口
 │   ├── api/                 # functions, task, schemas
-│   └── services/            # llm, prompt, task_manager
+│   └── services/            # llm, prompt, task_manager, task_sweeper
 ├── cli/                     # ai-app CLI
 ├── .claude/skills/skill.md  # Agent 技能描述
 ├── spec/                    # 需求、API、页面、任务拆分
+├── docs/
+│   ├── manual.md            # 系统使用手册
+│   ├── ai-native/           # 笔试需求与实现方案
+│   └── verification/        # 手动验收清单与截图目录
 ├── agent.md                 # AI Agent 协作记录
 └── scripts/sidecar.mjs
 ```
@@ -101,6 +108,8 @@ cp backend/.env.example backend/.env
 # 或在仓库根目录：cp .env.example .env
 ```
 
+**后端（Sidecar）**
+
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `LLM_MODE` | `mock` 本地流 / `real` 真实 GLM | `mock` |
@@ -109,6 +118,17 @@ cp backend/.env.example backend/.env
 | `GLM_API_BASE` | OpenAI 兼容网关 | 智谱默认 |
 | `GEMINI_API_KEY` | Gemini（GLM 未配置时 Chat 使用） | 空 |
 | `TASK_TIMEOUT_SECONDS` | 单任务超时 | `60` |
+| `MAX_CONCURRENT_TASKS` | 并发任务上限 | `3` |
+| `MAX_LOGS` | 内存日志环形缓冲上限 | `500` |
+
+**前端（Vite，见 `frontend/.env.development`）**
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `VITE_API_BASE` | REST API 前缀 | `http://127.0.0.1:18765/api` |
+| `VITE_WS_BASE` | WebSocket 前缀 | `ws://127.0.0.1:18765` |
+
+> 开发时前端直连 Sidecar；若修改端口或部署分离，需同步调整 `VITE_API_BASE` / `VITE_WS_BASE`。
 
 ### 3. 一键启动
 
@@ -130,14 +150,16 @@ ai-app --help
 ai-app translate --text "你好" --from zh --to en
 ```
 
+Sidecar 须先启动；默认连接 `http://127.0.0.1:18765`，可通过环境变量 `BASE_URL` 覆盖。
+
 ### 5. 测试与构建
 
 ```bash
 make test                    # 后端 pytest + CLI + 前端 vitest
 npm run build --prefix frontend
-cd backend && .venv/bin/pytest
-npm run test --prefix frontend
 ```
+
+> 后端测试建议在 `LLM_MODE=mock` 且无 `GLM_API_KEY` 干扰的环境下运行，以确保 mock 链路断言稳定。
 
 ---
 
@@ -153,6 +175,8 @@ Base URL：`http://127.0.0.1:18765`
 curl http://127.0.0.1:18765/api/functions
 ```
 
+返回 `translate`、`summarize` 两项及参数 schema。
+
 ### POST /api/task（SSE）
 
 ```bash
@@ -161,7 +185,24 @@ curl -N -X POST http://127.0.0.1:18765/api/task \
   -d '{"type":"translate","params":{"text":"你好","sourceLang":"zh","targetLang":"en","tone":"Professional"}}'
 ```
 
-SSE 事件：`task_start` → `token`（多次）→ `task_done` / `task_error`
+SSE 事件：`task_start` → `token`（多次，含 `seq` 序号）→ `task_done` / `task_error`
+
+**summarize 示例**
+
+```bash
+curl -N -X POST http://127.0.0.1:18765/api/task \
+  -H "Content-Type: application/json" \
+  -d '{"type":"summarize","params":{"text":"长文本…","keyPointsCount":3,"wordLimit":250,"tone":"Professional"}}'
+```
+
+### GET /api/task/{taskId}
+
+查询任务状态（加分项：刷新恢复、轮询）。
+
+```bash
+curl http://127.0.0.1:18765/api/task/{taskId}
+# {"taskId":"...","status":"pending|running|done|failed|cancelled"}
+```
 
 ### DELETE /api/task/{taskId}
 
@@ -173,8 +214,10 @@ curl -X DELETE http://127.0.0.1:18765/api/task/{taskId}
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/health` | 健康检查 |
-| GET | `/api/logs` | 翻译/总结内存日志 |
+| GET | `/api/health` | `{ status, llm, keyLoaded }` |
+| GET | `/api/logs?page=1&size=20` | 翻译/总结内存日志（分页） |
+
+所有 HTTP 响应含 `X-Request-ID` 头，便于日志关联。
 
 ### Agent Chat
 
@@ -199,6 +242,8 @@ LLM_MODE=real    # 需 GLM_API_KEY
 | `mock` | 否 | 联调、CI、笔试演示 |
 | `real` | 是 | 真实模型输出 |
 
+工作台在 `mock` 模式下显示 **Mock 模式** 徽章；`/api/health` 返回当前 `llm` 模式与 `keyLoaded` 状态。
+
 ---
 
 ## Docker（可选）
@@ -208,7 +253,27 @@ docker compose up --build
 curl -sf http://127.0.0.1:18765/api/functions
 ```
 
-默认 `LLM_MODE=mock`，无需 API 密钥。
+默认 `LLM_MODE=mock`，无需 API 密钥。当前 `docker-compose.yml` 仅打包 **Sidecar 后端**；前端开发仍用 `npm run dev` 连接 18765。
+
+---
+
+## 笔试交付物对照
+
+| 交付物 | 路径 | 状态 |
+|--------|------|------|
+| 项目源码 | 本仓库 | ✅ |
+| README（介绍 / 技术栈 / 运行 / API） | `README.md` | ✅ |
+| CLI 工具 | `cli/ai_app.py` | ✅ |
+| skill.md | `.claude/skills/skill.md` | ✅ |
+| Agent 调用截图 | `docs/verification/agent-skill-invoke.png` | ⚠️ **待补** |
+| agent.md | `agent.md` | ✅ |
+| spec/ 规范目录 | `spec/` | ✅ |
+| 系统使用手册 | `docs/manual.md` | ✅ |
+| 手动验收截图 | `docs/verification/*.png` | ⚠️ **待补** |
+| Docker | `Dockerfile` + `docker-compose.yml` | ✅（后端） |
+| 异常场景清单 | `docs/ai-native/exception-checklist.md` | ✅ |
+
+详见 [`docs/verification/README.md`](docs/verification/README.md)。
 
 ---
 
@@ -220,7 +285,8 @@ curl -sf http://127.0.0.1:18765/api/functions
 | [agent.md](agent.md) | AI Agent 角色与协作决策 |
 | [spec/](spec/) | 需求、API、页面原型、任务拆分 |
 | [.claude/skills/skill.md](.claude/skills/skill.md) | CLI Agent 技能 |
-| [docs/ai-native/](docs/ai-native/) | 笔试需求与实现方案 |
+| [docs/ai-native/](docs/ai-native/) | 笔试需求、实现方案、任务清单 |
+| [docs/ai-native/exception-checklist.md](docs/ai-native/exception-checklist.md) | 异常场景评估与验收 |
 | [docs/verification/](docs/verification/) | 手动验收清单与截图目录 |
 
 ---

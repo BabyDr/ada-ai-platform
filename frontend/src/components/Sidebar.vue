@@ -128,9 +128,7 @@ const menuItems = [
       </router-link>
     </nav>
 
-    <div
-      class="p-4 border-t ui-border bg-[var(--color-sidebar-footer-bg)]"
-    >
+    <div class="p-4 border-t ui-border bg-[var(--color-sidebar-footer-bg)]">
       <div
         class="flex items-center justify-between p-3 rounded bg-[var(--color-sidebar-status-bg)] border ui-border"
       >

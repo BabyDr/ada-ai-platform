@@ -243,7 +243,9 @@ async function handleSummarize(): Promise<void> {
             {{ mode.label }}
           </a-radio-button>
         </a-radio-group>
-        <p class="text-[10px] text-[var(--color-mono-text)]/60 mt-2 leading-relaxed">
+        <p
+          class="text-[10px] text-[var(--color-mono-text)]/60 mt-2 leading-relaxed"
+        >
           {{ SUMMARY_MODES.find((m) => m.value === summaryMode)?.description }}
         </p>
       </div>
