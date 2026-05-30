@@ -27,7 +27,7 @@ def build_log_details(task_type: str, params: dict[str, Any]) -> dict[str, Any]:
             "tone": params.get("tone", "Professional"),
         }
     return {
-        "keyPointsCount": params.get("keyPointsCount", 5),
+        "keyPointsCount": params.get("keyPointsCount", 3),
         "wordLimit": params.get("wordLimit", 250),
         "tone": params.get("tone", "Professional"),
     }
@@ -45,7 +45,7 @@ def build_task_messages(task_type: str, params: dict[str, Any]) -> tuple[str, st
         )
     return build_summarize_messages(
         text,
-        int(params.get("keyPointsCount", 5)),
+        int(params.get("keyPointsCount", 3)),
         int(params.get("wordLimit", 250)),
         str(params.get("tone", "Professional")),
     )

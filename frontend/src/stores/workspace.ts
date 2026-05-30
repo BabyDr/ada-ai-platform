@@ -15,24 +15,76 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const logs = ref<LogEntry[]>([]);
   const quickText = ref("");
   const apiConnected = ref(false);
+  const llmMode = ref("mock");
+  const activeTaskId = ref("");
   const isDark = ref<boolean>(localStorage.getItem(THEME_KEY) !== "false");
+  /** Linguist SSE 流式进行中（跨页路由守卫 #35） */
+  const linguistStreaming = ref(false);
+  let linguistCancelHandler: (() => Promise<void>) | null = null;
+
+  function setLinguistStreaming(active: boolean, cancelFn?: () => Promise<void>): void {
+    linguistStreaming.value = active;
+    linguistCancelHandler = active ? (cancelFn ?? null) : null;
+  }
+
+  async function cancelLinguistTask(): Promise<void> {
+    if (linguistCancelHandler) {
+      await linguistCancelHandler();
+    }
+    linguistStreaming.value = false;
+    linguistCancelHandler = null;
+  }
 
   /** 拉取 Sidecar 健康状态，更新 apiConnected。 */
   async function fetchHealth(): Promise<void> {
     try {
       const health = await api.fetchHealth();
-      apiConnected.value = !!health.keyLoaded;
+      llmMode.value = health.llm ?? "mock";
+      apiConnected.value = health.status === "ok" && !!health.keyLoaded;
     } catch (err) {
       console.warn("Sidecar health check loading...", err);
+      apiConnected.value = false;
     }
   }
 
-  /** 从服务端加载历史运行日志。 */
+  function setActiveTaskId(taskId: string): void {
+    activeTaskId.value = taskId;
+  }
+
+  function clearActiveTaskId(): void {
+    activeTaskId.value = "";
+  }
+
+  const logsPage = ref(1);
+  const logsTotal = ref(0);
+  const logsLoading = ref(false);
+
+  /** 从服务端加载历史运行日志（首页）。 */
   async function fetchLogs(): Promise<void> {
     try {
-      logs.value = (await api.fetchLogs()) as LogEntry[];
+      const page = await api.fetchLogs(1, 100);
+      logs.value = page.items as LogEntry[];
+      logsTotal.value = page.total;
+      logsPage.value = 1;
     } catch (err) {
       console.warn("Could not load initial logs", err);
+    }
+  }
+
+  /** #7 历史页加载更多。 */
+  async function loadMoreLogs(): Promise<void> {
+    if (logsLoading.value || logs.value.length >= logsTotal.value) return;
+    logsLoading.value = true;
+    try {
+      const next = logsPage.value + 1;
+      const page = await api.fetchLogs(next, 20);
+      logs.value = [...logs.value, ...(page.items as LogEntry[])];
+      logsPage.value = next;
+      logsTotal.value = page.total;
+    } catch (err) {
+      console.warn("Could not load more logs", err);
+    } finally {
+      logsLoading.value = false;
     }
   }
 
@@ -90,9 +142,20 @@ export const useWorkspaceStore = defineStore("workspace", () => {
 
   return {
     logs,
+    logsPage,
+    logsTotal,
+    logsLoading,
+    loadMoreLogs,
     quickText,
     apiConnected,
+    llmMode,
+    activeTaskId,
     isDark,
+    linguistStreaming,
+    setLinguistStreaming,
+    cancelLinguistTask,
+    setActiveTaskId,
+    clearActiveTaskId,
     fetchHealth,
     fetchLogs,
     addLog,

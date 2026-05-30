@@ -17,6 +17,7 @@ import {
   Database,
 } from "lucide-vue-next";
 import { useLogHistory } from "../composables/useLogHistory";
+import TruncatedText from "./shared/TruncatedText.vue";
 
 const {
   workspace,
@@ -30,6 +31,8 @@ const {
   toggleExpand,
   handleCopyOutput,
   formatLogOutput,
+  canLoadMore,
+  loadMoreLogs,
 } = useLogHistory();
 </script>
 
@@ -153,8 +156,8 @@ const {
 
           <div>
             <span class="block text-[9px] font-mono text-[#acb5c9] uppercase tracking-wider mb-1.5">原始输入</span>
-            <div class="p-3.5 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
-              {{ log.input }}
+            <div class="p-3.5 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed select-text">
+              <TruncatedText :text="log.input" :limit="5000" />
             </div>
           </div>
 
@@ -213,12 +216,18 @@ const {
                   </div>
                 </div>
               </template>
-              <div v-else class="p-4 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
-                {{ log.output }}
+              <div v-else class="p-4 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed select-text">
+                <TruncatedText :text="log.output" :limit="8000" />
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-if="canLoadMore" class="flex justify-center pt-2">
+        <a-button type="default" size="small" class="action-btn" :loading="workspace.logsLoading" @click="loadMoreLogs">
+          加载更多
+        </a-button>
       </div>
     </div>
 

@@ -10,6 +10,7 @@ export function useDashboardMetrics() {
   const workspace = useWorkspaceStore();
 
   const apiConnected = computed(() => workspace.apiConnected);
+  const llmMode = computed(() => workspace.llmMode);
 
   /** 已完成（成功或失败）的请求总数。 */
   const totalProcessed = computed(
@@ -28,5 +29,5 @@ export function useDashboardMetrics() {
     return `${(sum / successfulLogs.length).toFixed(1)}s`;
   });
 
-  return { apiConnected, totalProcessed, avgLatency };
+  return { apiConnected, llmMode, totalProcessed, avgLatency };
 }

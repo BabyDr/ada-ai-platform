@@ -19,7 +19,7 @@ import { DEFAULT_GLM_MODEL } from "../types";
 import { useDashboardMetrics } from "../composables/useDashboardMetrics";
 import { useQuickRoute } from "../composables/useQuickRoute";
 
-const { apiConnected, totalProcessed, avgLatency } = useDashboardMetrics();
+const { apiConnected, llmMode, totalProcessed, avgLatency } = useDashboardMetrics();
 const { quickInput, goTo, handleQuickSend } = useQuickRoute();
 </script>
 
@@ -33,6 +33,13 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
           >
             <Sparkle class="w-2.5 h-2.5 animate-pulse" />
             工作区已就绪
+          </span>
+          <span
+            v-if="llmMode === 'mock'"
+            class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wider font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30"
+            title="当前为 Mock 模式，未调用真实大模型"
+          >
+            Mock 模式
           </span>
         </div>
         <h2 class="font-display text-3xl font-bold tracking-tight text-white">智能工作区</h2>

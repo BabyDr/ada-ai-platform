@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     llm_mode: str = "mock"  # mock | real
     task_timeout_seconds: int = 60
+    max_concurrent_tasks: int = 3
+    max_logs: int = 500
+    max_task_entries: int = 1000
+    zombie_task_seconds: int = 300
 
     model_config = SettingsConfigDict(
         env_prefix="",

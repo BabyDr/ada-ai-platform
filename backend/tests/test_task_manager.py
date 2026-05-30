@@ -27,3 +27,21 @@ def test_cancel_running() -> None:
 def test_cancel_unknown() -> None:
     tm = TaskManager()
     assert tm.cancel("missing") is False
+
+
+def test_running_count() -> None:
+    tm = TaskManager()
+    ctx = tm.create()
+    tm.set_status(ctx.task_id, TaskStatus.RUNNING)
+    assert tm.running_count() == 1
+    tm.set_status(ctx.task_id, TaskStatus.DONE)
+    assert tm.running_count() == 0
+
+
+def test_sweep_zombie_tasks() -> None:
+    tm = TaskManager()
+    ctx = tm.create()
+    tm.set_status(ctx.task_id, TaskStatus.RUNNING)
+    ctx.last_heartbeat = 0.0
+    assert tm.sweep_zombie_tasks() == 1
+    assert ctx.status == TaskStatus.FAILED

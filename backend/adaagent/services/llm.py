@@ -20,6 +20,7 @@ from typing import AsyncIterator
 import httpx
 
 from adaagent.config import settings
+from adaagent.api.validators import sanitize_upstream_message
 from adaagent.env_secrets import read_first_secret
 from adaagent.glm_agent import DEFAULT_GLM_BASE, DEFAULT_GLM_MODEL
 
@@ -59,7 +60,11 @@ def effective_mode() -> str:
 class LLMService:
     """翻译 / 总结统一流式入口。"""
 
+    def __init__(self) -> None:
+        self.last_finish_reason: str | None = None
+
     async def stream(self, system: str, user: str, *, task_type: str = "translate") -> AsyncIterator[str]:
+        self.last_finish_reason = None
         if effective_mode() == "mock":
             async for token in self._mock_stream(task_type):
                 yield token
@@ -89,15 +94,40 @@ class LLMService:
                 {"role": "user", "content": user},
             ],
             "stream": True,
+            "max_tokens": 8000,
         }
 
+        last_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                async for piece in self._read_upstream_stream(url, headers, body):
+                    yield piece
+                return
+            except RuntimeError as e:
+                last_error = e
+                msg = str(e)
+                if attempt == 0 and "繁忙" in msg:
+                    await asyncio.sleep(1.0)
+                    continue
+                raise
+            except httpx.HTTPError as e:
+                raise RuntimeError("模型连接中断，请稍后重试") from e
+        if last_error:
+            raise last_error
+
+    async def _read_upstream_stream(
+        self,
+        url: str,
+        headers: dict[str, str],
+        body: dict[str, object],
+    ) -> AsyncIterator[str]:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
             async with client.stream("POST", url, headers=headers, json=body) as r:
                 try:
                     r.raise_for_status()
                 except httpx.HTTPStatusError:
                     err_body = (await r.aread()).decode(errors="replace")[:800]
-                    raise RuntimeError(f"GLM HTTP {r.status_code}: {err_body}") from None
+                    raise RuntimeError(sanitize_upstream_message(r.status_code, err_body)) from None
 
                 async for line in r.aiter_lines():
                     if not line:
@@ -116,11 +146,14 @@ class LLMService:
                         continue
                     err = obj.get("error")
                     if isinstance(err, dict) and err.get("message"):
-                        raise RuntimeError(str(err.get("message")))
+                        raise RuntimeError("模型服务异常，请稍后重试")
                     for ch in obj.get("choices") or []:
+                        reason = ch.get("finish_reason")
+                        if isinstance(reason, str):
+                            self.last_finish_reason = reason
                         piece = (ch.get("delta") or {}).get("content") or ""
                         if piece:
-                            yield piece
+                            yield str(piece)
 
 
 llm_service = LLMService()

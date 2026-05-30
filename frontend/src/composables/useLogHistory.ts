@@ -72,6 +72,12 @@ export function useLogHistory() {
     return parseLogSummaryOutput(log.type, log.output);
   }
 
+  const canLoadMore = computed(() => workspace.logs.length < workspace.logsTotal);
+
+  async function loadMoreLogs(): Promise<void> {
+    await workspace.loadMoreLogs();
+  }
+
   return {
     workspace,
     filterType,
@@ -84,5 +90,7 @@ export function useLogHistory() {
     toggleExpand,
     handleCopyOutput,
     formatLogOutput,
+    canLoadMore,
+    loadMoreLogs,
   };
 }

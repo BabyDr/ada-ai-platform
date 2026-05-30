@@ -10,6 +10,9 @@ import json
 import time
 from typing import Any
 
+from adaagent.config import settings
+from adaagent.services.log_sanitize import sanitize_log_fields
+
 # 与 linguist-ai 一致的初始 mock 日志
 _SEED_LOGS: list[dict[str, Any]] = [
     {
@@ -122,29 +125,55 @@ def lang_display(code: str) -> str:
     return _LANG_NAMES.get(code, code)
 
 
-def list_logs() -> list[dict[str, Any]]:
-    """返回全部运行日志（内存列表，最新在前）。"""
+def list_logs(page: int = 1, size: int = 20, level: str | None = None) -> dict[str, Any]:
+    """
+    分页返回运行日志（#7 / #32）。
+
+    level 过滤：error → failed；info → 全部（内存日志无 DEBUG 字段时等同全部）。
+    """
+    items = logs_db
+    if level == "error":
+        items = [log for log in items if log.get("status") == "failed"]
+    total = len(items)
+    page = max(1, page)
+    size = max(1, min(size, 100))
+    start = (page - 1) * size
+    return {
+        "items": items[start : start + size],
+        "total": total,
+        "page": page,
+        "size": size,
+    }
+
+
+def list_logs_legacy() -> list[dict[str, Any]]:
+    """兼容旧客户端：返回全部日志列表。"""
     return logs_db
 
 
 def add_log(payload: dict[str, Any]) -> dict[str, Any]:
-    """新增一条日志并插入列表头部，自动补全 id/timestamp/date。"""
+    """新增一条日志并插入列表头部，自动补全 id/timestamp/date；#32 环形缓冲。"""
     times = get_current_time_details()
+    safe = sanitize_log_fields(payload)
     new_log = {
         "id": f"log-{int(time.time() * 1000)}",
         "timestamp": times["time"],
         "date": times["date"],
-        **payload,
+        **safe,
     }
     logs_db.insert(0, new_log)
+    cap = settings.max_logs
+    while len(logs_db) > cap:
+        logs_db.pop()
     return new_log
 
 
 def update_log(log_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
     """按 id 合并更新日志字段；未找到返回 None。"""
+    safe = sanitize_log_fields(updates)
     for i, log in enumerate(logs_db):
         if log["id"] == log_id:
-            merged = {**log, **updates}
+            merged = {**log, **safe}
             logs_db[i] = merged
             return merged
     return None

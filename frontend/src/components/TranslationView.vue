@@ -3,7 +3,7 @@
  * 文本翻译页：双栏输入/输出 UI。
  * 任务流、日志、导出逻辑分别见 useTask / useLinguistTaskLog / useExportActions。
  */
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import {
   Sparkles,
   Copy,
@@ -24,8 +24,10 @@ import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
 import { useCopyFeedback, downloadTextFile } from "../composables/useExportActions";
 import { buildLinguistLogCallbacks, createProcessingLog } from "../composables/useLinguistTaskLog";
 import { runSafe } from "../utils/safeAsync";
+import { recoverPersistedTask } from "../composables/useTaskRecovery";
 import ApiKeyBanner from "./shared/ApiKeyBanner.vue";
 import StreamingBadge from "./shared/StreamingBadge.vue";
+import TruncatedText from "./shared/TruncatedText.vue";
 
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
@@ -40,6 +42,7 @@ const selectedTone = ref<
   "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
 >("Professional");
 const elapsedTime = ref("--");
+const recoveryNotice = ref("");
 
 const { copied, copyText } = useCopyFeedback();
 
@@ -54,6 +57,11 @@ const targetLanguageOptions = SUPPORTED_LANGUAGES.filter((l) => l.code !== "auto
 }));
 
 useQuickTextPrefill(inputText);
+
+onMounted(async () => {
+  const msg = await recoverPersistedTask("translate");
+  if (msg) recoveryNotice.value = msg;
+});
 
 /** 复制译文到剪贴板。 */
 async function handleCopy(): Promise<void> {
@@ -98,7 +106,7 @@ async function handleStop(): Promise<void> {
 
 /** 提交翻译任务（SSE + 运行日志）。 */
 async function handleTranslate(): Promise<void> {
-  if (!inputText.value.trim()) return;
+  if (!inputText.value.trim() || isStreaming.value) return;
 
   await runSafe(
     async () => {
@@ -179,6 +187,7 @@ async function handleTranslate(): Promise<void> {
         size="small"
         button-style="solid"
         class="tone-radio-group"
+        :disabled="isStreaming"
       >
         <a-radio-button
           v-for="t in TONE_STYLES"
@@ -215,6 +224,7 @@ async function handleTranslate(): Promise<void> {
               :options="sourceLanguageOptions"
               class="lang-select min-w-30"
               popup-class-name="lang-select-dropdown"
+              :disabled="isStreaming"
             />
           </div>
           <a-button
@@ -235,8 +245,9 @@ async function handleTranslate(): Promise<void> {
           <textarea
             v-model="inputText"
             placeholder="在此输入待翻译文本或原始文档…"
-            maxlength="10000"
-            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0"
+            maxlength="50000"
+            :disabled="isStreaming"
+            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
         </div>
 
@@ -244,7 +255,7 @@ async function handleTranslate(): Promise<void> {
           class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono"
         >
           <span class="shrink min-w-0 truncate"
-            >{{ inputText.length }} / 10,000 字符</span
+            >{{ inputText.length }} / 50,000 字符</span
           >
           <div class="flex shrink-0 items-center gap-2">
             <a-button
@@ -281,6 +292,7 @@ async function handleTranslate(): Promise<void> {
           size="small"
           class="icon-only-btn shadow-md"
           title="交换语言"
+          :disabled="isStreaming"
           @click="handleSwapLanguages"
         >
           <template #icon><ArrowRightLeft class="w-3.5 h-3.5" /></template>
@@ -303,6 +315,7 @@ async function handleTranslate(): Promise<void> {
               :options="targetLanguageOptions"
               class="lang-select min-w-30"
               popup-class-name="lang-select-dropdown"
+              :disabled="isStreaming"
             />
           </div>
           <div v-if="result" class="flex items-center gap-1">
@@ -333,6 +346,14 @@ async function handleTranslate(): Promise<void> {
 
         <div class="p-5 flex-1 min-h-75 flex flex-col bg-[#020c15]/40">
           <div
+            v-if="recoveryNotice"
+            class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
+          >
+            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{{ recoveryNotice }}</span>
+          </div>
+
+          <div
             v-if="error"
             class="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
           >
@@ -345,10 +366,10 @@ async function handleTranslate(): Promise<void> {
 
           <div
             v-else-if="result"
-            class="text-white text-sm leading-relaxed whitespace-pre-wrap flex-1 select-text selection:bg-[#00a67e]/40 custom-scrollbar overflow-y-auto"
+            class="text-white text-sm leading-relaxed flex-1 select-text selection:bg-[#00a67e]/40 custom-scrollbar overflow-y-auto"
           >
-            {{ result
-            }}<span
+            <TruncatedText :text="result" />
+            <span
               v-if="isStreaming"
               class="inline-block w-1.5 h-4 ml-0.5 align-middle bg-[#00a67e] animate-pulse"
             ></span>

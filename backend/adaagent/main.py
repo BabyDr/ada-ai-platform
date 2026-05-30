@@ -35,8 +35,11 @@ from adaagent.linguist_service import (
     list_logs,
     update_log,
 )
+from adaagent.middleware.body_limit import BodyLimitMiddleware
+from adaagent.middleware.request_id import RequestIdMiddleware
 from adaagent.mock_agent import run_mock_agent
 from adaagent.http_safe import register_global_exception_handler
+from adaagent.services.task_sweeper import run_task_sweeper
 from adaagent.ws_hub import ChatHub
 
 
@@ -105,10 +108,14 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             log.warning(
                 "LLM 模式: Mock。请在 .env 中设置 GLM_API_KEY（智谱）或 GEMINI_API_KEY 后重启 Sidecar",
             )
+        sweeper = asyncio.create_task(run_task_sweeper())
         yield
+        sweeper.cancel()
         await conn.close()
 
     app = FastAPI(title="AdaAgent Sidecar", lifespan=lifespan)
+    app.add_middleware(BodyLimitMiddleware)
+    app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -231,9 +238,16 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         }
 
     @app.get("/api/logs")
-    async def get_logs() -> list[dict[str, Any]]:
-        """获取翻译/总结操作日志（内存）。"""
-        return list_logs()
+    async def get_logs(
+        page: int = 1,
+        size: int = 20,
+        level: str | None = None,
+        legacy: bool = False,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """获取翻译/总结操作日志；默认分页，legacy=true 返回全量列表。"""
+        if legacy:
+            return list_logs(page=1, size=10_000)["items"]
+        return list_logs(page=page, size=size, level=level)
 
     @app.post("/api/logs/add")
     async def post_log_add(body: LogAddRequest) -> dict[str, Any]:

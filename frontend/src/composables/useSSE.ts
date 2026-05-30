@@ -1,13 +1,9 @@
 /**
  * SSE 流式解析 composable（fetch + ReadableStream，不引入 eventsource 库）。
- *
- * 解析后端事件：task_start / token / task_done / task_error。
- * - result：逐 token 追加的原始文本（打字机效果数据源）。
- * - currentTaskId：task_start 携带，供取消使用。
- * - 用户主动 abort 不计入 error。
  */
 import { ref } from "vue";
 import { createTaskSSE } from "../services/linguistApi";
+import { createStreamBuffer } from "./useStreamBuffer";
 
 export interface SSEHandlers {
   onStart?: (taskId: string) => void;
@@ -16,18 +12,43 @@ export interface SSEHandlers {
   onError?: (message: string) => void;
 }
 
+const DISCONNECT_MSG = "连接已断开，请重新提交";
+
 export function useSSE() {
   const result = ref("");
   const isStreaming = ref(false);
   const error = ref("");
   const currentTaskId = ref("");
   let abortController: AbortController | null = null;
+  let settled = false;
+  let userAborted = false;
+  let tokenBuffer: ReturnType<typeof createStreamBuffer> | null = null;
+  let lastSeq = 0;
+  const seenSeqs = new Set<number>();
+
+  function resetSeqState() {
+    lastSeq = 0;
+    seenSeqs.clear();
+  }
+
+  function acceptTokenSeq(seq: unknown): boolean {
+    if (typeof seq !== "number") return true;
+    if (seq <= lastSeq || seenSeqs.has(seq)) return false;
+    seenSeqs.add(seq);
+    lastSeq = seq;
+    return true;
+  }
 
   function dispatch(event: string, dataStr: string, handlers: SSEHandlers) {
     let data: Record<string, unknown> = {};
     try {
       data = dataStr ? JSON.parse(dataStr) : {};
     } catch {
+      if (!settled) {
+        const msg = "流式数据解析失败";
+        error.value = msg;
+        handlers.onError?.(msg);
+      }
       return;
     }
     switch (event) {
@@ -36,15 +57,21 @@ export function useSSE() {
         handlers.onStart?.(currentTaskId.value);
         break;
       case "token":
-        if (typeof data.content === "string") {
-          result.value += data.content;
+        if (typeof data.content === "string" && acceptTokenSeq(data.seq)) {
+          tokenBuffer?.push(data.content);
           handlers.onToken?.(data.content);
         }
         break;
       case "task_done":
+        settled = true;
+        tokenBuffer?.stop();
+        tokenBuffer = null;
         handlers.onDone?.(data as { taskId: string; status: string; duration?: string; result?: unknown });
         break;
       case "task_error":
+        settled = true;
+        tokenBuffer?.stop();
+        tokenBuffer = null;
         error.value = String(data.message ?? "任务执行失败");
         handlers.onError?.(error.value);
         break;
@@ -52,11 +79,19 @@ export function useSSE() {
   }
 
   async function startSSE(body: { type: string; params: Record<string, unknown> }, handlers: SSEHandlers = {}) {
+    if (isStreaming.value) return;
+
     result.value = "";
     error.value = "";
     currentTaskId.value = "";
+    settled = false;
+    userAborted = false;
+    resetSeqState();
     isStreaming.value = true;
     abortController = new AbortController();
+    tokenBuffer = createStreamBuffer((chunk) => {
+      result.value += chunk;
+    });
 
     try {
       const response = await createTaskSSE(body, abortController.signal);
@@ -81,7 +116,6 @@ export function useSSE() {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // 按 SSE 规范以空行分隔事件；逐行解析 event:/data:。
         let idx: number;
         while ((idx = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, idx).replace(/\r$/, "");
@@ -97,21 +131,31 @@ export function useSSE() {
           }
         }
       }
+
+      if (!settled && !userAborted) {
+        error.value = DISCONNECT_MSG;
+        handlers.onError?.(DISCONNECT_MSG);
+      }
     } catch (e: unknown) {
       if (e instanceof DOMException && e.name === "AbortError") {
-        // 用户主动取消，不算错误。
-      } else {
+        userAborted = true;
+      } else if (!settled) {
         error.value = e instanceof Error ? e.message : String(e);
         handlers.onError?.(error.value);
       }
     } finally {
+      tokenBuffer?.stop();
+      tokenBuffer = null;
       isStreaming.value = false;
       abortController = null;
     }
   }
 
   function stop() {
+    userAborted = true;
     abortController?.abort();
+    tokenBuffer?.stop();
+    tokenBuffer = null;
     isStreaming.value = false;
   }
 

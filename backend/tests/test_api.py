@@ -33,9 +33,20 @@ def test_health(client: TestClient) -> None:
 def test_linguist_logs(client: TestClient) -> None:
     r = client.get("/api/logs")
     assert r.status_code == 200
-    logs = r.json()
-    assert isinstance(logs, list)
-    assert len(logs) >= 1
+    data = r.json()
+    assert isinstance(data, dict)
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert data["total"] >= 1
+
+    legacy = client.get("/api/logs?legacy=true")
+    assert legacy.status_code == 200
+    assert isinstance(legacy.json(), list)
+
+
+def test_request_id_header(client: TestClient) -> None:
+    r = client.get("/api/health")
+    assert r.headers.get("X-Request-ID")
 
 
 def test_sessions_crud_and_messages(client: TestClient) -> None:

@@ -11,3 +11,6 @@ __pycache__
 backend/.env
 .env
 frontend/.tmp-pkgs/
+
+# IDE personal workspace (layout differs per developer)
+*.code-workspace

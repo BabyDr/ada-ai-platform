@@ -33,7 +33,7 @@ Strict rules:
 
 def build_summarize_messages(
     text: str,
-    key_points_count: int = 5,
+    key_points_count: int = 3,
     word_limit: int = 250,
     tone: str = "Professional",
 ) -> tuple[str, str]:

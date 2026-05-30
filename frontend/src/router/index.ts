@@ -2,6 +2,7 @@
  * Vue Router 配置：Linguist 工作台各功能页 + Agent Chat 页。
  */
 import { createRouter, createWebHistory } from "vue-router";
+import { setupBeforeUnloadGuard, setupStreamingGuard } from "./guards";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -18,5 +19,8 @@ const router = createRouter({
     { path: "/:pathMatch(.*)*", redirect: "/dashboard" },
   ],
 });
+
+setupStreamingGuard(router);
+setupBeforeUnloadGuard();
 
 export default router;

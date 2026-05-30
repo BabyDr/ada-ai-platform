@@ -16,7 +16,8 @@ const antTheme = computed(() => ({
     colorPrimary: "#00A67E",
     colorInfo: "#00A67E",
     borderRadius: 12,
-    fontFamily: '"Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+    fontFamily:
+      '"Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
     ...(workspace.isDark
       ? {
           colorBgContainer: "#0c1622",
@@ -39,7 +40,9 @@ onMounted(() => {
 
 <template>
   <a-config-provider :locale="zhCN" :theme="antTheme">
-    <div class="flex bg-[#020c15] text-[#d4e4fa] min-h-screen h-screen overflow-hidden">
+    <div
+      class="flex bg-[#020c15] text-[#d4e4fa] min-h-screen h-screen overflow-hidden"
+    >
       <Sidebar />
 
       <main
@@ -47,12 +50,15 @@ onMounted(() => {
           'flex-1 min-h-0 h-full',
           isChat
             ? 'overflow-hidden'
-            : 'overflow-y-auto bg-gradient-to-tr from-[#020c15] via-[#051424] to-[#010912] custom-scrollbar',
+            : 'overflow-y-auto bg-linear-to-tr from-[#020c15] via-[#051424] to-[#010912] custom-scrollbar',
         ]"
       >
         <router-view v-slot="{ Component }">
           <keep-alive :exclude="['ChatView']">
-            <component :is="Component" :class="isChat ? 'h-full min-h-0' : ''" />
+            <component
+              :is="Component"
+              :class="isChat ? 'h-full min-h-0' : ''"
+            />
           </keep-alive>
         </router-view>
       </main>

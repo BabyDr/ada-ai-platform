@@ -9,9 +9,14 @@ from adaagent.api.task import _task_generator
 from adaagent.services.task_manager import task_manager
 
 
+class _MockRequest:
+    async def is_disconnected(self) -> bool:
+        return False
+
+
 def test_cancel_midstream() -> None:
     async def run() -> list[dict]:
-        gen = _task_generator("translate", {"text": "hello world"})
+        gen = _task_generator("translate", {"text": "hello world"}, _MockRequest())
         first = await gen.__anext__()
         task_id = json.loads(first["data"])["taskId"]
         # 模拟 DELETE /api/task/{id}

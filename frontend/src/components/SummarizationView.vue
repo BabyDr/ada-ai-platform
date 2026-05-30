@@ -3,7 +3,7 @@
  * 智能总结页：配置参数、源文档输入、结构化结果展示。
  * 任务/日志/导出/文件导入分别见对应 composables。
  */
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import {
   Sparkles,
   Copy,
@@ -27,8 +27,10 @@ import { buildLinguistLogCallbacks, createProcessingLog } from "../composables/u
 import { useFileImport } from "../composables/useFileImport";
 import { formatSummaryForClipboard, formatSummaryForDownload } from "../utils/linguistFormat";
 import { runSafe } from "../utils/safeAsync";
+import { recoverPersistedTask } from "../composables/useTaskRecovery";
 import ApiKeyBanner from "./shared/ApiKeyBanner.vue";
 import StreamingBadge from "./shared/StreamingBadge.vue";
+import TruncatedText from "./shared/TruncatedText.vue";
 
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
@@ -39,17 +41,23 @@ const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 const inputText = ref("");
 const overviewText = ref("");
 const keyPoints = ref<string[]>([]);
-const keyPointsCount = ref(5);
+const keyPointsCount = ref(3);
 const wordLimit = ref(250);
 const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">(
   "Professional",
 );
 const elapsedTime = ref("--");
+const recoveryNotice = ref("");
 
 const { copied, copyText } = useCopyFeedback();
 const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }));
 
 useQuickTextPrefill(inputText);
+
+onMounted(async () => {
+  const msg = await recoverPersistedTask("summarize");
+  if (msg) recoveryNotice.value = msg;
+});
 
 const {
   dragActive,
@@ -94,7 +102,7 @@ async function handleStop(): Promise<void> {
 
 /** 提交总结任务（SSE + 运行日志 + 结构化结果解析）。 */
 async function handleSummarize(): Promise<void> {
-  if (!inputText.value.trim()) return;
+  if (!inputText.value.trim() || isStreaming.value) return;
 
   await runSafe(
     async () => {
@@ -173,7 +181,7 @@ async function handleSummarize(): Promise<void> {
           <span>概述字数上限</span>
           <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
         </div>
-        <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e]" />
+        <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
       </div>
 
       <div id="cfg-points-count">
@@ -181,12 +189,12 @@ async function handleSummarize(): Promise<void> {
           <span>要点数量</span>
           <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ keyPointsCount }} 条</span>
         </div>
-        <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e]" />
+        <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
       </div>
 
       <div id="cfg-tone-style">
         <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">摘要语气风格</label>
-        <a-select v-model:value="selectedTone" size="small" :options="toneOptions" class="form-select w-full" />
+        <a-select v-model:value="selectedTone" size="small" :options="toneOptions" class="form-select w-full" :disabled="isStreaming" />
       </div>
     </div>
 
@@ -199,7 +207,7 @@ async function handleSummarize(): Promise<void> {
           </span>
           <div class="flex shrink-0 items-center gap-1">
             <input ref="fileInputRef" type="file" class="hidden" accept=".txt,.md" @change="handleFileChoose" />
-            <a-button type="default" size="small" class="action-btn shrink-0" @click="triggerFileSelect">
+            <a-button type="default" size="small" class="action-btn shrink-0" :disabled="isStreaming" @click="triggerFileSelect">
               <template #icon><Upload class="w-3.5 h-3.5" /></template>
               导入 TXT/MD
             </a-button>
@@ -230,7 +238,9 @@ async function handleSummarize(): Promise<void> {
           <textarea
             v-model="inputText"
             placeholder="粘贴日志、会议记录、草稿笔记，或拖放 .txt/.md 文件到此处…"
-            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0"
+            maxlength="50000"
+            :disabled="isStreaming"
+            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
           <div v-if="dragActive" class="absolute inset-0 bg-[#0c1622]/90 flex flex-col items-center justify-center p-6 text-center">
             <Upload class="w-12 h-12 text-[#00a67e] mb-2 animate-bounce" />
@@ -277,6 +287,14 @@ async function handleSummarize(): Promise<void> {
 
         <div class="p-5 flex-1 min-h-87.5 flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
           <div
+            v-if="recoveryNotice"
+            class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
+          >
+            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{{ recoveryNotice }}</span>
+          </div>
+
+          <div
             v-if="error"
             class="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
           >
@@ -315,7 +333,7 @@ async function handleSummarize(): Promise<void> {
                 概述摘要
               </span>
               <p class="text-white bg-[#0e1b2b]/40 border border-[#26384d]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40">
-                {{ overviewText }}
+                <TruncatedText :text="overviewText" />
               </p>
             </div>
             <div v-if="keyPoints.length > 0">
@@ -332,7 +350,7 @@ async function handleSummarize(): Promise<void> {
                   <span class="w-5 h-5 rounded bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {{ idx + 1 }}
                   </span>
-                  <span>{{ point }}</span>
+                  <span><TruncatedText :text="point" :limit="2000" /></span>
                 </li>
               </ul>
             </div>

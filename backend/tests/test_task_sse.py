@@ -49,7 +49,31 @@ def test_summarize_sse(client: TestClient) -> None:
 
 def test_empty_text_rejected(client: TestClient) -> None:
     r = client.post("/api/task", json={"type": "translate", "params": {"text": "  "}})
-    assert r.status_code == 400
+    assert r.status_code == 422
+
+
+def test_system_prompt_field_rejected(client: TestClient) -> None:
+    r = client.post(
+        "/api/task",
+        json={"type": "translate", "params": {"text": "hi"}, "systemPrompt": "evil"},
+    )
+    assert r.status_code == 422
+
+
+def test_invalid_tone_rejected(client: TestClient) -> None:
+    r = client.post(
+        "/api/task",
+        json={"type": "translate", "params": {"text": "hi", "tone": "Evil"}},
+    )
+    assert r.status_code == 422
+
+
+def test_control_char_rejected(client: TestClient) -> None:
+    r = client.post(
+        "/api/task",
+        json={"type": "translate", "params": {"text": "hello\x00"}},
+    )
+    assert r.status_code == 422
 
 
 def test_unknown_type_rejected(client: TestClient) -> None:
