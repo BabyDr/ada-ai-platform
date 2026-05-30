@@ -1,8 +1,8 @@
 # AdaAgent · Linguist AI / AI TextFlow
 
-面向 [AI Native 开发工程师笔试](docs/ai-navitve/ai-requirement.md) 的 AI 文本处理应用：在现有 **Linguist AI** 工作区上增量演进，提供多语言翻译、智能要点总结、SSE 流式输出与任务取消，并附带 Agent 对话、调用记录与 CLI/Agent 工具链。
+面向 [AI Native 开发工程师笔试](docs/ai-native/ai-requirement.md) 的 AI 文本处理应用：在现有 **Linguist AI** 工作区上增量演进，提供多语言翻译、智能要点总结、SSE 流式输出与任务取消，并附带 Agent 对话、调用记录与 CLI/Agent 工具链。
 
-> 详细方案见 [`docs/ai-navitve/plan.md`](docs/ai-navitve/plan.md) · 规范见 [`spec/`](spec/) · Agent 协作见 [`agent.md`](agent.md)
+> 详细方案见 [`docs/ai-native/plan.md`](docs/ai-native/plan.md) · 规范见 [`spec/`](spec/) · 使用手册见 [`docs/manual.md`](docs/manual.md) · Agent 协作见 [`agent.md`](agent.md)
 
 ---
 
@@ -98,6 +98,7 @@ npm run sidecar:setup
 
 ```bash
 cp backend/.env.example backend/.env
+# 或在仓库根目录：cp .env.example .env
 ```
 
 | 变量 | 说明 | 默认值 |
@@ -188,7 +189,7 @@ curl -X DELETE http://127.0.0.1:18765/api/task/{taskId}
 ## Mock / Real 模式
 
 ```bash
-# backend/.env
+# backend/.env 或根目录 .env
 LLM_MODE=mock    # 零配置演示，本地预设逐字流
 LLM_MODE=real    # 需 GLM_API_KEY
 ```
@@ -200,14 +201,27 @@ LLM_MODE=real    # 需 GLM_API_KEY
 
 ---
 
+## Docker（可选）
+
+```bash
+docker compose up --build
+curl -sf http://127.0.0.1:18765/api/functions
+```
+
+默认 `LLM_MODE=mock`，无需 API 密钥。
+
+---
+
 ## 相关文档
 
 | 文档 | 说明 |
 |------|------|
+| [docs/manual.md](docs/manual.md) | 系统使用手册（活文档） |
 | [agent.md](agent.md) | AI Agent 角色与协作决策 |
 | [spec/](spec/) | 需求、API、页面原型、任务拆分 |
 | [.claude/skills/skill.md](.claude/skills/skill.md) | CLI Agent 技能 |
-| [docs/ai-navitve/](docs/ai-navitve/) | 笔试需求与实现方案 |
+| [docs/ai-native/](docs/ai-native/) | 笔试需求与实现方案 |
+| [docs/verification/](docs/verification/) | 手动验收清单与截图目录 |
 
 ---
 

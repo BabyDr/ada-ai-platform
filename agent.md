@@ -77,10 +77,10 @@ Agent：按阶段 0→7 实施 + 测试
 | M1 | Vue Router + 后端 mock SSE + 前端流式翻译 | ✅ |
 | M2 | 任务取消 + summarize + 旧接口移除 | ✅ |
 | M3 | CLI + skill.md + `dev:all` | ✅ |
-| M4 | agent.md + spec/ + vitest + README | ✅ |
+| M4 | agent.md + spec/ + docs/manual.md + vitest + README + Docker | ✅ |
 
 ---
 
 ## 5. Future Scope（本期未实现）
 
-见 `spec/task-breakdown.md`：Tauri 桌面壳、RAG 知识库、MCP 工具、Redis 任务队列、Docker 一键部署等。
+见 `spec/task-breakdown.md`：Tauri 桌面壳、RAG 知识库、MCP 工具、Redis 任务队列等。Docker 一键部署见根目录 `docker-compose.yml`。
