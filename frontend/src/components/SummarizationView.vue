@@ -37,6 +37,8 @@ const dragActive = ref(false);
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
+const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }));
+
 watch(
   () => workspace.quickText,
   (newVal) => {
@@ -213,7 +215,7 @@ const handleSummarize = async () => {
       <div class="flex items-center gap-2">
         <span
           v-if="isStreaming"
-          class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded-full flex items-center gap-1.5"
+          class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded flex items-center gap-1.5"
         >
           <span class="animate-spin rounded-full h-2 w-2 border-2 border-t-transparent border-[#00a67e]"></span>
           正在生成总结…
@@ -223,7 +225,7 @@ const handleSummarize = async () => {
 
     <div
       v-if="!apiConnected"
-      class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3"
+      class="p-4 rounded bg-amber-500/10 border border-amber-500/30 flex items-start gap-3"
     >
       <AlertTriangle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
       <div>
@@ -234,13 +236,13 @@ const handleSummarize = async () => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded-xl">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded">
       <div id="cfg-word-limit">
         <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
           <span>概述字数上限</span>
           <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
         </div>
-        <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" class="w-full h-1.5 bg-[#122131] rounded-lg appearance-none cursor-pointer accent-[#00a67e]" />
+        <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e]" />
       </div>
 
       <div id="cfg-points-count">
@@ -248,45 +250,45 @@ const handleSummarize = async () => {
           <span>要点数量</span>
           <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ keyPointsCount }} 条</span>
         </div>
-        <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" class="w-full h-1.5 bg-[#122131] rounded-lg appearance-none cursor-pointer accent-[#00a67e]" />
+        <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e]" />
       </div>
 
       <div id="cfg-tone-style">
         <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">摘要语气风格</label>
-        <select
-          v-model="selectedTone"
-          class="w-full bg-[#122131] border border-[#26384d]/60 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#00a67e]"
-        >
-          <option v-for="t in TONE_STYLES" :key="t.value" :value="t.value">{{ t.label }}</option>
-        </select>
+        <a-select
+          v-model:value="selectedTone"
+          size="small"
+          :options="toneOptions"
+          class="form-select w-full"
+        />
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="rounded-2xl border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
-        <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between">
-          <span class="text-xs font-semibold text-[#acb5c9] flex items-center gap-1.5">
+      <div class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
+        <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold text-[#acb5c9] flex items-center gap-1.5 shrink min-w-0">
             <Sliders class="w-3.5 h-3.5" />
             源文档输入
           </span>
-          <div class="flex items-center gap-2">
+          <div class="flex shrink-0 items-center gap-1">
             <input ref="fileInputRef" type="file" class="hidden" accept=".txt,.md" @change="handleFileChoose" />
-            <button
-              type="button"
-              @click="triggerFileSelect"
-              class="p-1.5 rounded bg-[#122131] hover:bg-[#26384d] border border-[#26384d]/60 text-white text-xs flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <Upload class="w-3.5 h-3.5" />
-              <span>导入 TXT/MD</span>
-            </button>
-            <button
+            <a-button type="default" size="small" class="action-btn shrink-0" @click="triggerFileSelect">
+              <template #icon><Upload class="w-3.5 h-3.5" /></template>
+              导入 TXT/MD
+            </a-button>
+            <a-button
               v-if="inputText"
-              type="button"
+              type="text"
+              size="small"
+              shape="circle"
+              danger
+              class="icon-only-btn"
+              title="清空"
               @click="handleClear"
-              class="p-1.5 rounded bg-[#122131] hover:bg-red-500/10 border border-[#26384d]/60 text-red-400 text-xs transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
+              <template #icon><Trash2 class="w-3.5 h-3.5" /></template>
+            </a-button>
           </div>
         </div>
 
@@ -310,49 +312,54 @@ const handleSummarize = async () => {
           </div>
         </div>
 
-        <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between text-xs text-[#acb5c9] font-mono">
-          <span>已加载 {{ inputText.length.toLocaleString() }} 字符</span>
-          <button
+        <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono">
+          <span class="shrink min-w-0 truncate">已加载 {{ inputText.length.toLocaleString() }} 字符</span>
+          <a-button
             v-if="isStreaming"
-            type="button"
+            type="primary"
+            danger
+            size="small"
+            class="action-btn shrink-0"
             @click="handleStop"
-            class="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold text-xs transition-all cursor-pointer"
           >
-            <Square class="w-3.5 h-3.5 fill-current" />
+            <template #icon><Square class="w-3.5 h-3.5 fill-current" /></template>
             停止生成
-          </button>
-          <button
+          </a-button>
+          <a-button
             v-else
-            type="button"
-            @click="handleSummarize"
+            type="primary"
+            size="small"
+            class="action-btn shrink-0"
             :disabled="!inputText.trim()"
-            class="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00a67e] hover:bg-[#008f6c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs transition-all cursor-pointer"
+            @click="handleSummarize"
           >
-            <Sparkles class="w-3.5 h-3.5" />
+            <template #icon><Sparkles class="w-3.5 h-3.5" /></template>
             生成总结
-          </button>
+          </a-button>
         </div>
       </div>
 
-      <div class="rounded-2xl border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
+      <div class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
         <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between">
           <span class="text-xs font-semibold text-[#acb5c9]">执行摘要与要点</span>
-          <div v-if="(overviewText || keyPoints.length > 0) && !isStreaming" class="flex items-center gap-1.5">
-            <button type="button" @click="handleCopy" class="p-1.5 rounded bg-[#122131] hover:bg-[#26384d] text-white border border-[#26384d]/60 text-xs flex items-center gap-1 transition-colors cursor-pointer">
-              <Check v-if="copied" class="w-3.5 h-3.5 text-[#00a67e]" />
-              <Copy v-else class="w-3.5 h-3.5" />
-              <span>{{ copied ? "已复制" : "复制" }}</span>
-            </button>
-            <button type="button" @click="handleDownload" class="p-1.5 rounded bg-[#122131] hover:bg-[#26384d] text-white border border-[#26384d]/60 text-xs flex items-center gap-1 transition-colors cursor-pointer">
-              <Download class="w-3.5 h-3.5" />
-            </button>
+          <div v-if="(overviewText || keyPoints.length > 0) && !isStreaming" class="flex items-center gap-1">
+            <a-button type="default" size="small" class="action-btn !text-xs" @click="handleCopy">
+              <template #icon>
+                <Check v-if="copied" class="w-3.5 h-3.5 text-[#00a67e]" />
+                <Copy v-else class="w-3.5 h-3.5" />
+              </template>
+              {{ copied ? "已复制" : "复制" }}
+            </a-button>
+            <a-button type="default" size="small" shape="circle" class="icon-only-btn" title="下载" @click="handleDownload">
+              <template #icon><Download class="w-3.5 h-3.5" /></template>
+            </a-button>
           </div>
         </div>
 
         <div class="p-5 flex-1 min-h-[350px] flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
           <div
             v-if="error"
-            class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
+            class="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
           >
             <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
             <div>
@@ -372,7 +379,7 @@ const handleSummarize = async () => {
           <div v-else-if="isStreaming" class="my-auto flex flex-col justify-center items-center gap-3">
             <div class="relative flex h-10 w-10">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a67e] opacity-40"></span>
-              <div class="relative rounded-full h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center">
+              <div class="relative rounded h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center">
                 <Sparkles class="w-5 h-5 text-[#00a67e] animate-pulse" />
               </div>
             </div>
@@ -388,7 +395,7 @@ const handleSummarize = async () => {
                 <Sparkle class="w-3 h-3 fill-current" />
                 概述摘要
               </span>
-              <p class="text-white bg-[#0e1b2b]/40 border border-[#26384d]/30 p-4 rounded-xl leading-relaxed selection:bg-[#00a67e]/40">
+              <p class="text-white bg-[#0e1b2b]/40 border border-[#26384d]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40">
                 {{ overviewText }}
               </p>
             </div>
@@ -401,9 +408,9 @@ const handleSummarize = async () => {
                 <li
                   v-for="(point, idx) in keyPoints"
                   :key="idx"
-                  class="flex gap-3 text-white leading-relaxed text-xs p-3.5 rounded-xl bg-[#08121e]/50 border border-[#26384d]/40 items-start hover:border-[#00a67e]/30 transition-all"
+                  class="flex gap-3 text-white leading-relaxed text-xs p-3.5 rounded bg-[#08121e]/50 border border-[#26384d]/40 items-start hover:border-[#00a67e]/30 transition-all"
                 >
-                  <span class="w-5 h-5 rounded-full bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span class="w-5 h-5 rounded bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {{ idx + 1 }}
                   </span>
                   <span>{{ point }}</span>

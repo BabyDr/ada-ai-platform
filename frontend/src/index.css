@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "ant-design-vue/dist/reset.css";
+@import "./styles/ant-controls.css";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 :root {
@@ -21,7 +22,7 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-outline-variant);
-  border-radius: 9999px;
+  border-radius: 0.25rem;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {

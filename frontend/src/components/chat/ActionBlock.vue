@@ -7,7 +7,7 @@ defineProps<{
 
 <template>
   <div
-    class="overflow-hidden rounded-xl border border-[#26384d] bg-[#0c1622]"
+    class="overflow-hidden rounded border border-[#26384d] bg-[#0c1622]"
     style="border-left-width: 4px; border-left-color: #00a67e"
   >
     <div class="border-b border-[#26384d]/80 bg-[#08121e] px-4 py-2">

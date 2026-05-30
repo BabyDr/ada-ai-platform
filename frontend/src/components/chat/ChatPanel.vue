@@ -31,10 +31,10 @@ async function onSubmitMessage(text: string) {
       <div class="mx-auto max-w-3xl">
         <div
           v-if="!messages.length"
-          class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#26384d] bg-[#0c1622]/80 px-8 py-16 text-center"
+          class="flex flex-col items-center justify-center rounded border border-dashed border-[#26384d] bg-[#0c1622]/80 px-8 py-16 text-center"
         >
           <div
-            class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00a67e]/10 border border-[#00a67e]/30 text-[#00a67e]"
+            class="mb-4 flex h-14 w-14 items-center justify-center rounded bg-[#00a67e]/10 border border-[#00a67e]/30 text-[#00a67e]"
             aria-hidden="true"
           >
             <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

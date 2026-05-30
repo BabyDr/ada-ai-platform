@@ -36,7 +36,7 @@ body {
 }
 .scrollbar-arch::-webkit-scrollbar-thumb {
   background-color: #b8d4cc;
-  border-radius: 8px;
+  border-radius: 0.25rem;
 }
 
 /* 按钮统一去掉边框（原生 + Ant Design Vue） */

@@ -1,0 +1,111 @@
+/* 与 TranslationView 等页面共用的 Ant Design Vue 控件微调 */
+
+.tone-radio-group,
+.filter-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tone-radio-group .ant-radio-button-wrapper,
+.filter-radio-group .ant-radio-button-wrapper {
+  height: 28px;
+  line-height: 26px;
+  padding-inline: 10px;
+  font-size: 12px;
+  border-radius: 0.25rem !important;
+  border-inline-start-width: 1px;
+}
+
+.tone-radio-group .ant-radio-button-wrapper:not(:first-child)::before,
+.filter-radio-group .ant-radio-button-wrapper:not(:first-child)::before {
+  display: none;
+}
+
+.tone-radio-group .ant-radio-button-wrapper-checked,
+.filter-radio-group .ant-radio-button-wrapper-checked {
+  font-weight: 500;
+}
+
+.filter-radio-group .ant-radio-button-wrapper {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lang-select .ant-select-selector,
+.form-select .ant-select-selector {
+  font-size: 12px !important;
+}
+
+.action-btn {
+  white-space: nowrap;
+}
+
+.action-btn.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+/* Ant Design Vue 4 #icon 槽直接渲染 SVG/Lucide，无 .ant-btn-icon；用 flex gap 控制间距 */
+.block-btn.ant-btn:not(.icon-only-btn):not(.ant-btn-icon-only),
+.chat-sidebar-btn.ant-btn:not(.icon-only-btn),
+.chat-mode-btn.ant-btn:not(.icon-only-btn) {
+  gap: 6px;
+}
+
+.action-btn .ant-btn-icon,
+.action-btn > svg,
+.block-btn > svg,
+.chat-sidebar-btn > svg,
+.chat-mode-btn > svg {
+  display: inline-flex;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
+.block-btn.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.chat-sidebar-btn.ant-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.chat-mode-btn.ant-btn {
+  flex-shrink: 0;
+}
+
+/* 仅图标按钮：居中，去除 ant-btn-icon 为文字预留的间距 */
+.icon-only-btn.ant-btn,
+.action-btn.icon-only-btn.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0;
+  line-height: 1;
+  gap: 0;
+}
+
+.icon-only-btn.ant-btn > .ant-btn-icon,
+.icon-only-btn.ant-btn > svg,
+.icon-only-btn.ant-btn > span:only-child {
+  margin-inline: 0 !important;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.icon-only-btn.ant-btn > .ant-btn-icon svg,
+.icon-only-btn.ant-btn > svg {
+  display: block;
+}

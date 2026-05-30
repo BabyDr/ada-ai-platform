@@ -7,14 +7,14 @@ const open = ref(true);
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-xl border border-[#26384d] bg-[#08121e]/80">
+  <div class="overflow-hidden rounded border border-[#26384d] bg-[#08121e]/80">
     <button
       type="button"
       class="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-[#162537]/40"
       @click="open = !open"
     >
       <span
-        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#00a67e]/10 border border-[#00a67e]/25 text-[#00a67e]"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#00a67e]/10 border border-[#00a67e]/25 text-[#00a67e]"
         aria-hidden="true"
       >
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -97,18 +97,20 @@ const filteredLogs = computed(() =>
         <p class="text-xs text-[#acb5c9] mt-1">查看请求参数、响应延迟与模型输出，数据由服务端记录。</p>
       </div>
 
-      <button
+      <a-button
         v-if="workspace.logs.length > 0"
-        type="button"
+        type="primary"
+        danger
+        size="small"
+        class="ml-auto md:ml-0 action-btn shrink-0"
         @click="workspace.clearHistory()"
-        class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-semibold select-none transition-colors ml-auto md:ml-0 cursor-pointer"
       >
-        <Trash2 class="w-3.5 h-3.5" />
+        <template #icon><Trash2 class="w-3.5 h-3.5" /></template>
         清空日志
-      </button>
+      </a-button>
     </div>
 
-    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-[#08121e]/40 border border-[#26384d]/60 rounded-xl p-4">
+    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-[#08121e]/40 border border-[#26384d]/60 rounded p-4">
       <div class="relative flex-1">
         <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[#bccac2]/45">
           <Search class="w-4 h-4" />
@@ -117,24 +119,15 @@ const filteredLogs = computed(() =>
           v-model="searchQuery"
           type="text"
           placeholder="按关键词筛选输入或响应内容…"
-          class="w-full bg-[#122131] border border-[#26384d]/60 focus:border-[#00a67e] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-[#bccac2]/35 outline-none transition-colors"
+          class="w-full bg-[#122131] border border-[#26384d]/60 focus:border-[#00a67e] rounded pl-9 pr-4 py-2 text-xs text-white placeholder-[#bccac2]/35 outline-none transition-colors"
         />
       </div>
 
-      <div class="flex items-center gap-1 bg-[#122131] p-1 border border-[#26384d]/60 rounded-xl shrink-0">
-        <button
-          v-for="type in (['all', 'translation', 'summarization'] as const)"
-          :key="type"
-          type="button"
-          @click="filterType = type"
-          :class="[
-            'px-3.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider transition-colors cursor-pointer',
-            filterType === type ? 'bg-[#00a67e] text-white' : 'text-[#acb5c9] hover:text-white hover:bg-[#26384d]/30',
-          ]"
-        >
+      <a-radio-group v-model:value="filterType" size="small" button-style="solid" class="filter-radio-group shrink-0">
+        <a-radio-button v-for="type in (['all', 'translation', 'summarization'] as const)" :key="type" :value="type">
           {{ filterLabels[type] }}
-        </button>
-      </div>
+        </a-radio-button>
+      </a-radio-group>
     </div>
 
     <div v-if="filteredLogs.length > 0" class="space-y-3.5">
@@ -142,13 +135,13 @@ const filteredLogs = computed(() =>
         v-for="log in filteredLogs"
         :key="log.id"
         @click="toggleExpand(log.id)"
-        class="rounded-xl border border-[#26384d] bg-[#0c1622] hover:border-[#00a67e]/40 transition-all duration-150 cursor-pointer overflow-hidden"
+        class="rounded border border-[#26384d] bg-[#0c1622] hover:border-[#00a67e]/40 transition-all duration-150 cursor-pointer overflow-hidden"
       >
         <div class="p-4 flex items-center justify-between gap-4 select-none">
           <div class="flex items-center gap-3">
             <div
               :class="[
-                'p-2.5 rounded-lg shrink-0 border',
+                'p-2.5 rounded shrink-0 border',
                 log.type === 'translation'
                   ? 'bg-[#00a67e]/10 text-[#00a67e] border-[#00a67e]/15'
                   : 'bg-sky-500/10 text-sky-400 border-sky-500/15',
@@ -213,7 +206,7 @@ const filteredLogs = computed(() =>
 
           <div>
             <span class="block text-[9px] font-mono text-[#acb5c9] uppercase tracking-wider mb-1.5">原始输入</span>
-            <div class="p-3.5 rounded-lg bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
+            <div class="p-3.5 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
               {{ log.input }}
             </div>
           </div>
@@ -221,21 +214,24 @@ const filteredLogs = computed(() =>
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-[9px] font-mono text-[#acb5c9] uppercase tracking-wider">模型响应</span>
-              <button
+              <a-button
                 v-if="log.status === 'success'"
-                type="button"
+                type="default"
+                size="small"
+                class="action-btn !text-[10px]"
                 @click="handleCopyOutput($event, log.id, log.output)"
-                class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#122131] border border-[#26384d]/60 text-[10px] text-white hover:bg-[#26384d] transition-colors"
               >
-                <Check v-if="copiedLogId === log.id" class="w-3 h-3 text-[#00a67e]" />
-                <Copy v-else class="w-3 h-3" />
-                <span>{{ copiedLogId === log.id ? "已复制" : "复制响应" }}</span>
-              </button>
+                <template #icon>
+                  <Check v-if="copiedLogId === log.id" class="w-3 h-3 text-[#00a67e]" />
+                  <Copy v-else class="w-3 h-3" />
+                </template>
+                {{ copiedLogId === log.id ? "已复制" : "复制响应" }}
+              </a-button>
             </div>
 
             <div
               v-if="log.status === 'failed'"
-              class="p-4 rounded-xl border border-red-500/25 bg-red-500/5 text-red-400 text-xs flex items-start gap-2.5"
+              class="p-4 rounded border border-red-500/25 bg-red-500/5 text-red-400 text-xs flex items-start gap-2.5"
             >
               <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
               <span>{{ log.error || "服务端处理出错。" }}</span>
@@ -243,7 +239,7 @@ const filteredLogs = computed(() =>
 
             <div
               v-else-if="log.status === 'processing'"
-              class="p-4 rounded-xl border border-amber-500/25 bg-amber-500/5 text-amber-500 text-xs flex items-center gap-2"
+              class="p-4 rounded border border-amber-500/25 bg-amber-500/5 text-amber-500 text-xs flex items-center gap-2"
             >
               <span class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-t-transparent border-amber-500"></span>
               <span>等待服务端响应…</span>
@@ -251,7 +247,7 @@ const filteredLogs = computed(() =>
 
             <div v-else>
               <template v-if="log.type === 'summarization' && formatLogOutput(log)">
-                <div class="space-y-4 p-4 rounded-lg bg-[#0c1622] border border-[#26384d] select-text">
+                <div class="space-y-4 p-4 rounded bg-[#0c1622] border border-[#26384d] select-text">
                   <div v-if="formatLogOutput(log)?.overview">
                     <span class="block text-[8px] font-mono text-[#00a67e] uppercase tracking-widest font-bold mb-1">概述</span>
                     <p class="text-xs text-[#bccac2] leading-relaxed">{{ formatLogOutput(log)?.overview }}</p>
@@ -261,7 +257,7 @@ const filteredLogs = computed(() =>
                       <li
                         v-for="(point, idx) in formatLogOutput(log)?.keyPoints"
                         :key="idx"
-                        class="flex gap-2.5 items-start bg-[#08121e] border border-[#26384d]/40 rounded-lg p-2.5"
+                        class="flex gap-2.5 items-start bg-[#08121e] border border-[#26384d]/40 rounded p-2.5"
                       >
                         <span class="text-[#00a67e] font-mono font-bold">{{ idx + 1 }}.</span>
                         <span>{{ point }}</span>
@@ -270,7 +266,7 @@ const filteredLogs = computed(() =>
                   </div>
                 </div>
               </template>
-              <div v-else class="p-4 rounded-lg bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
+              <div v-else class="p-4 rounded bg-[#0c1622] border border-[#26384d] text-xs text-white leading-relaxed whitespace-pre-wrap select-text">
                 {{ log.output }}
               </div>
             </div>
@@ -279,7 +275,7 @@ const filteredLogs = computed(() =>
       </div>
     </div>
 
-    <div v-else class="text-center p-12 rounded-2xl border border-dashed border-[#26384d] bg-[#0c1622]/40">
+    <div v-else class="text-center p-12 rounded border border-dashed border-[#26384d] bg-[#0c1622]/40">
       <Database class="w-12 h-12 text-[#bccac2]/25 mx-auto mb-3" />
       <span class="block text-sm font-semibold text-white">暂无运行日志</span>
       <p class="text-xs text-[#acb5c9] max-w-sm mx-auto mt-1">完成翻译或总结任务后，相关记录将显示在这里。</p>

@@ -66,7 +66,7 @@ const handleQuickSend = () => {
       <div>
         <div class="flex items-center gap-2 mb-2">
           <span
-            class="px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wider font-semibold text-[#00a67e] bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center gap-1"
+            class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wider font-semibold text-[#00a67e] bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center gap-1"
           >
             <Sparkle class="w-2.5 h-2.5 animate-pulse" />
             工作区已就绪
@@ -78,8 +78,8 @@ const handleQuickSend = () => {
         </p>
       </div>
 
-      <div id="engine-platform-chip" class="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#08121e] border border-[#26384d]/60">
-        <div class="p-2 rounded-lg bg-[#2c3a4c]/60">
+      <div id="engine-platform-chip" class="flex items-center gap-3 px-3 py-2 rounded bg-[#08121e] border border-[#26384d]/60">
+        <div class="p-2 rounded bg-[#2c3a4c]/60">
           <Cpu class="w-4 h-4 text-[#00a67e]" />
         </div>
         <div class="flex flex-col">
@@ -90,8 +90,8 @@ const handleQuickSend = () => {
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-      <div id="metric-gateway" class="p-5 rounded-xl border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
-        <div class="p-3 rounded-xl bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/25">
+      <div id="metric-gateway" class="p-5 rounded border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
+        <div class="p-3 rounded bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/25">
           <Activity class="w-5 h-5" />
         </div>
         <div>
@@ -105,8 +105,8 @@ const handleQuickSend = () => {
         </div>
       </div>
 
-      <div id="metric-events" class="p-5 rounded-xl border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
-        <div class="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/25">
+      <div id="metric-events" class="p-5 rounded border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
+        <div class="p-3 rounded bg-sky-500/10 text-sky-400 border border-sky-500/25">
           <Database class="w-5 h-5" />
         </div>
         <div>
@@ -117,8 +117,8 @@ const handleQuickSend = () => {
         </div>
       </div>
 
-      <div id="metric-latency" class="p-5 rounded-xl border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
-        <div class="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/25">
+      <div id="metric-latency" class="p-5 rounded border border-[#26384d]/60 bg-[#08121e]/40 flex items-center gap-4">
+        <div class="p-3 rounded bg-amber-500/10 text-amber-400 border border-amber-500/25">
           <Clock class="w-5 h-5" />
         </div>
         <div>
@@ -130,11 +130,11 @@ const handleQuickSend = () => {
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div
-        class="group relative rounded-2xl border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
+        class="group relative rounded border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
       >
         <div>
           <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center justify-center">
+            <div class="w-12 h-12 rounded bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center justify-center">
               <Languages class="w-6 h-6 text-[#00a67e]" />
             </div>
             <span class="text-[10px] font-mono text-[#bccac2] uppercase tracking-wider">多语调翻译器</span>
@@ -144,23 +144,26 @@ const handleQuickSend = () => {
             支持 10 种目标语言与 5 种语调风格，提供高精度文本转换与术语一致性。
           </p>
         </div>
-        <button
+        <a-button
           id="btn-nav-translation"
-          type="button"
+          block
+          size="middle"
+          class="block-btn mt-6"
           @click="goTo('translation')"
-          class="mt-6 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#26384d] bg-[#0c1622] text-white hover:bg-[#00a67e] hover:text-white hover:border-[#00a67e] text-xs font-semibold transition-all duration-200 cursor-pointer"
         >
-          进入翻译面板
-          <ArrowRight class="w-3.5 h-3.5" />
-        </button>
+          <span class="inline-flex items-center gap-2">
+            进入翻译面板
+            <ArrowRight class="w-3.5 h-3.5" />
+          </span>
+        </a-button>
       </div>
 
       <div
-        class="group relative rounded-2xl border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
+        class="group relative rounded border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
       >
         <div>
           <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
+            <div class="w-12 h-12 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
               <FileText class="w-6 h-6 text-sky-400" />
             </div>
             <span class="text-[10px] font-mono text-sky-400 uppercase tracking-wider">文档压缩总结</span>
@@ -170,19 +173,22 @@ const handleQuickSend = () => {
             将会议记录、研究笔记、长文档或代码注释压缩为结构化概述与要点列表。
           </p>
         </div>
-        <button
+        <a-button
           id="btn-nav-summarization"
-          type="button"
+          block
+          size="middle"
+          class="block-btn mt-6"
           @click="goTo('summarization')"
-          class="mt-6 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#26384d] bg-[#0c1622] text-white hover:bg-[#00a67e] hover:text-white hover:border-[#00a67e] text-xs font-semibold transition-all duration-200 cursor-pointer"
         >
-          进入总结工作区
-          <ArrowRight class="w-3.5 h-3.5" />
-        </button>
+          <span class="inline-flex items-center gap-2">
+            进入总结工作区
+            <ArrowRight class="w-3.5 h-3.5" />
+          </span>
+        </a-button>
       </div>
     </div>
 
-    <div class="rounded-2xl border border-[#26384d] bg-[#0c1622] p-6 shadow-xl relative overflow-hidden">
+    <div class="rounded border border-[#26384d] bg-[#0c1622] p-6 shadow-xl relative overflow-hidden">
       <div class="flex items-center gap-2 mb-4">
         <Sparkles class="w-4 h-4 text-[#00a67e]" />
         <h4 class="text-sm font-semibold text-white font-display">智能输入控制台</h4>
@@ -198,21 +204,23 @@ const handleQuickSend = () => {
             v-model="quickInput"
             placeholder="例如：将系统日志翻译成法语…或粘贴较长的会议纪要…"
             rows="3"
-            class="w-full bg-[#08121e] border border-[#26384d] focus:border-[#00a67e] rounded-xl p-4 text-xs text-white placeholder-[#bccac2]/40 outline-none resize-none transition-all duration-150 custom-scrollbar focus:ring-1 focus:ring-[#00a67e]"
+            class="w-full bg-[#08121e] border border-[#26384d] focus:border-[#00a67e] rounded p-4 text-xs text-white placeholder-[#bccac2]/40 outline-none resize-none transition-all duration-150 custom-scrollbar focus:ring-1 focus:ring-[#00a67e]"
             @keydown.enter.prevent="handleQuickSend"
           />
         </div>
 
         <div class="flex items-center justify-between">
           <span class="text-[10px] text-[#bccac2]/55 font-mono">基于 GLM 的启发式自动路由</span>
-          <button
-            type="submit"
+          <a-button
+            type="primary"
+            size="small"
+            html-type="submit"
+            class="action-btn shrink-0"
             :disabled="!quickInput.trim()"
-            class="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00a67e] text-white font-semibold text-xs hover:bg-[#008f6c] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
+            <template #icon><CornerDownLeft class="w-3.5 h-3.5" /></template>
             分析并跳转
-            <CornerDownLeft class="w-3.5 h-3.5" />
-          </button>
+          </a-button>
         </div>
       </form>
     </div>
