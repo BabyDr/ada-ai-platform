@@ -26,7 +26,8 @@ watch(
 
 useThemeAttribute(isDark);
 
-// 主题：Ant Design algorithm + 浅色语义 token（深色块在 antTheme 中保持原值）。
+// Ant Design 全局主题配置：根据 isDark 切换 darkAlgorithm / defaultAlgorithm，
+// 并覆盖语义 token（背景色、边框色、文字色等）以匹配项目品牌色系。
 const antTheme = computed(() => ({
   algorithm: isDark.value ? theme.darkAlgorithm : theme.defaultAlgorithm,
   token: {

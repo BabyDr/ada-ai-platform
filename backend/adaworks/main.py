@@ -2,8 +2,6 @@
 AdaWorks Python Sidecar（FastAPI）· Author: RenXiaodi
 
 职责概览：
-
-职责概览：
 - 提供 REST API：会话 CRUD、发消息、健康检查。
 - 提供 WebSocket：按会话推送模型事件（流式 delta、结束、错误等）。
 - 在收到用户消息后，通过 asyncio.create_task 后台执行模型逻辑，避免阻塞 HTTP 响应。
@@ -15,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -29,6 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from adaworks.api.router import api_router
+from adaworks.config import settings
 from adaworks.db import connect, row_to_message, row_to_session
 from adaworks.gemini_agent import gemini_api_key_configured, run_gemini_agent
 from adaworks.glm_agent import DEFAULT_GLM_MODEL, glm_api_key_configured, run_glm_agent
@@ -90,6 +90,15 @@ class LogUpdateRequest(BaseModel):
     error: str | None = None
 
 
+_SESSION_ID_RE = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _validate_session_id(sid: str) -> None:
+    """校验 session_id 为合法 UUID hex（32 位小写十六进制）。"""
+    if not _SESSION_ID_RE.match(sid):
+        raise HTTPException(status_code=400, detail="invalid session_id format")
+
+
 def create_app(db_path: Path | None = None) -> FastAPI:
     """创建 FastAPI 应用；单测可传入独立 db_path 使用内存或临时文件库。"""
 
@@ -121,13 +130,20 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     app = FastAPI(title="AdaWorks Sidecar", lifespan=lifespan)
     app.add_middleware(BodyLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # CORS 配置：从环境变量 CORS_ORIGINS 读取允许的源列表（逗号分隔）。
+    # 通配符 "*" 时不启用 credentials（浏览器拒绝此组合），否则指定具体源并启用 credentials。
+    _origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+    _cors_kwargs: dict[str, Any] = {
+        "allow_methods": ["*"],
+        "allow_headers": ["*"],
+    }
+    if "*" in _origins:
+        _cors_kwargs["allow_origins"] = ["*"]
+        _cors_kwargs["allow_credentials"] = False
+    else:
+        _cors_kwargs["allow_origins"] = _origins
+        _cors_kwargs["allow_credentials"] = True
+    app.add_middleware(CORSMiddleware, **_cors_kwargs)
 
     register_global_exception_handler(app)
 
@@ -154,12 +170,14 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             await db.commit()
         async with db.execute("SELECT * FROM sessions WHERE id = ?", (sid,)) as cur:
             row = await cur.fetchone()
-        assert row is not None
+        if row is None:
+            raise HTTPException(status_code=500, detail="Failed to retrieve created session")
         return {"session": dict(row_to_session(row))}
 
     @app.delete("/api/sessions/{session_id}")
     async def delete_session(session_id: str, request: Request) -> dict[str, bool]:
         """删除会话。"""
+        _validate_session_id(session_id)
         db = request.app.state.db
         lock: asyncio.Lock = request.app.state.db_lock
         async with lock:
@@ -170,6 +188,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     @app.get("/api/sessions/{session_id}/messages")
     async def list_messages(session_id: str, request: Request) -> dict[str, Any]:
         """获取会话消息历史。"""
+        _validate_session_id(session_id)
         db = request.app.state.db
         async with db.execute(
             "SELECT * FROM messages WHERE session_id = ? ORDER BY created_at ASC",
@@ -181,6 +200,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     @app.post("/api/chat")
     async def post_chat(request: Request, body: ChatRequestBody) -> dict[str, str]:
         """发送消息：落库用户消息并异步触发 GLM / Gemini / Mock。"""
+        _validate_session_id(body.session_id)
         db = request.app.state.db
         lock: asyncio.Lock = request.app.state.db_lock
         hub: ChatHub = request.app.state.hub
@@ -202,7 +222,8 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             )
             await db.commit()
 
-        # create_task：立即返回 HTTP，模型在后台跑并通过 WebSocket 推送。
+        # 后台异步执行模型调用：GLM 优先 → Gemini → Mock 兜底。
+        # 通过 asyncio.create_task 立即返回 HTTP 响应，模型在后台通过 WebSocket 推送结果。
         mode = _active_llm_mode()
         if mode == "glm":
             asyncio.create_task(
@@ -220,6 +241,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
 
     @app.websocket("/ws/chat/{session_id}")
     async def websocket_chat(websocket: WebSocket, session_id: str) -> None:
+        _validate_session_id(session_id)
         """
         长连接：仅用于服务端下行推送；客户端发来的文本帧可忽略（仅占位保活）。
         业务事件一律由后台模型任务调用 hub.broadcast 下发。

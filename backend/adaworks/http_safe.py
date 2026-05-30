@@ -20,6 +20,7 @@ _log = logging.getLogger("adaworks")
 
 
 def _request_id(request: Request) -> str | None:
+    """从 request.state 中读取 RequestIdMiddleware 注入的请求 ID。"""
     return getattr(request.state, "request_id", None)
 
 
@@ -30,6 +31,7 @@ def _error_body(
     request_id: str | None = None,
     code: str | None = None,
 ) -> dict[str, Any]:
+    """构造统一错误响应体：detail + level + 可选 requestId/code。"""
     body: dict[str, Any] = {"detail": detail, "level": level}
     if request_id:
         body["requestId"] = request_id

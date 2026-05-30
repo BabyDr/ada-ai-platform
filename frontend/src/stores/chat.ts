@@ -92,13 +92,20 @@ export const useChatStore = defineStore("chat", () => {
 
   /**
    * 处理 Sidecar 下行事件（spec §5.2）。
-   * - `agent:delta`：流式正文片段；
-   * - `agent:final`：本轮结束，清空 streamingAssistantId 并拉全量消息；
-   * - `agent:error`：展示错误文案。
+   *
+   * 事件流转（ReAct 模式）：
+   * 1. agent:think — 模型思考步骤，插入 think 角色气泡；
+   * 2. agent:act — 调用工具，插入 act 角色气泡（含工具名和参数）；
+   * 3. agent:observe — 工具返回结果，插入 observe 角色气泡；
+   * 4. agent:delta — 流式正文片段，追加到当前 streamingAssistantId 指向的 assistant 气泡；
+   *    若尚无 streamingAssistantId，则新建一条 assistant 消息；
+   * 5. agent:final — 本轮结束，清空 streamingAssistantId 并从服务端拉全量消息（获取权威 ID）；
+   * 6. agent:error — 展示错误文案为 assistant 气泡。
    */
   function applyAgentEvent(type: string, payload: Record<string, unknown>) {
     const genId = () => randomUUID();
 
+    // ReAct 思考步骤：模型内部推理过程
     if (type === "agent:think") {
       messages.value.push({
         id: genId(),
@@ -107,6 +114,7 @@ export const useChatStore = defineStore("chat", () => {
       });
       return;
     }
+    // ReAct 动作步骤：模型调用工具
     if (type === "agent:act") {
       const tool = String(payload.tool ?? "");
       const params = (payload.params as Record<string, unknown>) ?? {};
@@ -118,6 +126,7 @@ export const useChatStore = defineStore("chat", () => {
       });
       return;
     }
+    // ReAct 观察步骤：工具返回结果
     if (type === "agent:observe") {
       messages.value.push({
         id: genId(),
@@ -126,6 +135,7 @@ export const useChatStore = defineStore("chat", () => {
       });
       return;
     }
+    // 流式正文片段：追加到当前 assistant 气泡，或新建一条
     if (type === "agent:delta") {
       const piece = String(payload.content ?? "");
       if (!piece) return;
@@ -146,6 +156,7 @@ export const useChatStore = defineStore("chat", () => {
       }
       return;
     }
+    // 本轮结束：用服务端权威数据刷新消息列表
     if (type === "agent:final") {
       streamingAssistantId.value = null;
       const sid = activeSessionId.value;
@@ -154,6 +165,7 @@ export const useChatStore = defineStore("chat", () => {
       }
       return;
     }
+    // 错误：展示为 assistant 气泡
     if (type === "agent:error") {
       streamingAssistantId.value = null;
       messages.value.push({

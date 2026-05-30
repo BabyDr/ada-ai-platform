@@ -51,13 +51,14 @@ async def connect(db_path: Path | None = None) -> aiosqlite.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = await aiosqlite.connect(path)
     conn.row_factory = aiosqlite.Row
+    await conn.execute("PRAGMA foreign_keys = ON")
     await conn.executescript(SCHEMA)
     await conn.commit()
     return conn
 
 
 def row_to_session(row: aiosqlite.Row) -> dict[str, Any]:
-    """将 sessions 行转为 API Session 对象。"""
+    """将 sessions 表的一行转换为 API 响应中的 Session 对象（id + title + updated_at）。"""
     return {
         "id": row["id"],
         "title": row["title"],
@@ -66,7 +67,7 @@ def row_to_session(row: aiosqlite.Row) -> dict[str, Any]:
 
 
 def row_to_message(row: aiosqlite.Row) -> dict[str, Any]:
-    """将 messages 行转为 API Message 对象。"""
+    """将 messages 表的一行转换为 API 响应中的 Message 对象，metadata JSON 字段自动解析为 dict。"""
     meta = row["metadata"]
     metadata: dict[str, Any] | None = None
     if meta:

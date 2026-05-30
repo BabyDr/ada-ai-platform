@@ -34,6 +34,7 @@ def gemini_api_key_configured() -> bool:
 
 
 def _api_key() -> str | None:
+    """读取 Gemini API 密钥（兼容 GEMINI_API_KEY 和 GOOGLE_API_KEY 两种命名）。"""
     return read_first_secret("GEMINI_API_KEY", "GOOGLE_API_KEY")
 
 
@@ -62,6 +63,15 @@ async def run_gemini_agent(
     lock: asyncio.Lock,
     model_id: str,
 ) -> None:
+    """
+    Gemini Agent 异步任务：读历史消息 → 构建 Gemini contents → 流式调用 → WS 广播 + 落库。
+
+    流程：
+    1. 校验 API Key，读取当前会话的 user/assistant 历史；
+    2. 通过 prompt_security 构建带隔离标签的 Gemini contents；
+    3. 调用 generate_content_stream 异步迭代，逐 chunk 广播 agent:delta；
+    4. 流结束后广播 agent:final 并将完整回答写入 messages 表。
+    """
     api_key = _api_key()
     if not api_key:
         await hub.broadcast(session_id, "agent:error", {"message": "未配置 GEMINI_API_KEY 或 GOOGLE_API_KEY"})
@@ -77,6 +87,7 @@ async def run_gemini_agent(
         rows = [(row["role"], row["content"]) for row in await cur.fetchall()]
 
     gemini_turns = build_gemini_chat_contents(rows)
+    # 将通用 (role, content) 元组转为 Gemini SDK 的 UserContent/ModelContent 类型
     contents: list[types.Content] = []
     for role, content in gemini_turns:
         if role == "user":
@@ -113,6 +124,7 @@ async def run_gemini_agent(
 
     full = "".join(collected).strip()
     if not full:
+        # Gemini 可能因安全策略返回空文本，给出明确提示
         await hub.broadcast(
             session_id,
             "agent:error",

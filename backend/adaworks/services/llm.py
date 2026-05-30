@@ -61,14 +61,17 @@ _MOCK_SUMMARIZE_WORDS = json.dumps(
 
 
 def _glm_key() -> str | None:
+    """读取 GLM API 密钥，支持 GLM_API_KEY 和 ZHIPU_API_KEY 两种环境变量名。"""
     return read_first_secret("GLM_API_KEY", "ZHIPU_API_KEY")
 
 
 def _glm_base() -> str:
+    """获取 GLM API 网关地址，可通过 GLM_API_BASE 环境变量覆盖默认值。"""
     return (os.environ.get("GLM_API_BASE") or DEFAULT_GLM_BASE).rstrip("/")
 
 
 def _glm_model() -> str:
+    """获取 GLM 模型名称，可通过 GLM_MODEL 环境变量覆盖默认值。"""
     return (os.environ.get("GLM_MODEL") or DEFAULT_GLM_MODEL).strip() or DEFAULT_GLM_MODEL
 
 
@@ -105,7 +108,11 @@ class LLMService:
             await asyncio.sleep(0.02)
 
     async def _real_stream(self, system: str, user: str) -> AsyncIterator[str]:
-        """复用 GLM OpenAI 兼容流式接口，逐段 yield delta.content。"""
+        """
+        调用 GLM OpenAI 兼容接口，逐段 yield delta.content。
+
+        内建一次重试：当模型返回「繁忙」错误时等待 1 秒后重试，其他错误直接抛出。
+        """
         api_key = _glm_key()
         if not api_key:
             raise RuntimeError("GLM_API_KEY 或 ZHIPU_API_KEY 未配置")
@@ -122,6 +129,7 @@ class LLMService:
             "max_tokens": 8000,
         }
 
+        # 最多重试 1 次：首次遇到「繁忙」时 sleep 后重跑
         last_error: Exception | None = None
         for attempt in range(2):
             try:
@@ -132,6 +140,7 @@ class LLMService:
                 last_error = e
                 msg = str(e)
                 if attempt == 0 and "繁忙" in msg:
+                    # 仅在首次遇到「繁忙」时重试，避免无限循环
                     await asyncio.sleep(1.0)
                     continue
                 raise
@@ -146,14 +155,17 @@ class LLMService:
         headers: dict[str, str],
         body: dict[str, object],
     ) -> AsyncIterator[str]:
+        """读取上游 SSE 流，逐行解析 data 字段，yield delta.content 片段。"""
         async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
             async with client.stream("POST", url, headers=headers, json=body) as r:
                 try:
                     r.raise_for_status()
                 except httpx.HTTPStatusError:
+                    # 流式接口在连接建立后仍可返回 4xx，读取 body 便于排错
                     err_body = (await r.aread()).decode(errors="replace")[:800]
                     raise RuntimeError(sanitize_upstream_message(r.status_code, err_body)) from None
 
+                # 逐行解析 SSE：data: {...} 或 data:{...}，[DONE] 标记流结束
                 async for line in r.aiter_lines():
                     if not line:
                         continue
@@ -169,9 +181,11 @@ class LLMService:
                         obj = json.loads(payload)
                     except json.JSONDecodeError:
                         continue
+                    # 上游错误：直接抛出，由调用方决定是否重试
                     err = obj.get("error")
                     if isinstance(err, dict) and err.get("message"):
                         raise RuntimeError("模型服务异常，请稍后重试")
+                    # 提取 delta.content 并记录 finish_reason（用于截断检测）
                     for ch in obj.get("choices") or []:
                         reason = ch.get("finish_reason")
                         if isinstance(reason, str):

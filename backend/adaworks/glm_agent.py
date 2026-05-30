@@ -39,10 +39,12 @@ def glm_api_key_configured() -> bool:
 
 
 def _api_key() -> str | None:
+    """读取智谱 API 密钥（兼容 GLM_API_KEY 和 ZHIPU_API_KEY 两种命名）。"""
     return read_first_secret("GLM_API_KEY", "ZHIPU_API_KEY")
 
 
 def _api_base() -> str:
+    """获取智谱 API 网关地址，支持 GLM_API_BASE 环境变量覆盖。"""
     return (os.environ.get("GLM_API_BASE") or DEFAULT_GLM_BASE).rstrip("/")
 
 
@@ -61,7 +63,16 @@ async def run_glm_agent(
     lock: asyncio.Lock,
     model_id: str,
 ) -> None:
-    # lock：与 HTTP 写库共用，插入 assistant 前需与 post_chat 等写操作互斥。
+    """
+    GLM Agent 异步任务：读历史消息 → 构建对话上下文 → 流式调用 GLM → WS 广播 + 落库。
+
+    流程：
+    1. 校验 API Key，读取当前会话的 user/assistant 历史消息；
+    2. 通过 prompt_security 构建带隔离标签的 messages 数组；
+    3. POST /chat/completions (stream=true)，逐行解析 SSE；
+    4. 每收到 delta.content 通过 WS 广播 agent:delta；
+    5. 流结束后广播 agent:final 并将完整回答写入 messages 表。
+    """
     api_key = _api_key()
     if not api_key:
         await hub.broadcast(session_id, "agent:error", {"message": "未配置 GLM_API_KEY 或 ZHIPU_API_KEY"})

@@ -41,10 +41,13 @@ class TaskContext:
 
 
 class TaskManager:
+    """内存任务状态管理器：创建、状态流转、协作式取消、僵尸清理、终态驱逐。"""
+
     def __init__(self) -> None:
         self._tasks: dict[str, TaskContext] = {}
 
     def create(self) -> TaskContext:
+        """创建新任务上下文（PENDING 状态），超限时先驱逐终态任务。"""
         self._evict_if_needed()
         task_id = uuid.uuid4().hex[:12]
         ctx = TaskContext(task_id=task_id)
@@ -52,9 +55,11 @@ class TaskManager:
         return ctx
 
     def get(self, task_id: str) -> TaskContext | None:
+        """按 ID 查找任务上下文，不存在则返回 None。"""
         return self._tasks.get(task_id)
 
     def set_status(self, task_id: str, status: TaskStatus) -> None:
+        """更新任务状态并刷新心跳；若进入终态则触发驱逐检查。"""
         ctx = self._tasks.get(task_id)
         if ctx is not None:
             ctx.status = status
@@ -63,11 +68,13 @@ class TaskManager:
             self._evict_if_needed()
 
     def touch_heartbeat(self, task_id: str) -> None:
+        """刷新任务心跳时间戳，供 SSE 生成器在每次 yield token 时调用，防止被 sweeper 误判为僵尸。"""
         ctx = self._tasks.get(task_id)
         if ctx is not None:
             ctx.last_heartbeat = time.time()
 
     def running_count(self) -> int:
+        """当前处于 RUNNING 状态的任务数，用于并发限制判断。"""
         return sum(1 for ctx in self._tasks.values() if ctx.status == TaskStatus.RUNNING)
 
     def cancel(self, task_id: str) -> bool:
@@ -98,9 +105,11 @@ class TaskManager:
         return swept
 
     def _evict_if_needed(self) -> None:
+        """当内存任务数超过 max_task_entries 时，优先驱逐已终态（DONE/FAILED/CANCELLED）的旧任务。"""
         cap = settings.max_task_entries
         if len(self._tasks) <= cap:
             return
+        # 收集所有终态任务 ID，按超出配额的数量批量移除
         terminal_ids = [tid for tid, ctx in self._tasks.items() if ctx.status in _TERMINAL]
         for tid in terminal_ids[: len(self._tasks) - cap]:
             self._tasks.pop(tid, None)

@@ -49,12 +49,12 @@ _RETRY_USER_SUFFIX = (
 
 
 def _sse(event: str, data: dict[str, Any]) -> dict[str, str]:
-    """构造 sse-starlette 事件字典。"""
+    """构造 sse-starlette 事件字典（event + JSON data）。"""
     return {"event": event, "data": json.dumps(data, ensure_ascii=False)}
 
 
 def _yield_token(token: str, seq: int) -> dict[str, str]:
-    """流式 token 事件，含单调 seq（#18 / #19）。"""
+    """构造流式 token SSE 事件，含单调递增 seq 用于前端去重和排序。"""
     return _sse("token", {"content": token, "seq": seq})
 
 
@@ -73,6 +73,7 @@ async def _task_generator(
 
     log_id, _log = create_processing_log(task_type, params)
 
+    # 立即下发 task_start，前端收到后可展示进度条并获取 taskId 用于取消
     yield _sse("task_start", {"taskId": ctx.task_id})
 
     if task_type == "translate":
@@ -98,6 +99,7 @@ async def _task_generator(
     seq = 0
 
     async def _emit_cancelled() -> AsyncIterator[dict[str, str]]:
+        """协作式取消：记录日志 + 更新状态 + 下发 task_done(status=cancelled)。"""
         duration = f"{time.time() - start:.1f}s"
         mark_log_cancelled(log_id, duration)
         task_manager.set_status(ctx.task_id, TaskStatus.CANCELLED)
@@ -109,6 +111,7 @@ async def _task_generator(
     try:
         stream = llm_service.stream(system, user, task_type=task_type)
         while True:
+            # 协作式取消检查：客户端主动 DELETE 或断开连接时提前结束
             if ctx.cancelled or await request.is_disconnected():
                 if await request.is_disconnected():
                     ctx.cancel_event.set()
@@ -116,6 +119,7 @@ async def _task_generator(
                     yield ev
                 return
 
+            # 刷新心跳并检查剩余超时预算
             task_manager.touch_heartbeat(ctx.task_id)
             remaining = deadline - time.time()
             if remaining <= 0:
@@ -133,12 +137,14 @@ async def _task_generator(
                 yield _yield_token(token, seq)
 
     except (TimeoutError, asyncio.TimeoutError):
+        # 超时：标记 FAILED，写入日志，下发 task_error
         duration = f"{time.time() - start:.1f}s"
         task_manager.set_status(ctx.task_id, TaskStatus.FAILED)
         mark_log_timeout(log_id, duration)
         yield _sse("task_error", {"taskId": ctx.task_id, "message": "任务超时"})
         return
     except Exception as e:  # noqa: BLE001
+        # LLM 或网络异常：标记 FAILED，截断错误信息避免泄露
         duration = f"{time.time() - start:.1f}s"
         task_manager.set_status(ctx.task_id, TaskStatus.FAILED)
         msg = str(e)[:800]
@@ -146,6 +152,7 @@ async def _task_generator(
         yield _sse("task_error", {"taskId": ctx.task_id, "message": msg})
         return
 
+    # 流式结束后再次检查取消/断开
     if ctx.cancelled or await request.is_disconnected():
         async for ev in _emit_cancelled():
             yield ev
@@ -155,11 +162,13 @@ async def _task_generator(
     raw = "".join(collected)
 
     if not raw.strip():
+        # LLM 返回空内容，视为失败
         task_manager.set_status(ctx.task_id, TaskStatus.FAILED)
         mark_log_failed(log_id, duration, "empty_result")
         yield _sse("task_error", {"taskId": ctx.task_id, "message": "模型未返回有效内容"})
         return
 
+    # 翻译：直接使用原始文本作为结果
     if task_type == "translate":
         task_manager.set_status(ctx.task_id, TaskStatus.DONE)
         result: dict[str, Any] = {"text": raw}
@@ -169,6 +178,7 @@ async def _task_generator(
         yield _sse("task_done", {"taskId": ctx.task_id, "status": "done", "duration": duration, "result": result})
         return
 
+    # 总结：需要校验 JSON 结构，失败时追加重试 prompt 再请求一次
     key_points_count = int(params.get("keyPointsCount", 3))
     summary_mode = str(params.get("summaryMode", "points"))
     source_text = str(params.get("text", ""))
@@ -177,6 +187,7 @@ async def _task_generator(
             raw, key_points_count, mode=summary_mode, source_text=source_text
         )
     except ValueError:
+        # 首次校验失败：检查取消状态，若仍活跃则带重试后缀再请求一次 LLM
         if ctx.cancelled or await request.is_disconnected():
             async for ev in _emit_cancelled():
                 yield ev

@@ -30,11 +30,13 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const linguistStreaming = ref(false);
   let linguistCancelHandler: (() => Promise<void>) | null = null;
 
+  /** 设置 Linguist（翻译/总结）流式状态；active 时注册取消回调，inactive 时清空。 */
   function setLinguistStreaming(active: boolean, cancelFn?: () => Promise<void>): void {
     linguistStreaming.value = active;
     linguistCancelHandler = active ? (cancelFn ?? null) : null;
   }
 
+  /** 调用已注册的取消回调终止当前 Linguist 任务，并重置流式状态。路由守卫和 beforeunload 调用。 */
   async function cancelLinguistTask(): Promise<void> {
     if (linguistCancelHandler) {
       await linguistCancelHandler();
@@ -55,10 +57,12 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     }
   }
 
+  /** 记录当前活跃的 SSE 任务 ID（用于路由守卫取消和 beforeunload 提示）。 */
   function setActiveTaskId(taskId: string): void {
     activeTaskId.value = taskId;
   }
 
+  /** 清空活跃任务 ID（任务结束或取消后调用）。 */
   function clearActiveTaskId(): void {
     activeTaskId.value = "";
   }

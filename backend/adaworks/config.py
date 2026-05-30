@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     max_logs: int = 500
     max_task_entries: int = 1000
     zombie_task_seconds: int = 300
+    cors_origins: str = "http://localhost:1420,http://127.0.0.1:1420"
 
     model_config = SettingsConfigDict(
         env_prefix="",

@@ -8,6 +8,12 @@ import { useWorkspaceStore } from "../stores/workspace";
 const LINGUIST_ROUTE_NAMES = new Set(["translation", "summarization"]);
 
 export function setupStreamingGuard(router: Router): void {
+  /**
+   * 全局 beforeEach 守卫：
+   * 1. 仅拦截从翻译/总结页离开的导航；
+   * 2. 若 Linguist 任务正在流式执行，弹出确认对话框；
+   * 3. 用户确认后调用 cancelLinguistTask 终止任务并放行；取消则阻止导航。
+   */
   router.beforeEach(async (_to, from, next) => {
     const fromName = from.name;
     if (typeof fromName !== "string" || !LINGUIST_ROUTE_NAMES.has(fromName)) {

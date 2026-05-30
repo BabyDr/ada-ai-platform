@@ -14,6 +14,9 @@ async def run_task_sweeper(interval_seconds: int = 60) -> None:
     """周期性扫描无心跳 RUNNING 任务并标记 FAILED。"""
     while True:
         await asyncio.sleep(interval_seconds)
-        swept = task_manager.sweep_zombie_tasks()
-        if swept:
-            _log.warning("Swept %s zombie task(s)", swept)
+        try:
+            swept = task_manager.sweep_zombie_tasks()
+            if swept:
+                _log.warning("Swept %s zombie task(s)", swept)
+        except Exception:
+            _log.exception("Task sweeper iteration failed")
