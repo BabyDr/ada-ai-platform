@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 全局侧栏导航：路由菜单、主题切换、API 连接状态指示。 */
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import {

@@ -36,6 +36,7 @@ from adaagent.linguist_service import (
     update_log,
 )
 from adaagent.mock_agent import run_mock_agent
+from adaagent.http_safe import register_global_exception_handler
 from adaagent.ws_hub import ChatHub
 
 
@@ -115,6 +116,8 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    register_global_exception_handler(app)
 
     @app.get("/api/sessions")
     async def list_sessions(request: Request) -> dict[str, Any]:
@@ -246,8 +249,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Log not found")
         return updated
 
-    # SSE 任务契约（GET /api/functions、POST /api/task、DELETE/GET /api/task/{id}）。
-    # 旧的非流式 /api/translate、/api/summarize 已由 task SSE 契约取代（见 docs 决策 B）。
+    # SSE 任务契约：GET /api/functions、POST /api/task、DELETE/GET /api/task/{id}
     app.include_router(api_router, prefix="/api")
 
     return app

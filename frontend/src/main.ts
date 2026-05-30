@@ -1,3 +1,6 @@
+/**
+ * 前端应用入口：挂载 Vue、Pinia、Router、Ant Design Vue。
+ */
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import Antd from "ant-design-vue";

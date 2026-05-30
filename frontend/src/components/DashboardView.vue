@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
+/**
+ * Dashboard 工作台：指标概览、功能入口、智能快捷输入路由。
+ * 统计与路由逻辑见 composables/useDashboardMetrics、useQuickRoute。
+ */
 import {
   Sparkles,
   Languages,
@@ -14,50 +16,11 @@ import {
   Sparkle,
 } from "lucide-vue-next";
 import { DEFAULT_GLM_MODEL } from "../types";
-import { useWorkspaceStore } from "../stores/workspace";
+import { useDashboardMetrics } from "../composables/useDashboardMetrics";
+import { useQuickRoute } from "../composables/useQuickRoute";
 
-const router = useRouter();
-const workspace = useWorkspaceStore();
-
-const apiConnected = computed(() => workspace.apiConnected);
-const quickInput = ref("");
-
-const totalProcessed = computed(
-  () => workspace.logs.filter((l) => l.status === "success" || l.status === "failed").length,
-);
-
-const avgLatency = computed(() => {
-  const successfulLogs = workspace.logs.filter((l) => l.status === "success");
-  if (successfulLogs.length > 0) {
-    const sum = successfulLogs.reduce((acc, curr) => {
-      const val = parseFloat(curr.duration);
-      return Number.isNaN(val) ? acc : acc + val;
-    }, 0);
-    return `${(sum / successfulLogs.length).toFixed(1)}s`;
-  }
-  return "1.8s";
-});
-
-const goTo = (name: "translation" | "summarization") => router.push({ name });
-
-const handleQuickSend = () => {
-  if (!quickInput.value.trim()) return;
-
-  const text = quickInput.value.trim();
-  workspace.setQuickText(text);
-
-  const lowercaseInput = text.toLowerCase();
-  const isProbablySummary =
-    lowercaseInput.includes("summary") ||
-    lowercaseInput.includes("summarize") ||
-    lowercaseInput.includes("总结") ||
-    lowercaseInput.includes("提炼") ||
-    lowercaseInput.includes("要点") ||
-    text.length > 250;
-
-  router.push({ name: isProbablySummary ? "summarization" : "translation" });
-  quickInput.value = "";
-};
+const { apiConnected, totalProcessed, avgLatency } = useDashboardMetrics();
+const { quickInput, goTo, handleQuickSend } = useQuickRoute();
 </script>
 
 <template>
@@ -130,6 +93,7 @@ const handleQuickSend = () => {
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div
+        id="btn-nav-translation"
         class="group relative rounded border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
       >
         <div>
@@ -144,21 +108,16 @@ const handleQuickSend = () => {
             支持 10 种目标语言与 5 种语调风格，提供高精度文本转换与术语一致性。
           </p>
         </div>
-        <a-button
-          id="btn-nav-translation"
-          block
-          size="middle"
-          class="block-btn mt-6"
-          @click="goTo('translation')"
-        >
-          <span class="inline-flex items-center gap-2">
+        <a-button block size="middle" class="block-btn action-btn mt-6" @click="goTo('translation')">
+          <span>
             进入翻译面板
-            <ArrowRight class="w-3.5 h-3.5" />
+            <ArrowRight class="w-3.5 h-3.5 shrink-0" />
           </span>
         </a-button>
       </div>
 
       <div
+        id="btn-nav-summarization"
         class="group relative rounded border border-[#26384d] bg-gradient-to-b from-[#0e1b2b]/90 to-[#08121e]/90 p-6 flex flex-col justify-between hover:border-[#00a67e]/60 transition-all duration-300"
       >
         <div>
@@ -173,16 +132,10 @@ const handleQuickSend = () => {
             将会议记录、研究笔记、长文档或代码注释压缩为结构化概述与要点列表。
           </p>
         </div>
-        <a-button
-          id="btn-nav-summarization"
-          block
-          size="middle"
-          class="block-btn mt-6"
-          @click="goTo('summarization')"
-        >
-          <span class="inline-flex items-center gap-2">
+        <a-button block size="middle" class="block-btn action-btn mt-6" @click="goTo('summarization')">
+          <span>
             进入总结工作区
-            <ArrowRight class="w-3.5 h-3.5" />
+            <ArrowRight class="w-3.5 h-3.5 shrink-0" />
           </span>
         </a-button>
       </div>

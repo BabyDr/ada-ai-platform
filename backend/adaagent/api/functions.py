@@ -36,4 +36,5 @@ FUNCTIONS: list[FunctionItem] = [
 
 @router.get("/functions", response_model=FunctionsResponse)
 async def get_functions() -> FunctionsResponse:
+    """返回 translate / summarize 两项能力描述（SSE task type，非独立 REST 路径）。"""
     return FunctionsResponse(functions=FUNCTIONS)

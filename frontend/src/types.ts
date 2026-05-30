@@ -1,3 +1,8 @@
+/**
+ * Linguist 工作台共享类型与常量（语言列表、语调、日志结构、默认模型）。
+ */
+
+/** 单条 API 运行日志（翻译/总结任务） */
 export interface LogEntry {
   id: string;
   timestamp: string;
@@ -17,11 +22,7 @@ export interface LogEntry {
   };
 }
 
-export interface AppSettings {
-  defaultTone: "Professional" | "Conversational" | "Technical" | "Academic" | "Creative";
-  preferredModel: string;
-}
-
+/** 翻译源/目标语言选项（code 供 API，name 供 UI） */
 export const SUPPORTED_LANGUAGES = [
   { code: "auto", name: "自动检测" },
   { code: "en", name: "英语" },
@@ -35,6 +36,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: "it", name: "意大利语" },
 ];
 
+/** 译文/摘要语调风格选项 */
 export const TONE_STYLES = [
   { value: "Professional", label: "专业" },
   { value: "Conversational", label: "口语" },
@@ -43,13 +45,5 @@ export const TONE_STYLES = [
   { value: "Creative", label: "创意" },
 ];
 
+/** 默认 GLM 模型 id（与 backend DEFAULT_GLM_MODEL 一致） */
 export const DEFAULT_GLM_MODEL = "glm-4-flash";
-
-/** Workspace sidebar views (includes legacy agent chat) */
-export type WorkspaceViewId =
-  | "dashboard"
-  | "translation"
-  | "summarization"
-  | "history"
-  | "settings"
-  | "chat";

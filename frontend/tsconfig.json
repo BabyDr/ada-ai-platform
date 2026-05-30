@@ -15,10 +15,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
     "plugins": [{ "name": "@vue/typescript-plugin" }]
+  },
+  "vueCompilerOptions": {
+    "target": 3.5,
+    "strictTemplates": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"]
 }

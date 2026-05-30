@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+/**
+ * 文本翻译页：双栏输入/输出 UI。
+ * 任务流、日志、导出逻辑分别见 useTask / useLinguistTaskLog / useExportActions。
+ */
+import { computed, ref } from "vue";
 import {
   Sparkles,
   Copy,
@@ -13,14 +17,20 @@ import {
   Sparkle,
   Square,
 } from "lucide-vue-next";
-import { SUPPORTED_LANGUAGES, TONE_STYLES, type LogEntry } from "../types";
+import { SUPPORTED_LANGUAGES, TONE_STYLES } from "../types";
 import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
+import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
+import { useCopyFeedback, downloadTextFile } from "../composables/useExportActions";
+import { buildLinguistLogCallbacks, createProcessingLog } from "../composables/useLinguistTaskLog";
+import { runSafe } from "../utils/safeAsync";
+import ApiKeyBanner from "./shared/ApiKeyBanner.vue";
+import StreamingBadge from "./shared/StreamingBadge.vue";
 
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
 
-// 流式输出：result 即逐 token 追加的译文（打字机效果）。
+/** 流式输出：result 即逐 token 追加的译文。 */
 const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 
 const inputText = ref("");
@@ -29,63 +39,44 @@ const targetLang = ref("zh");
 const selectedTone = ref<
   "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
 >("Professional");
-
-const copied = ref(false);
 const elapsedTime = ref("--");
 
-const sourceLanguageOptions = SUPPORTED_LANGUAGES.map((l) => ({
-  value: l.code,
-  label: l.name,
-}));
-const targetLanguageOptions = SUPPORTED_LANGUAGES.filter(
-  (l) => l.code !== "auto",
-).map((l) => ({
-  value: l.code,
-  label: l.name,
-}));
+const { copied, copyText } = useCopyFeedback();
 
-// 工作台快捷输入 → 预填（消费一次）。
-watch(
-  () => workspace.quickText,
-  (newVal) => {
-    if (newVal) {
-      inputText.value = newVal;
-      workspace.setQuickText("");
-    }
-  },
-  { immediate: true },
+const selectedToneLabel = computed(
+  () => TONE_STYLES.find((t) => t.value === selectedTone.value)?.label ?? selectedTone.value,
 );
 
-const handleCopy = async () => {
-  if (!result.value) return;
-  try {
-    await navigator.clipboard.writeText(result.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
-  } catch (err) {
-    console.error("Failed to copy text", err);
-  }
-};
+const sourceLanguageOptions = SUPPORTED_LANGUAGES.map((l) => ({ value: l.code, label: l.name }));
+const targetLanguageOptions = SUPPORTED_LANGUAGES.filter((l) => l.code !== "auto").map((l) => ({
+  value: l.code,
+  label: l.name,
+}));
 
-const handleDownload = () => {
-  if (!result.value) return;
-  const element = document.createElement("a");
-  const file = new Blob([result.value], { type: "text/plain;charset=utf-8" });
-  element.href = URL.createObjectURL(file);
-  element.download = `linguist-translation-${targetLang.value}.txt`;
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
-};
+useQuickTextPrefill(inputText);
 
-const handleClear = () => {
+/** 复制译文到剪贴板。 */
+async function handleCopy(): Promise<void> {
+  if (!result.value) return;
+  await copyText(result.value);
+}
+
+/** 下载译文为 .txt 文件。 */
+function handleDownload(): void {
+  if (!result.value) return;
+  downloadTextFile(result.value, `linguist-translation-${targetLang.value}.txt`);
+}
+
+/** 清空输入、结果与错误状态。 */
+function handleClear(): void {
   inputText.value = "";
   result.value = "";
   error.value = "";
   elapsedTime.value = "--";
-};
+}
 
-const handleSwapLanguages = () => {
+/** 交换源/目标语言；若有结果则回填到输入框。 */
+function handleSwapLanguages(): void {
   if (sourceLang.value === "auto") {
     sourceLang.value = targetLang.value;
     targetLang.value = "en";
@@ -98,79 +89,57 @@ const handleSwapLanguages = () => {
     inputText.value = result.value;
     result.value = "";
   }
-};
+}
 
-const handleStop = () => cancelCurrentTask();
+/** 中止当前 SSE 任务。 */
+async function handleStop(): Promise<void> {
+  await runSafe(() => cancelCurrentTask());
+}
 
-const handleTranslate = async () => {
+/** 提交翻译任务（SSE + 运行日志）。 */
+async function handleTranslate(): Promise<void> {
   if (!inputText.value.trim()) return;
-  elapsedTime.value = "--";
 
-  let activeLog: LogEntry | null = null;
-  try {
-    activeLog = await workspace.addLog({
-      type: "translation",
-      input: inputText.value.substring(0, 500),
-      output: "...",
-      duration: "--",
-      status: "processing",
-      details: {
-        sourceLang:
-          SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang.value)?.name ||
-          sourceLang.value,
-        targetLang:
-          SUPPORTED_LANGUAGES.find((l) => l.code === targetLang.value)?.name ||
-          targetLang.value,
+  await runSafe(
+    async () => {
+      elapsedTime.value = "--";
+
+      const activeLog = await createProcessingLog("translation", inputText.value.substring(0, 500), {
+        sourceLang: SUPPORTED_LANGUAGES.find((l) => l.code === sourceLang.value)?.name || sourceLang.value,
+        targetLang: SUPPORTED_LANGUAGES.find((l) => l.code === targetLang.value)?.name || targetLang.value,
         tone: selectedTone.value,
-      },
-    });
-  } catch (e) {
-    console.warn("Log creation failed: ", e);
-  }
+      });
 
-  await submitTask(
-    "translate",
-    {
-      text: inputText.value,
-      sourceLang: sourceLang.value,
-      targetLang: targetLang.value,
-      tone: selectedTone.value,
+      const logCallbacks = buildLinguistLogCallbacks(activeLog, {
+        getCancelledOutput: () => result.value || "已取消",
+        buildSuccessOutput: (payload) =>
+          (payload.result as { text?: string } | undefined)?.text ?? result.value,
+      });
+
+      await submitTask(
+        "translate",
+        {
+          text: inputText.value,
+          sourceLang: sourceLang.value,
+          targetLang: targetLang.value,
+          tone: selectedTone.value,
+        },
+        {
+          onDone: (payload) => {
+            elapsedTime.value = payload.duration || elapsedTime.value;
+            logCallbacks.onDone?.(payload);
+          },
+          onError: (message) => {
+            logCallbacks.onError?.(message);
+          },
+        },
+      );
     },
-    {
-      onDone: (payload) => {
-        elapsedTime.value = payload.duration || elapsedTime.value;
-        if (!activeLog) return;
-        if (payload.status === "cancelled") {
-          workspace.updateLog(activeLog.id, {
-            status: "failed",
-            output: result.value || "已取消",
-            duration: elapsedTime.value,
-            error: "用户已停止生成",
-          });
-          return;
-        }
-        const out =
-          (payload.result as { text?: string } | undefined)?.text ??
-          result.value;
-        workspace.updateLog(activeLog.id, {
-          status: "success",
-          output: out,
-          duration: elapsedTime.value,
-        });
-      },
-      onError: (message) => {
-        if (activeLog) {
-          workspace.updateLog(activeLog.id, {
-            status: "failed",
-            output: message,
-            duration: "0s",
-            error: message,
-          });
-        }
-      },
+    (msg) => {
+      error.value = msg;
     },
   );
-};
+}
 </script>
 
 <template>
@@ -190,33 +159,14 @@ const handleTranslate = async () => {
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <span
-          v-if="isStreaming"
-          class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded flex items-center gap-1.5"
-        >
-          <span
-            class="animate-spin rounded-full h-2 w-2 border-2 border-t-transparent border-[#00a67e]"
-          ></span>
-          流式翻译中...
-        </span>
+        <StreamingBadge :active="isStreaming" label="流式翻译中..." />
       </div>
     </div>
 
-    <div
-      v-if="!apiConnected"
-      class="p-4 rounded bg-amber-500/10 border border-amber-500/30 flex items-start gap-3"
-    >
-      <AlertTriangle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-      <div>
-        <span class="text-xs font-semibold text-white block"
-          >未检测到 GLM_API_KEY</span
-        >
-        <span class="text-xs text-[#acb5c9] leading-relaxed">
-          模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 或
-          ZHIPU_API_KEY 后重启 Sidecar。
-        </span>
-      </div>
-    </div>
+    <ApiKeyBanner
+      :connected="apiConnected"
+      description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 后重启 Sidecar。"
+    />
 
     <div class="p-4 rounded bg-[#08121e]/40 border border-[#26384d]/60">
       <label
@@ -246,7 +196,9 @@ const handleTranslate = async () => {
       </a-radio-group>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-y-6">
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-y-6"
+    >
       <div
         class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden"
       >
@@ -261,7 +213,7 @@ const handleTranslate = async () => {
               v-model:value="sourceLang"
               size="small"
               :options="sourceLanguageOptions"
-              class="lang-select min-w-[7.5rem]"
+              class="lang-select min-w-30"
               popup-class-name="lang-select-dropdown"
             />
           </div>
@@ -279,7 +231,7 @@ const handleTranslate = async () => {
           </a-button>
         </div>
 
-        <div class="p-5 flex-1 min-h-[300px] flex flex-col">
+        <div class="p-5 flex-1 min-h-75 flex flex-col">
           <textarea
             v-model="inputText"
             placeholder="在此输入待翻译文本或原始文档…"
@@ -349,7 +301,7 @@ const handleTranslate = async () => {
               v-model:value="targetLang"
               size="small"
               :options="targetLanguageOptions"
-              class="lang-select min-w-[7.5rem]"
+              class="lang-select min-w-30"
               popup-class-name="lang-select-dropdown"
             />
           </div>
@@ -379,7 +331,7 @@ const handleTranslate = async () => {
           </div>
         </div>
 
-        <div class="p-5 flex-1 min-h-[300px] flex flex-col bg-[#020c15]/40">
+        <div class="p-5 flex-1 min-h-75 flex flex-col bg-[#020c15]/40">
           <div
             v-if="error"
             class="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
@@ -442,12 +394,7 @@ const handleTranslate = async () => {
             <Clock class="w-3 h-3 text-[#00a67e]" />
             <span>耗时：{{ elapsedTime }}</span>
           </div>
-          <span
-            >语调：{{
-              TONE_STYLES.find((t) => t.value === selectedTone)?.label ??
-              selectedTone
-            }}</span
-          >
+          <span>语调：{{ selectedToneLabel }}</span>
         </div>
       </div>
     </div>

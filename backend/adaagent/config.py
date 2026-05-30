@@ -4,7 +4,6 @@
 仅承载 SSE 任务管线相关的开关：
 - `llm_mode`：mock | real。real 模式复用现有 GLM 流式（密钥沿用 GLM_API_KEY/ZHIPU_API_KEY）。
 - `task_timeout_seconds`：单任务超时时间，防止模型调用挂死。
-- `sidecar_port`：Sidecar 端口（与 scripts/sidecar.mjs、frontend/.env.development 一致）。
 
 环境变量经 bootstrap_env.load_app_dotenv() 注入到 os.environ，此处直接读取即可。
 """
@@ -19,7 +18,6 @@ class Settings(BaseSettings):
 
     llm_mode: str = "mock"  # mock | real
     task_timeout_seconds: int = 60
-    sidecar_port: int = 18765
 
     model_config = SettingsConfigDict(
         env_prefix="",

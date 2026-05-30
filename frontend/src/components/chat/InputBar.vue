@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 对话输入栏：本地文本状态 + 模式开关占位，提交通过 emit 交给 ChatPanel。 */
 import { ref } from "vue";
 
 const text = ref("");
@@ -8,6 +9,7 @@ const modeWeb = ref(false);
 const modeLocal = ref(true);
 const modeCode = ref(false);
 
+/** 校验非空后 emit submit 并清空输入框。 */
 function onSubmit() {
   const v = text.value.trim();
   if (!v) return;
@@ -34,7 +36,7 @@ function onSubmit() {
         v-model:value="text"
         :auto-size="{ minRows: 1, maxRows: 6 }"
         placeholder="输入消息… Enter 发送，Shift+Enter 换行"
-        class="chat-input !min-h-[44px] flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-2 !text-[#d4e4fa] !shadow-none focus:!ring-0"
+        class="chat-input !min-h-11 flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-2 !text-[#d4e4fa] !shadow-none focus:!ring-0"
         @keydown.enter.exact.prevent="onSubmit"
       />
       <a-button type="primary" shape="circle" size="large" class="icon-only-btn mb-1 shrink-0" title="发送" @click="onSubmit">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** ReAct Observe 步骤块：展示工具执行结果。 */
 defineProps<{ content: string }>();
 </script>
 
@@ -18,6 +19,6 @@ defineProps<{ content: string }>();
         Success
       </span>
     </div>
-    <pre class="m-0 max-h-48 overflow-auto whitespace-pre-wrap p-4 font-mono text-xs leading-relaxed text-[#bccac2]">{{ content }}</pre>
+    <pre class="m-0 max-h-48 overflow-auto whitespace-pre-wrap p-4 font-mono leading-relaxed text-[#bccac2]">{{ content }}</pre>
   </div>
 </template>

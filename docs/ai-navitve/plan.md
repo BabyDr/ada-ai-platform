@@ -486,6 +486,8 @@ AdaAgent/
 
 数据流：`View → Panel → Leaf`；`Panel → Store → Service`，无逆向绕路。
 
+**Linguist 工作台（Translation / Summarization）简化形态：** 业务编排已下沉至 composable（`useTask`、`useLinguistTaskLog` 等），页面可采用 **单文件双栏模板 + 共享 Leaf**（如 `ApiKeyBanner`），**不强制**拆成 `*Panel.vue` + Input/Result Leaf。Chat 模块因 6+ 种消息类型 Leaf，必须严格 View → Panel → Leaf。
+
 ```mermaid
 flowchart LR
   views[Views]
@@ -556,3 +558,15 @@ CREATE TABLE messages (
 - **MCP 客户端**：stdio / SSE 传输、Server 连接管理、工具自动发现。
 - **工具系统真实执行**：`file_read` / `file_write` / `terminal_execute` 的真实执行与安全沙箱（当前 Mock 仅演示 think/act/observe）。
 - **会话增强**：重命名、首条消息自动命名、清空当前会话；WebSocket `user:interrupt` 中断。
+
+### 6.7 开发规范（强制）
+
+完整条文见 **`spec/development-standards.md`**，摘要：
+
+| 条目 | 要求 |
+|------|------|
+| SRP | 逻辑抽取 composable/service，禁止多文件重复实现 |
+| 注释 | 所有模块、函数、方法必须有备注（JSDoc / docstring） |
+| 前端错误 | async / fetch / IO 必须 try/catch 或使用 `utils/safeAsync.runSafe` |
+| 后端错误 | 全局 exception handler + SSE 生成器内 try/except |
+| API | 翻译/总结仅 `POST /api/task`，禁止独立 `/api/translate`、`/api/summarize` 路由 |

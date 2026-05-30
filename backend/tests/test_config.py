@@ -11,7 +11,6 @@ def test_default_mode() -> None:
     s = Settings(_env_file=None)
     assert s.llm_mode == "mock"
     assert s.task_timeout_seconds == 60
-    assert s.sidecar_port == 18765
 
 
 def test_env_override(monkeypatch: pytest.MonkeyPatch) -> None:

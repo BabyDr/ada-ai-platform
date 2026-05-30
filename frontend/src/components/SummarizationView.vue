@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+/**
+ * 智能总结页：配置参数、源文档输入、结构化结果展示。
+ * 任务/日志/导出/文件导入分别见对应 composables。
+ */
+import { computed, ref } from "vue";
 import {
   Sparkles,
   Copy,
@@ -14,14 +18,22 @@ import {
   FileText,
   Square,
 } from "lucide-vue-next";
-import { TONE_STYLES, type LogEntry } from "../types";
+import { TONE_STYLES } from "../types";
 import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
+import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
+import { useCopyFeedback, downloadTextFile } from "../composables/useExportActions";
+import { buildLinguistLogCallbacks, createProcessingLog } from "../composables/useLinguistTaskLog";
+import { useFileImport } from "../composables/useFileImport";
+import { formatSummaryForClipboard, formatSummaryForDownload } from "../utils/linguistFormat";
+import { runSafe } from "../utils/safeAsync";
+import ApiKeyBanner from "./shared/ApiKeyBanner.vue";
+import StreamingBadge from "./shared/StreamingBadge.vue";
 
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
 
-// result：总结流式阶段的原始 JSON 文本；task_done 后解析为结构化 overview/keyPoints。
+/** result：总结流式阶段的原始 JSON 文本；task_done 后解析为 overview/keyPoints。 */
 const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 
 const inputText = ref("");
@@ -29,175 +41,108 @@ const overviewText = ref("");
 const keyPoints = ref<string[]>([]);
 const keyPointsCount = ref(5);
 const wordLimit = ref(250);
-const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">("Professional");
-
-const copied = ref(false);
+const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">(
+  "Professional",
+);
 const elapsedTime = ref("--");
-const dragActive = ref(false);
 
-const fileInputRef = ref<HTMLInputElement | null>(null);
-
+const { copied, copyText } = useCopyFeedback();
 const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }));
 
-watch(
-  () => workspace.quickText,
-  (newVal) => {
-    if (newVal) {
-      inputText.value = newVal;
-      workspace.setQuickText("");
-    }
-  },
-  { immediate: true },
-);
+useQuickTextPrefill(inputText);
 
-const handleCopy = async () => {
-  let textToCopy = "";
-  if (overviewText.value) textToCopy += `概述：\n${overviewText.value}\n\n`;
-  if (keyPoints.value.length > 0) {
-    textToCopy += `核心要点：\n` + keyPoints.value.map((kp, idx) => `${idx + 1}. ${kp}`).join("\n");
-  }
-  if (!textToCopy) return;
-  try {
-    await navigator.clipboard.writeText(textToCopy);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
-  } catch (err) {
-    console.error("Failed to copy text", err);
-  }
-};
+const {
+  dragActive,
+  fileInputRef,
+  triggerFileSelect,
+  handleFileChoose,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
+} = useFileImport((text) => {
+  inputText.value = text;
+});
 
-const handleDownload = () => {
-  let content = "";
-  if (overviewText.value) content += `概述：\n${overviewText.value}\n\n`;
-  if (keyPoints.value.length > 0) {
-    content += `核心要点：\n` + keyPoints.value.map((kp) => `- ${kp}`).join("\n");
-  }
+/** 复制概述与要点到剪贴板。 */
+async function handleCopy(): Promise<void> {
+  const text = formatSummaryForClipboard(overviewText.value, keyPoints.value);
+  if (!text) return;
+  await copyText(text);
+}
+
+/** 下载总结结果为 .txt 文件。 */
+function handleDownload(): void {
+  const content = formatSummaryForDownload(overviewText.value, keyPoints.value);
   if (!content) return;
-  const element = document.createElement("a");
-  const file = new Blob([content], { type: "text/plain;charset=utf-8" });
-  element.href = URL.createObjectURL(file);
-  element.download = "linguist-summary.txt";
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
-};
+  downloadTextFile(content, "linguist-summary.txt");
+}
 
-const handleClear = () => {
+/** 清空输入、结果与流式状态。 */
+function handleClear(): void {
   inputText.value = "";
   overviewText.value = "";
   keyPoints.value = [];
   result.value = "";
   error.value = "";
   elapsedTime.value = "--";
-};
+}
 
-const triggerFileSelect = () => fileInputRef.value?.click();
+/** 中止当前 SSE 任务。 */
+async function handleStop(): Promise<void> {
+  await runSafe(() => cancelCurrentTask());
+}
 
-const handleFileChoose = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files?.[0]) loadFile(target.files[0]);
-};
-
-const handleDragOver = (e: DragEvent) => {
-  e.preventDefault();
-  dragActive.value = true;
-};
-
-const handleDragLeave = (e: DragEvent) => {
-  e.preventDefault();
-  dragActive.value = false;
-};
-
-const handleDrop = (e: DragEvent) => {
-  e.preventDefault();
-  dragActive.value = false;
-  if (e.dataTransfer?.files?.[0]) loadFile(e.dataTransfer.files[0]);
-};
-
-const loadFile = (file: File) => {
-  if (file.type !== "text/plain" && !file.name.endsWith(".md") && !file.name.endsWith(".txt")) {
-    alert("不支持的文件类型，仅接受 .txt 与 .md 文档。");
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (e.target && typeof e.target.result === "string") inputText.value = e.target.result;
-  };
-  reader.readAsText(file);
-};
-
-const handleStop = () => cancelCurrentTask();
-
-const handleSummarize = async () => {
+/** 提交总结任务（SSE + 运行日志 + 结构化结果解析）。 */
+async function handleSummarize(): Promise<void> {
   if (!inputText.value.trim()) return;
-  overviewText.value = "";
-  keyPoints.value = [];
-  elapsedTime.value = "--";
 
-  let activeLog: LogEntry | null = null;
-  try {
-    activeLog = await workspace.addLog({
-      type: "summarization",
-      input: inputText.value.substring(0, 500),
-      output: "...",
-      duration: "--",
-      status: "processing",
-      details: {
+  await runSafe(
+    async () => {
+      overviewText.value = "";
+      keyPoints.value = [];
+      elapsedTime.value = "--";
+
+      const activeLog = await createProcessingLog("summarization", inputText.value.substring(0, 500), {
         keyPointsCount: keyPointsCount.value,
         wordLimit: wordLimit.value,
         tone: selectedTone.value,
-      },
-    });
-  } catch (e) {
-    console.warn("Log creation failed: ", e);
-  }
+      });
 
-  await submitTask(
-    "summarize",
-    {
-      text: inputText.value,
-      keyPointsCount: keyPointsCount.value,
-      wordLimit: wordLimit.value,
-      tone: selectedTone.value,
+      const logCallbacks = buildLinguistLogCallbacks(activeLog, {
+        getCancelledOutput: () => result.value || "已取消",
+        buildSuccessOutput: () =>
+          JSON.stringify({ overview: overviewText.value, keyPoints: keyPoints.value }),
+      });
+
+      await submitTask(
+        "summarize",
+        {
+          text: inputText.value,
+          keyPointsCount: keyPointsCount.value,
+          wordLimit: wordLimit.value,
+          tone: selectedTone.value,
+        },
+        {
+          onDone: (payload) => {
+            elapsedTime.value = payload.duration || elapsedTime.value;
+            if (payload.status !== "cancelled") {
+              const summary = (payload.result as { overview?: string; keyPoints?: string[] } | undefined) ?? {};
+              overviewText.value = summary.overview || "";
+              keyPoints.value = summary.keyPoints || [];
+            }
+            logCallbacks.onDone?.(payload);
+          },
+          onError: (message) => {
+            logCallbacks.onError?.(message);
+          },
+        },
+      );
     },
-    {
-      onDone: (payload) => {
-        elapsedTime.value = payload.duration || elapsedTime.value;
-        if (payload.status === "cancelled") {
-          if (activeLog) {
-            workspace.updateLog(activeLog.id, {
-              status: "failed",
-              output: result.value || "已取消",
-              duration: elapsedTime.value,
-              error: "用户已停止生成",
-            });
-          }
-          return;
-        }
-        const summary = (payload.result as { overview?: string; keyPoints?: string[] } | undefined) ?? {};
-        overviewText.value = summary.overview || "";
-        keyPoints.value = summary.keyPoints || [];
-        if (activeLog) {
-          workspace.updateLog(activeLog.id, {
-            status: "success",
-            output: JSON.stringify({ overview: overviewText.value, keyPoints: keyPoints.value }),
-            duration: elapsedTime.value,
-          });
-        }
-      },
-      onError: (message) => {
-        if (activeLog) {
-          workspace.updateLog(activeLog.id, {
-            status: "failed",
-            output: message,
-            duration: "0s",
-            error: message,
-          });
-        }
-      },
+    (msg) => {
+      error.value = msg;
     },
   );
-};
+}
 </script>
 
 <template>
@@ -213,28 +158,14 @@ const handleSummarize = async () => {
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <span
-          v-if="isStreaming"
-          class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded flex items-center gap-1.5"
-        >
-          <span class="animate-spin rounded-full h-2 w-2 border-2 border-t-transparent border-[#00a67e]"></span>
-          正在生成总结…
-        </span>
+        <StreamingBadge :active="isStreaming" label="正在生成总结…" />
       </div>
     </div>
 
-    <div
-      v-if="!apiConnected"
-      class="p-4 rounded bg-amber-500/10 border border-amber-500/30 flex items-start gap-3"
-    >
-      <AlertTriangle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-      <div>
-        <span class="text-xs font-semibold text-white block">未检测到 GLM_API_KEY</span>
-        <span class="text-xs text-[#acb5c9] leading-relaxed">
-          请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 以启用总结功能。
-        </span>
-      </div>
-    </div>
+    <ApiKeyBanner
+      :connected="apiConnected"
+      description="请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 以启用总结功能。"
+    />
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded">
       <div id="cfg-word-limit">
@@ -255,12 +186,7 @@ const handleSummarize = async () => {
 
       <div id="cfg-tone-style">
         <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">摘要语气风格</label>
-        <a-select
-          v-model:value="selectedTone"
-          size="small"
-          :options="toneOptions"
-          class="form-select w-full"
-        />
+        <a-select v-model:value="selectedTone" size="small" :options="toneOptions" class="form-select w-full" />
       </div>
     </div>
 
@@ -297,7 +223,7 @@ const handleSummarize = async () => {
           @dragleave="handleDragLeave"
           @drop="handleDrop"
           :class="[
-            'p-5 flex-1 min-h-[350px] flex flex-col transition-all duration-150 relative',
+            'p-5 flex-1 min-h-87.5 flex flex-col transition-all duration-150 relative',
             dragActive ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60' : '',
           ]"
         >
@@ -314,14 +240,7 @@ const handleSummarize = async () => {
 
         <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono">
           <span class="shrink min-w-0 truncate">已加载 {{ inputText.length.toLocaleString() }} 字符</span>
-          <a-button
-            v-if="isStreaming"
-            type="primary"
-            danger
-            size="small"
-            class="action-btn shrink-0"
-            @click="handleStop"
-          >
+          <a-button v-if="isStreaming" type="primary" danger size="small" class="action-btn shrink-0" @click="handleStop">
             <template #icon><Square class="w-3.5 h-3.5 fill-current" /></template>
             停止生成
           </a-button>
@@ -356,7 +275,7 @@ const handleSummarize = async () => {
           </div>
         </div>
 
-        <div class="p-5 flex-1 min-h-[350px] flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
+        <div class="p-5 flex-1 min-h-87.5 flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
           <div
             v-if="error"
             class="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"

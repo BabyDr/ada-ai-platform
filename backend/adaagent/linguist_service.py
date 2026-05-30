@@ -1,20 +1,14 @@
 """
-Linguist AI 翻译 / 总结服务（智谱 GLM，非流式）。
+Linguist AI 运行日志（进程内内存）。
 
-供 /api/translate、/api/summarize 调用；日志存于进程内内存。
+翻译 / 总结任务经 SSE（api/task.py）执行；本模块仅负责日志 CRUD 与语言展示名。
 """
 
 from __future__ import annotations
 
 import json
-import os
 import time
 from typing import Any
-
-import httpx
-
-from adaagent.env_secrets import read_first_secret
-from adaagent.glm_agent import DEFAULT_GLM_BASE, DEFAULT_GLM_MODEL
 
 # 与 linguist-ai 一致的初始 mock 日志
 _SEED_LOGS: list[dict[str, Any]] = [
@@ -111,19 +105,8 @@ _LANG_NAMES: dict[str, str] = {
 }
 
 
-def _api_key() -> str | None:
-    return read_first_secret("GLM_API_KEY", "ZHIPU_API_KEY")
-
-
-def _api_base() -> str:
-    return (os.environ.get("GLM_API_BASE") or DEFAULT_GLM_BASE).rstrip("/")
-
-
-def _model_name() -> str:
-    return (os.environ.get("GLM_MODEL") or DEFAULT_GLM_MODEL).strip() or DEFAULT_GLM_MODEL
-
-
 def get_current_time_details() -> dict[str, str]:
+    """生成日志条目的 timestamp 与 date 字段（12 小时制）。"""
     d = time.localtime()
     hours = d.tm_hour
     minutes = d.tm_min
@@ -134,119 +117,18 @@ def get_current_time_details() -> dict[str, str]:
     return {"time": f"{hours}:{min_str} {ampm}", "date": f"{months[d.tm_mon - 1]} {d.tm_mday}"}
 
 
-async def glm_completion(system: str, user: str, *, temperature: float = 0.2) -> str:
-    """单次 GLM 对话补全（非流式）。"""
-    api_key = _api_key()
-    if not api_key:
-        raise RuntimeError("GLM_API_KEY 或 ZHIPU_API_KEY 未配置")
-
-    url = f"{_api_base()}/chat/completions"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    body = {
-        "model": _model_name(),
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        "temperature": temperature,
-        "stream": False,
-    }
-
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
-        r = await client.post(url, headers=headers, json=body)
-        try:
-            r.raise_for_status()
-        except httpx.HTTPStatusError:
-            err_body = r.text[:800]
-            raise RuntimeError(f"GLM HTTP {r.status_code}: {err_body}") from None
-
-        obj = r.json()
-        err = obj.get("error")
-        if isinstance(err, dict) and err.get("message"):
-            raise RuntimeError(str(err.get("message")))
-
-        choices = obj.get("choices") or []
-        if not choices:
-            raise RuntimeError("GLM 返回空 choices")
-        message = choices[0].get("message") or {}
-        content = (message.get("content") or "").strip()
-        if not content:
-            raise RuntimeError("GLM 返回内容为空")
-        return content
-
-
 def lang_display(code: str) -> str:
+    """语言 code → 展示名（未知 code 原样返回）。"""
     return _LANG_NAMES.get(code, code)
 
 
-async def translate_text(text: str, source_lang: str, target_lang: str, tone: str = "Professional") -> tuple[str, str]:
-    source_text = lang_display(source_lang) if source_lang != "auto" else "Detect automatically"
-    target_text = lang_display(target_lang)
-
-    system_prompt = f"""You are a professional linguistic translation engine.
-Translate the user input text from '{source_text}' to '{target_text}'.
-The tone of translation must be '{tone}'.
-Strict rules:
-1. Translate only. Do not add any conversational context, meta text, or chat responses.
-2. Maintain technical terms, punctuation, layout, and line breaks where appropriate.
-3. If the input is in the target language already, optimize it slightly or return it as-is."""
-
-    start = time.time()
-    result = await glm_completion(system_prompt, text, temperature=0.2)
-    duration = f"{(time.time() - start):.1f}s"
-    return result, duration
-
-
-async def summarize_text(
-    text: str,
-    key_points_count: int = 5,
-    word_limit: int = 250,
-    tone: str = "Professional",
-) -> tuple[dict[str, Any], str]:
-    system_prompt = f"""You are a high-level technical analyst and document compression system.
-Summarize the provided content into a cohesive overview and an ordered list of precisely key insights.
-Respond strictly in JSON format with keys "overview" (string) and "keyPoints" (array of strings).
-Use a '{tone}' style when summarizing. Output must match the text's dominant language.
-The overview must be at most {word_limit} words.
-Provide exactly {key_points_count} key points in keyPoints."""
-
-    user_prompt = f"""Perform summarization under these parameters:
-- Key points count: exactly {key_points_count} bullet points.
-- Word limit for overview: maximum {word_limit} words.
-- Tone style: {tone}
-
-Here is the text to summarize:
-{text}
-
-Respond with valid JSON only: {{"overview": "...", "keyPoints": ["...", ...]}}"""
-
-    start = time.time()
-    raw = await glm_completion(system_prompt, user_prompt, temperature=0.3)
-    duration = f"{(time.time() - start):.1f}s"
-
-    try:
-        # 去掉可能的 markdown 代码块包裹
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            lines = cleaned.split("\n")
-            cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
-        summary = json.loads(cleaned)
-    except json.JSONDecodeError:
-        summary = {"overview": raw, "keyPoints": ["Summary generation compiled successfully."]}
-
-    if "overview" not in summary:
-        summary["overview"] = raw
-    if "keyPoints" not in summary or not isinstance(summary["keyPoints"], list):
-        summary["keyPoints"] = []
-
-    return summary, duration
-
-
 def list_logs() -> list[dict[str, Any]]:
+    """返回全部运行日志（内存列表，最新在前）。"""
     return logs_db
 
 
 def add_log(payload: dict[str, Any]) -> dict[str, Any]:
+    """新增一条日志并插入列表头部，自动补全 id/timestamp/date。"""
     times = get_current_time_details()
     new_log = {
         "id": f"log-{int(time.time() * 1000)}",
@@ -259,6 +141,7 @@ def add_log(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def update_log(log_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+    """按 id 合并更新日志字段；未找到返回 None。"""
     for i, log in enumerate(logs_db):
         if log["id"] == log_id:
             merged = {**log, **updates}

@@ -183,8 +183,6 @@ curl -X DELETE http://127.0.0.1:18765/api/task/{taskId}
 | POST | `/api/chat` | 发送消息 |
 | WebSocket | `/ws/chat/{session_id}` | 流式 Agent 事件 |
 
-> 旧的 `POST /api/translate`、`POST /api/summarize` 已移除，统一使用 SSE task 契约。
-
 ---
 
 ## Mock / Real 模式

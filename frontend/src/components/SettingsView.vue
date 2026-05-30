@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 全局设置页：API 密钥状态、默认模型与语调（模型选择当前为只读占位）。 */
 import { computed, ref } from "vue";
 import { Settings, AlertTriangle, CheckCircle2, Cpu, Lock, ShieldAlert } from "lucide-vue-next";
 import { TONE_STYLES, DEFAULT_GLM_MODEL } from "../types";

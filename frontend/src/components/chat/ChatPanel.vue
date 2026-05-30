@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * 对话面板编排层：消息列表 + InputBar，绑定 chat store 与 WS 流。
+ */
 import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
 import { useChatStore } from "@/stores/chat";
@@ -15,6 +18,7 @@ const { messages, activeSessionId } = storeToRefs(chat);
 
 useChatStream(activeSessionId);
 
+/** 提交用户消息到 chat store（HTTP）；ReAct 步骤由 WS 推送。 */
 async function onSubmitMessage(text: string) {
   try {
     await chat.sendUserMessage(text);
@@ -47,7 +51,7 @@ async function onSubmitMessage(text: string) {
         </div>
         <div v-else class="flex flex-col gap-4 pb-6">
           <template v-for="m in messages" :key="m.id">
-            <MessageBubble v-if="m.role === 'user'" role="user" :content="m.content" />
+            <MessageBubble v-if="m.role === 'user'" :content="m.content" />
             <ThinkBlock v-else-if="m.role === 'think'" :content="m.content" />
             <ActionBlock
               v-else-if="m.role === 'act'"

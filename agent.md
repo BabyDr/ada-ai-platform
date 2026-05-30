@@ -44,8 +44,9 @@ Agent：按阶段 0→7 实施 + 测试
 ### 规范驱动（SDD）
 
 1. **先 spec 后 code**：`spec/requirements.md`、`spec/api-design.md` 定义契约
-2. **测试即验收**：每个任务自带测试用例；后端 pytest 27 项、前端 vitest 覆盖核心 composable
-3. **活文档**：README 与 API 示例与实现保持一致
+2. **开发规范**：`spec/development-standards.md`（SRP、注释、try/catch、后端兜底）
+3. **测试即验收**：每个任务自带测试用例；后端 pytest、前端 vitest 覆盖核心 composable
+4. **活文档**：README 与 API 示例与实现保持一致
 
 ### 工具链
 
@@ -65,7 +66,7 @@ Agent：按阶段 0→7 实施 + 测试
 | 2026-05 | LLM 环境变量 | **方案 A**：task 管线与 Agent Chat 共用 `GLM_API_KEY` / `GLM_API_BASE` / `GLM_MODEL`，`LLM_MODE=mock\|real` 控制翻译/总结 |
 | 2026-05 | UI 策略 | 保留现有 Dashboard / Translation / Summarization 页面，不新建 HomeView |
 | 2026-05 | 工作台入口 | 双卡片 + 快捷输入，非三卡片 functions 列表 |
-| 2026-05 | 旧 REST 接口 | 移除 `POST /api/translate`、`/api/summarize`，统一为 SSE task 契约 |
+| 2026-05 | 文本处理能力 | 翻译/总结统一经 `POST /api/task` SSE 契约（`type`: translate \| summarize） |
 
 ---
 

@@ -170,7 +170,6 @@ export const useChatStore = defineStore("chat", () => {
     currentModelId,
     loading,
     loadSessions,
-    loadMessages,
     addSession,
     selectSession,
     sendUserMessage,

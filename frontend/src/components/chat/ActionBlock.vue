@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** ReAct Act 步骤块：展示 tool 名与 params JSON。 */
 defineProps<{
   tool: string;
   params: Record<string, unknown>;
@@ -14,6 +15,6 @@ defineProps<{
       <span class="font-mono text-xs font-bold uppercase tracking-wide text-[#00a67e]">Act</span>
       <span class="ml-2 font-mono text-xs text-[#d4e4fa]">: {{ tool }}</span>
     </div>
-    <pre class="m-0 max-h-52 overflow-auto p-4 font-mono text-[12px] leading-relaxed text-[#bccac2]">{{ JSON.stringify(params, null, 2) }}</pre>
+    <pre class="m-0 max-h-52 overflow-auto p-4 font-mono leading-relaxed text-[#bccac2]">{{ JSON.stringify(params, null, 2) }}</pre>
   </div>
 </template>

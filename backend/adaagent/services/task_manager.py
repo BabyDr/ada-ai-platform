@@ -27,7 +27,6 @@ class TaskStatus(str, Enum):
 class TaskContext:
     task_id: str
     status: TaskStatus = TaskStatus.PENDING
-    result: str = ""
     # 协作式取消信号：DELETE 时 set，生成器循环检测。
     cancel_event: asyncio.Event = field(default_factory=asyncio.Event, repr=False)
 
@@ -64,9 +63,6 @@ class TaskManager:
         ctx.cancel_event.set()
         ctx.status = TaskStatus.CANCELLED
         return True
-
-    def remove(self, task_id: str) -> None:
-        self._tasks.pop(task_id, None)
 
 
 task_manager = TaskManager()

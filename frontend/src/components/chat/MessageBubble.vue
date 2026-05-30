@@ -1,5 +1,6 @@
 <script setup lang="ts">
-defineProps<{ role: "user" | "assistant"; content: string }>();
+/** 用户消息气泡：纯展示 content prop。 */
+defineProps<{ content: string }>();
 </script>
 
 <template>

@@ -1,5 +1,7 @@
 # API 设计规范
 
+> 开发规范（注释、try/catch、SRP）见 `spec/development-standards.md`。
+
 Base URL：`http://127.0.0.1:18765`  
 前缀：所有 REST 路径以 `/api` 开头
 
@@ -146,15 +148,6 @@ Base URL：`http://127.0.0.1:18765`
 | GET | `/api/sessions/{id}/messages` | 消息历史 |
 | POST | `/api/chat` | 发送消息（异步，过程走 WS） |
 | WS | `/ws/chat/{session_id}` | 流式 Agent 事件 |
-
----
-
-## 4. 已废弃
-
-以下接口已由 Task SSE 契约取代，**不再提供**：
-
-- ~~`POST /api/translate`~~
-- ~~`POST /api/summarize`~~
 
 ---
 

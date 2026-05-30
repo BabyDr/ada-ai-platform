@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+/**
+ * API 运行历史日志页：纯 UI 展示，筛选/复制/格式化逻辑见 useLogHistory。
+ */
 import {
   Search,
   Trash2,
@@ -14,76 +16,21 @@ import {
   Terminal,
   Database,
 } from "lucide-vue-next";
-import type { LogEntry } from "../types";
-import { useWorkspaceStore } from "../stores/workspace";
+import { useLogHistory } from "../composables/useLogHistory";
 
-const workspace = useWorkspaceStore();
-
-const filterType = ref<"all" | "translation" | "summarization">("all");
-const filterLabels: Record<typeof filterType.value, string> = {
-  all: "全部",
-  translation: "翻译",
-  summarization: "总结",
-};
-const statusLabels: Record<LogEntry["status"], string> = {
-  success: "成功",
-  processing: "处理中",
-  failed: "失败",
-};
-const searchQuery = ref("");
-const expandedLogId = ref<string | null>(null);
-const copiedLogId = ref<string | null>(null);
-
-const toggleExpand = (id: string) => {
-  expandedLogId.value = expandedLogId.value === id ? null : id;
-};
-
-const handleCopyOutput = async (e: Event, id: string, content: string) => {
-  e.stopPropagation();
-  try {
-    let textToCopy = content;
-    try {
-      const parsed = JSON.parse(content);
-      if (parsed.overview || parsed.keyPoints) {
-        textToCopy =
-          `概述：\n${parsed.overview || ""}\n\n核心要点：\n` +
-          (parsed.keyPoints || []).map((p: string, i: number) => `${i + 1}. ${p}`).join("\n");
-      }
-    } catch {
-      /* plain text */
-    }
-    await navigator.clipboard.writeText(textToCopy);
-    copiedLogId.value = id;
-    setTimeout(() => (copiedLogId.value = null), 2500);
-  } catch (err) {
-    console.error("Failed to copy text", err);
-  }
-};
-
-const formatLogOutput = (log: LogEntry) => {
-  if (log.type === "summarization") {
-    try {
-      const parsed = JSON.parse(log.output);
-      if (parsed.overview || (parsed.keyPoints && parsed.keyPoints.length > 0)) return parsed;
-    } catch {
-      /* unparsed */
-    }
-  }
-  return null;
-};
-
-const filteredLogs = computed(() =>
-  workspace.logs.filter((l) => {
-    const matchesType = filterType.value === "all" || l.type === filterType.value;
-    const query = searchQuery.value.trim().toLowerCase();
-    const matchesSearch = !query
-      ? true
-      : l.input.toLowerCase().includes(query) ||
-        l.output.toLowerCase().includes(query) ||
-        (l.error && l.error.toLowerCase().includes(query));
-    return matchesType && matchesSearch;
-  }),
-);
+const {
+  workspace,
+  filterType,
+  filterLabels,
+  statusLabels,
+  searchQuery,
+  expandedLogId,
+  copiedLogId,
+  filteredLogs,
+  toggleExpand,
+  handleCopyOutput,
+  formatLogOutput,
+} = useLogHistory();
 </script>
 
 <template>

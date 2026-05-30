@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** ReAct Think 步骤块：可折叠展示推理内容。 */
 import { ref } from "vue";
 
 defineProps<{ content: string }>();

@@ -17,6 +17,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const apiConnected = ref(false);
   const isDark = ref<boolean>(localStorage.getItem(THEME_KEY) !== "false");
 
+  /** 拉取 Sidecar 健康状态，更新 apiConnected。 */
   async function fetchHealth(): Promise<void> {
     try {
       const health = await api.fetchHealth();
@@ -26,6 +27,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     }
   }
 
+  /** 从服务端加载历史运行日志。 */
   async function fetchLogs(): Promise<void> {
     try {
       logs.value = (await api.fetchLogs()) as LogEntry[];
@@ -34,6 +36,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     }
   }
 
+  /** 新增一条日志；服务端失败时降级为本地内存条目。 */
   async function addLog(newLogData: Omit<LogEntry, "id" | "timestamp" | "date">): Promise<LogEntry> {
     try {
       const addedLog = (await api.addLog(newLogData)) as LogEntry;
@@ -59,6 +62,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     return fallbackLog;
   }
 
+  /** 更新本地日志并尝试同步到服务端。 */
   async function updateLog(id: string, updates: Partial<LogEntry>): Promise<void> {
     logs.value = logs.value.map((log) => (log.id === id ? { ...log, ...updates } : log));
     try {
@@ -68,20 +72,17 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     }
   }
 
+  /** 清空本地日志列表（不删服务端 seed 数据，仅 UI 侧）。 */
   function clearHistory(): void {
     logs.value = [];
   }
 
+  /** Dashboard 快捷输入写入，目标页消费后应清空。 */
   function setQuickText(text: string): void {
     quickText.value = text;
   }
 
-  function consumeQuickText(): string {
-    const text = quickText.value;
-    quickText.value = "";
-    return text;
-  }
-
+  /** 切换明暗主题并持久化到 localStorage。 */
   function toggleTheme(): void {
     isDark.value = !isDark.value;
     localStorage.setItem(THEME_KEY, String(isDark.value));
@@ -98,7 +99,6 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     updateLog,
     clearHistory,
     setQuickText,
-    consumeQuickText,
     toggleTheme,
   };
 });

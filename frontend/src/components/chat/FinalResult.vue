@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 助手最终回答块：流式拼接完成后的 assistant 内容。 */
 defineProps<{ content: string }>();
 </script>
 

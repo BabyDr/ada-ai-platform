@@ -163,7 +163,7 @@
 - 测试用例：mock 测试保留；real 集成 skip 无密钥。
 
 ### T3.4 移除旧接口
-- 交付物：前端不再调用 `POST /api/translate`、`POST /api/summarize`；后端标记废弃或删除对应路由。
+- 交付物：前端仅通过 `POST /api/task` SSE 提交 translate/summarize；后端无独立 REST 翻译/总结路由。
 - 测试用例：回归 `backend/tests/test_api.py` 更新为新契约；前端 build 通过。
 
 ---

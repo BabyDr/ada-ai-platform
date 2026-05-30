@@ -24,12 +24,10 @@ describe("useWorkspaceStore", () => {
     setActivePinia(createPinia());
   });
 
-  it("setQuickText and consumeQuickText", () => {
+  it("setQuickText updates quickText", () => {
     const store = useWorkspaceStore();
     store.setQuickText("hello from dashboard");
     expect(store.quickText).toBe("hello from dashboard");
-    expect(store.consumeQuickText()).toBe("hello from dashboard");
-    expect(store.quickText).toBe("");
   });
 
   it("toggleTheme persists to localStorage", () => {
