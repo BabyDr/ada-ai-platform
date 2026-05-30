@@ -41,12 +41,15 @@ from adaworks.middleware.body_limit import BodyLimitMiddleware
 from adaworks.middleware.request_id import RequestIdMiddleware
 from adaworks.mock_agent import run_mock_agent
 from adaworks.http_safe import register_global_exception_handler
+from adaworks.services.llm import effective_mode
 from adaworks.services.task_sweeper import run_task_sweeper
 from adaworks.ws_hub import ChatHub
 
 
 def _active_llm_mode() -> str:
     """根据环境变量决定实际调用的模型后端（与 post_chat 分支一致）。"""
+    if effective_mode() == "mock":
+        return "mock"
     # GLM 优先：与业务上「默认用智谱」一致；未配置时再尝试 Gemini。
     if glm_api_key_configured():
         return "glm"
@@ -200,11 +203,12 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             await db.commit()
 
         # create_task：立即返回 HTTP，模型在后台跑并通过 WebSocket 推送。
-        if glm_api_key_configured():
+        mode = _active_llm_mode()
+        if mode == "glm":
             asyncio.create_task(
                 run_glm_agent(body.session_id, hub, db, lock, body.model_id),
             )
-        elif gemini_api_key_configured():
+        elif mode == "gemini":
             asyncio.create_task(
                 run_gemini_agent(body.session_id, hub, db, lock, body.model_id),
             )
