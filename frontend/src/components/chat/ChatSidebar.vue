@@ -41,7 +41,7 @@ defineExpose({ onNew });
 
 <template>
   <aside
-    class="flex h-full min-h-0 w-65 shrink-0 flex-col overflow-hidden border-r border-[#26384d] bg-[#020c15]"
+    class="flex h-full min-h-0 w-65 shrink-0 flex-col overflow-hidden border-r border-[var(--color-outline-variant)] bg-[var(--color-background)]"
   >
     <div class="flex items-start gap-3 px-4 pt-5 pb-4">
       <div
@@ -59,12 +59,12 @@ defineExpose({ onNew });
       </div>
       <div class="min-w-0 pt-0.5">
         <h1
-          class="text-[15px] font-bold leading-tight tracking-tight text-white"
+          class="text-[15px] font-bold leading-tight tracking-tight text-ui"
         >
           AdaAgent
         </h1>
         <p
-          class="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#acb5c9]"
+          class="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-ui-muted"
         >
           智能体对话
         </p>
@@ -85,7 +85,7 @@ defineExpose({ onNew });
     </div>
 
     <p
-      class="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-[#acb5c9]"
+      class="px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-ui-muted"
     >
       最近
     </p>
@@ -99,13 +99,13 @@ defineExpose({ onNew });
           class="mb-1 flex w-full items-center gap-3 rounded px-3 py-2.5 text-left text-sm transition"
           :class="
             activeSessionId === s.id
-              ? 'bg-linear-to-r from-[#2c3a4c] to-[#162537] font-medium text-white border-l-2 border-[#00a67e]'
-              : 'text-[#acb5c9] hover:bg-[#162537]/50 hover:text-white'
+               ? 'sidebar-nav-active font-medium'
+              : 'sidebar-nav-inactive'
           "
           @click="onSelect(s.id)"
         >
           <span
-            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#08121e] text-[#00a67e] border border-[#26384d]/60"
+            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[var(--color-surface-header)] text-[#00a67e] border border-[var(--color-outline-variant)]/60"
             aria-hidden="true"
           >
             <svg
@@ -125,7 +125,7 @@ defineExpose({ onNew });
       </div>
     </a-spin>
 
-    <div class="mt-auto border-t border-[#26384d] px-2 py-3 space-y-1">
+    <div class="mt-auto border-t border-[var(--color-outline-variant)] px-2 py-3 space-y-1">
       <a-button
         block
         type="text"

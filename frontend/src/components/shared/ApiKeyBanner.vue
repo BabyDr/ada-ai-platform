@@ -17,8 +17,8 @@ defineProps<{
   >
     <AlertTriangle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
     <div>
-      <span class="text-xs font-semibold text-white block">未检测到 GLM_API_KEY</span>
-      <span class="text-xs text-[#acb5c9] leading-relaxed">{{ description }}</span>
+      <span class="text-xs font-semibold text-ui block">未检测到 GLM_API_KEY</span>
+      <span class="text-xs text-ui-muted leading-relaxed">{{ description }}</span>
     </div>
   </div>
 </template>

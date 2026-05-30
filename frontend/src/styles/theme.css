@@ -1,0 +1,186 @@
+/**
+ * 明/暗主题语义色板（F19）。
+ * 深色块数值与改版前 :root 一致，切换 data-theme 时不改深色表现。
+ * 浅色：primary #00A67E、secondary #1A1C1E、tertiary #F0FDF4、neutral #64748B。
+ */
+
+/* 默认深色（与改版前 :root 一致）；JS 同步 data-theme 后浅色覆盖 */
+:root,
+[data-theme="dark"] {
+  --color-brand-primary: #00a67e;
+  --color-brand-secondary: #d4e4fa;
+  --color-brand-tertiary: #01060c;
+  --color-brand-neutral: #acb5c9;
+
+  --color-background: #020c15;
+  --color-on-background: #d4e4fa;
+  --color-surface: #0c1622;
+  --color-surface-header: #08121e;
+  --color-surface-dim: rgb(2 12 21 / 0.4);
+  --color-surface-container-lowest: #01060c;
+  --color-surface-elevated: #08121e;
+  --color-surface-footer: #08121e;
+  --color-outline-variant: #26384d;
+  --color-on-surface-muted: #acb5c9;
+  --color-on-surface-subtle: rgb(188 202 194 / 0.7);
+  --color-placeholder: rgb(188 202 194 / 0.35);
+
+  --gradient-main-from: #020c15;
+  --gradient-main-via: #051424;
+  --gradient-main-to: #010912;
+
+  --color-nav-active-from: #2c3a4c;
+  --color-nav-active-to: #162537;
+  --color-nav-active-text: #ffffff;
+  --color-nav-text: #acb5c9;
+  --color-nav-text-hover: #ffffff;
+  --color-nav-hover-bg: rgb(22 37 55 / 0.5);
+
+  --color-sidebar-footer-bg: rgb(1 6 12 / 0.6);
+  --color-sidebar-status-bg: rgb(8 18 30 / 0.8);
+  --color-chat-bubble: #0e1b2b;
+  --color-chat-bubble-border: #26384d;
+  --color-tone-box-bg: rgb(8 18 30 / 0.4);
+  --color-card-from: rgb(14 27 43 / 0.9);
+  --color-card-to: rgb(8 18 30 / 0.9);
+  --color-input-bg: #122131;
+  --color-chip-bg: #122131;
+  --color-badge-bg: #162537;
+  --color-mono-text: #bccac2;
+  --color-icon-dim: rgb(188 202 194 / 0.25);
+  --color-summary-highlight: rgb(14 27 43 / 0.4);
+  --color-range-track: #26384d;
+  --color-range-thumb: #00a67e;
+}
+
+[data-theme="light"] {
+  --color-brand-primary: #00a67e;
+  --color-brand-secondary: #1a1c1e;
+  --color-brand-tertiary: #f0fdf4;
+  --color-brand-neutral: #64748b;
+
+  --color-background: #f0fdf4;
+  --color-on-background: #1a1c1e;
+  --color-surface: #ffffff;
+  --color-surface-header: #f0fdf4;
+  --color-surface-dim: rgb(240 253 244 / 0.85);
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-footer: #ecfdf5;
+  --color-outline-variant: #cbd5e1;
+  --color-on-surface-muted: #64748b;
+  --color-on-surface-subtle: rgb(100 116 139 / 0.75);
+  --color-placeholder: rgb(100 116 139 / 0.45);
+
+  --gradient-main-from: #f0fdf4;
+  --gradient-main-via: #ffffff;
+  --gradient-main-to: #ecfdf5;
+
+  --color-nav-active-from: #ecfdf5;
+  --color-nav-active-to: #d1fae5;
+  --color-nav-active-text: #1a1c1e;
+  --color-nav-text: #64748b;
+  --color-nav-text-hover: #1a1c1e;
+  --color-nav-hover-bg: rgb(0 166 126 / 0.08);
+
+  --color-sidebar-footer-bg: rgb(240 253 244 / 0.9);
+  --color-sidebar-status-bg: #ffffff;
+  --color-chat-bubble: #ffffff;
+  --color-chat-bubble-border: #e2e8f0;
+  --color-tone-box-bg: rgb(240 253 244 / 0.9);
+  --color-card-from: rgb(255 255 255 / 0.95);
+  --color-card-to: rgb(240 253 244 / 0.95);
+  --color-input-bg: #ffffff;
+  --color-chip-bg: #ecfdf5;
+  --color-badge-bg: #ecfdf5;
+  --color-mono-text: #64748b;
+  --color-icon-dim: rgb(100 116 139 / 0.35);
+  --color-summary-highlight: rgb(255 255 255 / 0.9);
+  /* 浅底上滑轨需足够对比，避免与 #f0fdf4 面板融在一起 */
+  --color-range-track: #94a3b8;
+  --color-range-thumb: #00a67e;
+}
+
+.app-shell-bg {
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+}
+
+.app-main-gradient {
+  background-image: linear-gradient(
+    to top right,
+    var(--gradient-main-from),
+    var(--gradient-main-via),
+    var(--gradient-main-to)
+  );
+}
+
+.ui-panel {
+  border: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface);
+}
+
+.ui-panel-header,
+.ui-panel-footer {
+  border-color: var(--color-outline-variant);
+  background-color: var(--color-surface-header);
+}
+
+.ui-panel-header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.ui-panel-footer {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.ui-panel-body-dim {
+  background-color: var(--color-surface-dim);
+}
+
+.ui-border {
+  border-color: var(--color-outline-variant);
+}
+
+.text-ui {
+  color: var(--color-on-background);
+}
+
+.text-ui-muted {
+  color: var(--color-on-surface-muted);
+}
+
+.text-ui-subtle {
+  color: var(--color-on-surface-subtle);
+}
+
+.ui-tone-box {
+  background-color: var(--color-tone-box-bg);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.sidebar-nav-active {
+  background-image: linear-gradient(
+    to right,
+    var(--color-nav-active-from),
+    var(--color-nav-active-to)
+  );
+  color: var(--color-nav-active-text);
+  border-left: 2px solid var(--color-brand-primary);
+}
+
+.sidebar-nav-inactive {
+  color: var(--color-nav-text);
+}
+
+.sidebar-nav-inactive:hover {
+  color: var(--color-nav-text-hover);
+  background-color: var(--color-nav-hover-bg);
+}
+
+/** 对话区：与底部输入栏同宽（父级 max-w-3xl 内 100%） */
+.chat-align-column {
+  width: 100%;
+}

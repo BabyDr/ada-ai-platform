@@ -23,10 +23,19 @@ import { TONE_STYLES, SUMMARY_MODES, type SummaryMode } from "../types";
 import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
 import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
-import { useCopyFeedback, downloadTextFile } from "../composables/useExportActions";
-import { buildLinguistLogCallbacks, createProcessingLog } from "../composables/useLinguistTaskLog";
+import {
+  useCopyFeedback,
+  downloadTextFile,
+} from "../composables/useExportActions";
+import {
+  buildLinguistLogCallbacks,
+  createProcessingLog,
+} from "../composables/useLinguistTaskLog";
 import { useFileImport } from "../composables/useFileImport";
-import { formatSummaryForClipboard, formatSummaryForDownload } from "../utils/linguistFormat";
+import {
+  formatSummaryForClipboard,
+  formatSummaryForDownload,
+} from "../utils/linguistFormat";
 import { runSafe } from "../utils/safeAsync";
 import { recoverPersistedTask } from "../composables/useTaskRecovery";
 import ApiKeyBanner from "./shared/ApiKeyBanner.vue";
@@ -45,9 +54,9 @@ const keyPoints = ref<string[]>([]);
 const summaryMode = ref<SummaryMode>("points");
 const keyPointsCount = ref(3);
 const wordLimit = ref(250);
-const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">(
-  "Professional",
-);
+const selectedTone = ref<
+  "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
+>("Professional");
 const elapsedTime = ref("--");
 const recoveryNotice = ref("");
 
@@ -60,7 +69,10 @@ const scrollTick = computed(() => {
 useAutoScroll(outputRef, scrollTick);
 
 const { copied, copyText } = useCopyFeedback();
-const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }));
+const toneOptions = TONE_STYLES.map((t) => ({
+  value: t.value,
+  label: t.label,
+}));
 
 /** 清空输出区（快捷预填时复用，不清输入框）。 */
 function resetOutputState(): void {
@@ -126,17 +138,24 @@ async function handleSummarize(): Promise<void> {
       keyPoints.value = [];
       elapsedTime.value = "--";
 
-      const activeLog = await createProcessingLog("summarization", inputText.value.substring(0, 500), {
-        summaryMode: summaryMode.value,
-        keyPointsCount: keyPointsCount.value,
-        wordLimit: wordLimit.value,
-        tone: selectedTone.value,
-      });
+      const activeLog = await createProcessingLog(
+        "summarization",
+        inputText.value.substring(0, 500),
+        {
+          summaryMode: summaryMode.value,
+          keyPointsCount: keyPointsCount.value,
+          wordLimit: wordLimit.value,
+          tone: selectedTone.value,
+        },
+      );
 
       const logCallbacks = buildLinguistLogCallbacks(activeLog, {
         getCancelledOutput: () => result.value || "已取消",
         buildSuccessOutput: () =>
-          JSON.stringify({ overview: overviewText.value, keyPoints: keyPoints.value }),
+          JSON.stringify({
+            overview: overviewText.value,
+            keyPoints: keyPoints.value,
+          }),
       });
 
       await submitTask(
@@ -152,7 +171,10 @@ async function handleSummarize(): Promise<void> {
           onDone: (payload) => {
             elapsedTime.value = payload.duration || elapsedTime.value;
             if (payload.status !== "cancelled") {
-              const summary = (payload.result as { overview?: string; keyPoints?: string[] } | undefined) ?? {};
+              const summary =
+                (payload.result as
+                  | { overview?: string; keyPoints?: string[] }
+                  | undefined) ?? {};
               overviewText.value = summary.overview || "";
               keyPoints.value = summary.keyPoints || [];
               result.value = "";
@@ -174,13 +196,17 @@ async function handleSummarize(): Promise<void> {
 
 <template>
   <div class="space-y-6 p-8 max-w-6xl mx-auto" id="summarization-view">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#26384d]/40 pb-5">
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
+    >
       <div>
-        <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2">
+        <h2
+          class="font-display text-2xl font-bold text-ui flex items-center gap-2"
+        >
           <FileText class="w-6 h-6 text-[#00a67e]" />
           智能要点总结
         </h2>
-        <p class="text-xs text-[#acb5c9] mt-1">
+        <p class="text-xs text-ui-muted mt-1">
           在可配置的篇幅与要点数量下，对会议记录、文档、代码块等进行高压缩总结。
         </p>
       </div>
@@ -194,9 +220,14 @@ async function handleSummarize(): Promise<void> {
       description="请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 以启用总结功能。"
     />
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60 rounded"
+    >
       <div id="cfg-summary-mode" class="md:col-span-2 lg:col-span-1">
-        <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">总结方式</label>
+        <label
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+          >总结方式</label
+        >
         <a-radio-group
           v-model:value="summaryMode"
           size="small"
@@ -212,53 +243,119 @@ async function handleSummarize(): Promise<void> {
             {{ mode.label }}
           </a-radio-button>
         </a-radio-group>
-        <p class="text-[10px] text-[#bccac2]/60 mt-1.5 leading-relaxed">
+        <p class="text-[10px] text-[var(--color-mono-text)]/60 mt-2 leading-relaxed">
           {{ SUMMARY_MODES.find((m) => m.value === summaryMode)?.description }}
         </p>
       </div>
 
       <div v-if="summaryMode === 'words'" id="cfg-word-limit">
-        <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
+        <div
+          class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+        >
           <span>概要字数上限</span>
-          <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
+          <span
+            class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
+            >{{ wordLimit }} 字</span
+          >
         </div>
-        <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
+        <input
+          v-model.number="wordLimit"
+          type="range"
+          min="50"
+          max="800"
+          step="50"
+          :disabled="isStreaming"
+          class="range-control w-full"
+        />
       </div>
 
       <template v-else>
         <div id="cfg-points-count">
-          <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
+          <div
+            class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+          >
             <span>要点数量</span>
-            <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ keyPointsCount }} 条</span>
+            <span
+              class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
+              >{{ keyPointsCount }} 条</span
+            >
           </div>
-          <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
+          <input
+            v-model.number="keyPointsCount"
+            type="range"
+            min="3"
+            max="10"
+            step="1"
+            :disabled="isStreaming"
+            class="range-control w-full"
+          />
         </div>
 
         <div id="cfg-point-word-limit">
-          <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
+          <div
+            class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+          >
             <span>每条要点字数</span>
-            <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
+            <span
+              class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
+              >{{ wordLimit }} 字</span
+            >
           </div>
-          <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
+          <input
+            v-model.number="wordLimit"
+            type="range"
+            min="50"
+            max="800"
+            step="50"
+            :disabled="isStreaming"
+            class="range-control w-full"
+          />
         </div>
       </template>
 
       <div id="cfg-tone-style">
-        <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">摘要语气风格</label>
-        <a-select v-model:value="selectedTone" size="small" :options="toneOptions" class="form-select w-full" :disabled="isStreaming" />
+        <label
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+          >摘要语气风格</label
+        >
+        <a-select
+          v-model:value="selectedTone"
+          size="small"
+          :options="toneOptions"
+          class="form-select w-full"
+          :disabled="isStreaming"
+        />
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
-        <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between gap-2">
-          <span class="text-xs font-semibold text-[#acb5c9] flex items-center gap-1.5 shrink min-w-0">
+      <div
+        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+      >
+        <div
+          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-2"
+        >
+          <span
+            class="text-xs font-semibold text-ui-muted flex items-center gap-1.5 shrink min-w-0"
+          >
             <Sliders class="w-3.5 h-3.5" />
             源文档输入
           </span>
           <div class="flex shrink-0 items-center gap-1">
-            <input ref="fileInputRef" type="file" class="hidden" accept=".txt,.md" @change="handleFileChoose" />
-            <a-button type="default" size="small" class="action-btn shrink-0" :disabled="isStreaming" @click="triggerFileSelect">
+            <input
+              ref="fileInputRef"
+              type="file"
+              class="hidden"
+              accept=".txt,.md"
+              @change="handleFileChoose"
+            />
+            <a-button
+              type="default"
+              size="small"
+              class="action-btn shrink-0"
+              :disabled="isStreaming"
+              @click="triggerFileSelect"
+            >
               <template #icon><Upload class="w-3.5 h-3.5" /></template>
               导入 TXT/MD
             </a-button>
@@ -283,7 +380,9 @@ async function handleSummarize(): Promise<void> {
           @drop="handleDrop"
           :class="[
             'p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
-            dragActive ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60' : '',
+            dragActive
+              ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60'
+              : '',
           ]"
         >
           <textarea
@@ -291,18 +390,34 @@ async function handleSummarize(): Promise<void> {
             placeholder="粘贴日志、会议记录、草稿笔记，或拖放 .txt/.md 文件到此处…"
             maxlength="50000"
             :disabled="isStreaming"
-            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
+            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-[var(--color-placeholder)] leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
-          <div v-if="dragActive" class="absolute inset-0 bg-[#0c1622]/90 flex flex-col items-center justify-center p-6 text-center">
+          <div
+            v-if="dragActive"
+            class="absolute inset-0 bg-[var(--color-surface)]/90 flex flex-col items-center justify-center p-6 text-center"
+          >
             <Upload class="w-12 h-12 text-[#00a67e] mb-2 animate-bounce" />
-            <span class="text-sm font-semibold text-white">松开以导入文档</span>
+            <span class="text-sm font-semibold text-ui">松开以导入文档</span>
           </div>
         </div>
 
-        <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono">
-          <span class="shrink min-w-0 truncate">已加载 {{ inputText.length.toLocaleString() }} 字符</span>
-          <a-button v-if="isStreaming" type="primary" danger size="small" class="action-btn shrink-0" @click="handleStop">
-            <template #icon><Square class="w-3.5 h-3.5 fill-current" /></template>
+        <div
+          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-3 text-xs text-ui-muted font-mono"
+        >
+          <span class="shrink min-w-0 truncate"
+            >已加载 {{ inputText.length.toLocaleString() }} 字符</span
+          >
+          <a-button
+            v-if="isStreaming"
+            type="primary"
+            danger
+            size="small"
+            class="action-btn shrink-0"
+            @click="handleStop"
+          >
+            <template #icon
+              ><Square class="w-3.5 h-3.5 fill-current"
+            /></template>
             停止生成
           </a-button>
           <a-button
@@ -319,24 +434,48 @@ async function handleSummarize(): Promise<void> {
         </div>
       </div>
 
-      <div class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
-        <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between">
-          <span class="text-xs font-semibold text-[#acb5c9]">执行摘要与要点</span>
-          <div v-if="(overviewText || keyPoints.length > 0) && !isStreaming" class="flex items-center gap-1">
-            <a-button type="default" size="small" class="action-btn !text-xs" @click="handleCopy">
+      <div
+        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+      >
+        <div
+          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
+        >
+          <span class="text-xs font-semibold text-ui-muted"
+            >执行摘要与要点</span
+          >
+          <div
+            v-if="(overviewText || keyPoints.length > 0) && !isStreaming"
+            class="flex items-center gap-1"
+          >
+            <a-button
+              type="default"
+              size="small"
+              class="action-btn !text-xs"
+              @click="handleCopy"
+            >
               <template #icon>
                 <Check v-if="copied" class="w-3.5 h-3.5 text-[#00a67e]" />
                 <Copy v-else class="w-3.5 h-3.5" />
               </template>
               {{ copied ? "已复制" : "复制" }}
             </a-button>
-            <a-button type="default" size="small" shape="circle" class="icon-only-btn" title="下载" @click="handleDownload">
+            <a-button
+              type="default"
+              size="small"
+              shape="circle"
+              class="icon-only-btn"
+              title="下载"
+              @click="handleDownload"
+            >
               <template #icon><Download class="w-3.5 h-3.5" /></template>
             </a-button>
           </div>
         </div>
 
-        <div ref="outputRef" class="p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[#020c15]/40">
+        <div
+          ref="outputRef"
+          class="p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40"
+        >
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
@@ -351,44 +490,74 @@ async function handleSummarize(): Promise<void> {
           >
             <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <span class="font-semibold text-white block">分析失败</span>
+              <span class="font-semibold text-ui block">分析失败</span>
               <span>{{ error }}</span>
             </div>
           </div>
 
-          <div v-else-if="isStreaming && result" class="text-xs text-[#bccac2] font-mono leading-relaxed whitespace-pre-wrap break-words">
-            <span class="flex items-center gap-1.5 text-[10px] text-[#00a67e] tracking-wider uppercase font-semibold mb-2">
-              <span class="animate-spin rounded-full h-2.5 w-2.5 border-2 border-t-transparent border-[#00a67e]"></span>
+          <div
+            v-else-if="isStreaming && result"
+            class="text-xs text-[var(--color-mono-text)] font-mono leading-relaxed whitespace-pre-wrap break-words"
+          >
+            <span
+              class="flex items-center gap-1.5 text-[10px] text-[#00a67e] tracking-wider uppercase font-semibold mb-2"
+            >
+              <span
+                class="animate-spin rounded-full h-2.5 w-2.5 border-2 border-t-transparent border-[#00a67e]"
+              ></span>
               流式生成中…
             </span>
-            {{ result }}<span class="inline-block w-1.5 h-3.5 ml-0.5 align-middle bg-[#00a67e] animate-pulse"></span>
+            {{ result
+            }}<span
+              class="inline-block w-1.5 h-3.5 ml-0.5 align-middle bg-[#00a67e] animate-pulse"
+            ></span>
           </div>
 
-          <div v-else-if="isStreaming" class="my-auto flex flex-col justify-center items-center gap-3">
+          <div
+            v-else-if="isStreaming"
+            class="my-auto flex flex-col justify-center items-center gap-3"
+          >
             <div class="relative flex h-10 w-10">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a67e] opacity-40"></span>
-              <div class="relative rounded h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a67e] opacity-40"
+              ></span>
+              <div
+                class="relative rounded h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center"
+              >
                 <Sparkles class="w-5 h-5 text-[#00a67e] animate-pulse" />
               </div>
             </div>
             <div class="text-center">
-              <span class="text-xs font-medium text-white block">正在综合提炼要点…</span>
-              <span class="text-[10px] text-[#bccac2]/70 font-mono">流式连接已建立，等待首个 token</span>
+              <span class="text-xs font-medium text-ui block"
+                >正在综合提炼要点…</span
+              >
+              <span class="text-[10px] text-ui-subtle font-mono"
+                >流式连接已建立，等待首个 token</span
+              >
             </div>
           </div>
 
-          <div v-else-if="!isStreaming && (overviewText || keyPoints.length > 0)" class="space-y-6 text-sm">
+          <div
+            v-else-if="!isStreaming && (overviewText || keyPoints.length > 0)"
+            class="space-y-6 text-sm"
+          >
             <div v-if="overviewText">
-              <span class="flex items-center gap-1.5 text-[10px] text-[#00a67e] font-mono tracking-wider uppercase font-semibold mb-2">
+              <span
+                class="flex items-center gap-1.5 text-[10px] text-[#00a67e] font-mono tracking-wider uppercase font-semibold mb-2"
+              >
                 <Sparkle class="w-3 h-3 fill-current" />
                 {{ summaryMode === "words" ? "概要总结" : "概述摘要" }}
               </span>
-              <p class="text-white bg-[#0e1b2b]/40 border border-[#26384d]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40">
+              <p
+                class="text-ui bg-[var(--color-chat-bubble)]/40 border border-[var(--color-outline-variant)]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40"
+              >
                 <TruncatedText :text="overviewText" />
               </p>
             </div>
             <div v-if="summaryMode === 'points' && keyPoints.length > 0">
-              <span class="flex items-center gap-1.5 text-[10px] text-sky-400 font-mono tracking-wider uppercase font-semibold mb-3">
+              <span
+                class="flex items-center gap-1.5 text-[10px] text-sky-400 font-mono tracking-wider uppercase font-semibold mb-3"
+              >
                 <Sparkle class="w-3 h-3 fill-current" />
                 核心要点提炼
               </span>
@@ -396,9 +565,11 @@ async function handleSummarize(): Promise<void> {
                 <li
                   v-for="(point, idx) in keyPoints"
                   :key="idx"
-                  class="flex gap-3 text-white leading-relaxed text-xs p-3.5 rounded bg-[#08121e]/50 border border-[#26384d]/40 items-start hover:border-[#00a67e]/30 transition-all"
+                  class="flex gap-3 text-ui leading-relaxed text-xs p-3.5 rounded bg-[var(--color-surface-header)]/50 border border-[var(--color-outline-variant)]/40 items-start hover:border-[#00a67e]/30 transition-all"
                 >
-                  <span class="w-5 h-5 rounded bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span
+                    class="w-5 h-5 rounded bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5"
+                  >
                     {{ idx + 1 }}
                   </span>
                   <span><TruncatedText :text="point" :limit="2000" /></span>
@@ -407,18 +578,28 @@ async function handleSummarize(): Promise<void> {
             </div>
           </div>
 
-          <div v-else class="my-auto flex flex-col justify-center items-center text-center text-[#bccac2]/35">
+          <div
+            v-else
+            class="my-auto flex flex-col justify-center items-center text-center text-[var(--color-placeholder)]"
+          >
             <FileText class="w-10 h-10 mb-2 stroke-[1.2]" />
             <span class="text-xs">概述与要点将显示在此处。</span>
           </div>
         </div>
 
-        <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between text-[10px] text-[#acb5c9] font-mono">
+        <div
+          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between text-[10px] text-ui-muted font-mono"
+        >
           <div class="flex items-center gap-1">
             <Clock class="w-3 h-3 text-[#00a67e]" />
             <span>处理耗时：{{ elapsedTime }}</span>
           </div>
-          <span class="uppercase">语气：{{ TONE_STYLES.find((t) => t.value === selectedTone)?.label ?? selectedTone }}</span>
+          <span class="uppercase"
+            >语气：{{
+              TONE_STYLES.find((t) => t.value === selectedTone)?.label ??
+              selectedTone
+            }}</span
+          >
         </div>
       </div>
     </div>

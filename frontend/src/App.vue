@@ -1,24 +1,32 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import { theme } from "ant-design-vue";
 import zhCN from "ant-design-vue/es/locale/zh_CN";
 import Sidebar from "./components/Sidebar.vue";
+import { useThemeAttribute } from "./composables/useThemeAttribute";
 import { useWorkspaceStore } from "./stores/workspace";
 
 const workspace = useWorkspaceStore();
+const { isDark } = storeToRefs(workspace);
 const route = useRoute();
 
-// 主题：通过 a-config-provider 的 algorithm 切换明/暗（F19），沿用现有品牌 token。
+useThemeAttribute(isDark);
+
+// 主题：Ant Design algorithm + 浅色语义 token（深色块在 antTheme 中保持原值）。
 const antTheme = computed(() => ({
-  algorithm: workspace.isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+  algorithm: isDark.value ? theme.darkAlgorithm : theme.defaultAlgorithm,
   token: {
     colorPrimary: "#00A67E",
     colorInfo: "#00A67E",
-    borderRadius: 12,
+    borderRadius: 4,
+    borderRadiusSM: 4,
+    borderRadiusLG: 4,
+    borderRadiusXS: 4,
     fontFamily:
       '"Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-    ...(workspace.isDark
+    ...(isDark.value
       ? {
           colorBgContainer: "#0c1622",
           colorBgElevated: "#08121e",
@@ -26,7 +34,13 @@ const antTheme = computed(() => ({
           colorText: "#d4e4fa",
           colorTextSecondary: "#acb5c9",
         }
-      : {}),
+      : {
+          colorBgContainer: "#ffffff",
+          colorBgElevated: "#f0fdf4",
+          colorBorder: "#cbd5e1",
+          colorText: "#1a1c1e",
+          colorTextSecondary: "#64748b",
+        }),
   },
 }));
 
@@ -40,9 +54,7 @@ onMounted(() => {
 
 <template>
   <a-config-provider :locale="zhCN" :theme="antTheme">
-    <div
-      class="flex bg-[#020c15] text-[#d4e4fa] min-h-screen h-screen overflow-hidden"
-    >
+    <div class="flex app-shell-bg min-h-screen h-screen overflow-hidden">
       <Sidebar />
 
       <main
@@ -50,7 +62,7 @@ onMounted(() => {
           'flex-1 min-h-0 h-full',
           isChat
             ? 'overflow-hidden'
-            : 'overflow-y-auto bg-linear-to-tr from-[#020c15] via-[#051424] to-[#010912] custom-scrollbar',
+            : 'overflow-y-auto app-main-gradient custom-scrollbar',
         ]"
       >
         <router-view v-slot="{ Component }">

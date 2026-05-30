@@ -1,12 +1,12 @@
 <script setup lang="ts">
-/** 用户消息气泡：纯展示 content prop。 */
+/** 用户消息气泡：纯展示 content prop，右对齐且与回答区共用列宽。 */
 defineProps<{ content: string }>();
 </script>
 
 <template>
-  <div class="flex w-full justify-start text-left">
+  <div class="chat-align-column flex justify-end text-right">
     <div
-      class="max-w-[min(92%,40rem)] rounded border border-[#26384d] bg-[#0e1b2b] px-4 py-3 text-[15px] leading-relaxed text-[#d4e4fa]"
+      class="w-fit max-w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-chat-bubble)] px-4 py-3 text-[15px] leading-relaxed text-ui"
     >
       <span class="whitespace-pre-wrap break-words">{{ content }}</span>
     </div>

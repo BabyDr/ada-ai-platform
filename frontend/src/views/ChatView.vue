@@ -44,7 +44,7 @@ function onHelp(): void {
 
 <template>
   <div
-    class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden bg-gradient-to-tr from-[#020c15] via-[#051424] to-[#010912] font-sans text-[#d4e4fa]"
+    class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden app-main-gradient font-sans text-ui"
   >
     <ChatSidebar @settings="onSettings" @help="onHelp" />
 
@@ -55,9 +55,9 @@ function onHelp(): void {
         <ChatPanel v-if="activeSessionId" class="min-h-0 flex-1" />
         <div
           v-else
-          class="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden p-10 text-center text-[#acb5c9]"
+          class="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden p-10 text-center text-ui-muted"
         >
-          <p class="text-sm font-medium text-white">请选择或创建会话</p>
+          <p class="text-sm font-medium text-ui">请选择或创建会话</p>
           <p class="max-w-xs text-xs">点击侧栏「新建会话」开始。</p>
         </div>
       </div>

@@ -59,7 +59,7 @@ const menuItems = [
 <template>
   <aside
     id="sidebar-container"
-    class="w-64 border-r border-[#26384d] bg-[#020c15] flex flex-col justify-between h-screen sticky top-0 shrink-0"
+    class="w-64 border-r ui-border bg-[var(--color-background)] flex flex-col justify-between h-screen sticky top-0 shrink-0"
   >
     <div class="p-6">
       <div class="flex items-center justify-between gap-3">
@@ -71,12 +71,12 @@ const menuItems = [
           </div>
           <div class="min-w-0">
             <h1
-              class="font-display font-semibold text-white tracking-wide text-base leading-tight"
+              class="font-display font-semibold text-ui tracking-wide text-base leading-tight"
             >
               Linguist AI
             </h1>
             <span
-              class="font-mono text-[10px] text-[#bccac2] uppercase tracking-wider"
+              class="font-mono text-[10px] text-ui-subtle uppercase tracking-wider"
               >工作区 v1.2</span
             >
           </div>
@@ -108,29 +108,31 @@ const menuItems = [
         :class="[
           'w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-all duration-150',
           route.name === item.name
-            ? 'bg-gradient-to-r from-[#2c3a4c] to-[#162537] text-white border-l-2 border-[#00a67e]'
-            : 'text-[#acb5c9] hover:text-white hover:bg-[#162537]/50',
+            ? 'sidebar-nav-active'
+            : 'sidebar-nav-inactive',
         ]"
       >
         <component
           :is="item.icon"
           :class="[
             'w-4 h-4 shrink-0',
-            route.name === item.name ? 'text-[#00a67e]' : 'text-[#acb5c9]',
+            route.name === item.name ? 'text-[#00a67e]' : 'text-ui-muted',
           ]"
         />
         <div class="flex flex-col items-start leading-tight">
-          <span class="text-xs text-[#acb5c9]">{{ item.title }}</span>
-          <span class="text-[10px] font-medium text-[#bccac2]/70">{{
+          <span class="text-xs text-ui-muted">{{ item.title }}</span>
+          <span class="text-[10px] font-medium text-ui-subtle">{{
             item.label
           }}</span>
         </div>
       </router-link>
     </nav>
 
-    <div class="p-4 border-t border-[#26384d] bg-[#01060c]/60">
+    <div
+      class="p-4 border-t ui-border bg-[var(--color-sidebar-footer-bg)]"
+    >
       <div
-        class="flex items-center justify-between p-3 rounded bg-[#08121e]/80 border border-[#26384d]/60"
+        class="flex items-center justify-between p-3 rounded bg-[var(--color-sidebar-status-bg)] border ui-border"
       >
         <div class="flex items-center gap-2">
           <div class="relative flex h-2 w-2">
@@ -147,11 +149,11 @@ const menuItems = [
           </div>
           <div class="flex flex-col">
             <span
-              class="text-[10px] font-mono font-semibold text-white uppercase tracking-wider"
+              class="text-[10px] font-mono font-semibold text-ui uppercase tracking-wider"
             >
               {{ apiConnected ? "系统正常" : "需配置密钥" }}
             </span>
-            <span class="text-[9px] text-[#bccac2]/80 mt-1">
+            <span class="text-[9px] text-ui-subtle mt-1">
               {{ apiConnected ? "API 已连接" : "请查看设置" }}
             </span>
           </div>

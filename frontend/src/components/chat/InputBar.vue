@@ -21,9 +21,9 @@ function onSubmit() {
 <template>
   <div>
     <div
-      class="flex items-end gap-2 rounded border border-[#26384d] bg-[#0c1622] p-2 sm:gap-3"
+      class="chat-input-bar flex items-center gap-2 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-2 sm:gap-3"
     >
-      <a-button type="text" shape="circle" size="large" class="icon-only-btn mb-1 shrink-0" title="附件（占位）">
+      <a-button type="text" shape="circle" size="large" class="icon-only-btn shrink-0" title="附件（占位）">
         <template #icon>
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
@@ -36,10 +36,10 @@ function onSubmit() {
         v-model:value="text"
         :auto-size="{ minRows: 1, maxRows: 6 }"
         placeholder="输入消息… Enter 发送，Shift+Enter 换行"
-        class="chat-input !min-h-11 flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-2 !text-[#d4e4fa] !shadow-none focus:!ring-0"
+        class="chat-input !min-h-10 flex-1 !resize-none !border-0 !bg-transparent !px-2 !py-0 !text-ui !shadow-none focus:!ring-0"
         @keydown.enter.exact.prevent="onSubmit"
       />
-      <a-button type="primary" shape="circle" size="large" class="icon-only-btn mb-1 shrink-0" title="发送" @click="onSubmit">
+      <a-button type="primary" shape="circle" size="large" class="icon-only-btn shrink-0" title="发送" @click="onSubmit">
         <template #icon>
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M12 19V5M5 12l7-7 7 7" />
@@ -94,7 +94,20 @@ function onSubmit() {
 </template>
 
 <style scoped>
+/** 与 lg 圆形按钮同高，单行时占位与文字垂直居中 */
+.chat-input-bar :deep(.chat-input textarea) {
+  min-height: 2.5rem !important;
+  padding-block: 0.5rem;
+  line-height: 1.5rem;
+  box-sizing: border-box;
+}
+
+/** 多行输入时发送/附件按钮贴底，单行时与输入框同高仍视觉居中 */
+.chat-input-bar :deep(.icon-only-btn.ant-btn-lg) {
+  align-self: flex-end;
+}
+
 .chat-input::placeholder {
-  color: rgba(188, 202, 194, 0.45);
+  color: var(--color-placeholder);
 }
 </style>

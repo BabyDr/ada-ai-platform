@@ -20,19 +20,19 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
 
 <template>
   <div class="space-y-6 p-8 max-w-4xl mx-auto" id="settings-view">
-    <div class="border-b border-[#26384d]/40 pb-5">
-      <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2">
+    <div class="border-b border-[var(--color-outline-variant)]/40 pb-5">
+      <h2 class="font-display text-2xl font-bold text-ui flex items-center gap-2">
         <Settings class="w-6 h-6 text-[#00a67e]" />
         全局系统设置
       </h2>
-      <p class="text-xs text-[#acb5c9] mt-1">查看默认模型行为、密钥配置状态与服务端隔离说明。</p>
+      <p class="text-xs text-ui-muted mt-1">查看默认模型行为、密钥配置状态与服务端隔离说明。</p>
     </div>
 
-    <div class="rounded border border-[#26384d] bg-[#0c1622] p-5 space-y-4">
+    <div class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <Lock class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-white">GLM API 密钥状态</h3>
+          <h3 class="text-sm font-semibold text-ui">GLM API 密钥状态</h3>
         </div>
         <span
           :class="[
@@ -44,12 +44,12 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
         </span>
       </div>
 
-      <p class="text-xs text-[#acb5c9] leading-relaxed">
+      <p class="text-xs text-ui-muted leading-relaxed">
         Linguist AI 通过 AdaAgent Python Sidecar 调用 GLM，密钥仅保存在服务端，不会暴露给浏览器。
       </p>
 
-      <div class="p-4 rounded bg-[#08121e]/80 border border-[#26384d]/60 space-y-3">
-        <div class="flex gap-2.5 items-start text-xs text-white">
+      <div class="p-4 rounded bg-[var(--color-surface-header)]/80 border border-[var(--color-outline-variant)]/60 space-y-3">
+        <div class="flex gap-2.5 items-start text-xs text-ui">
           <component
             :is="apiConnected ? CheckCircle2 : AlertTriangle"
             :class="['w-4 h-4 shrink-0 mt-0.5', apiConnected ? 'text-[#00a67e]' : 'text-amber-500']"
@@ -58,7 +58,7 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
             <span class="font-semibold block">
               {{ apiConnected ? "密钥已生效，服务已同步。" : "未检测到 GLM_API_KEY 环境变量。" }}
             </span>
-            <span class="text-[#acb5c9] text-[11px] leading-relaxed">
+            <span class="text-ui-muted text-[11px] leading-relaxed">
               {{
                 apiConnected
                   ? "密钥已在 backend/.env 中注册，翻译与总结功能已解锁。"
@@ -71,14 +71,14 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div id="settings-model-box" class="rounded border border-[#26384d] bg-[#0c1622] p-5 space-y-4">
+      <div id="settings-model-box" class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4">
         <div class="flex items-center gap-2">
           <Cpu class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-white">主引擎选择</h3>
+          <h3 class="text-sm font-semibold text-ui">主引擎选择</h3>
         </div>
-        <p class="text-xs text-[#acb5c9]">翻译与总结默认使用智谱 GLM OpenAPI。</p>
+        <p class="text-xs text-ui-muted">翻译与总结默认使用智谱 GLM OpenAPI。</p>
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider">当前模型</label>
+          <label class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider">当前模型</label>
           <a-select
             v-model:value="preferredModel"
             size="small"
@@ -89,14 +89,14 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
         </div>
       </div>
 
-      <div id="settings-defaults-box" class="rounded border border-[#26384d] bg-[#0c1622] p-5 space-y-4">
+      <div id="settings-defaults-box" class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4">
         <div class="flex items-center gap-2">
           <Settings class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-white">工作区默认预设</h3>
+          <h3 class="text-sm font-semibold text-ui">工作区默认预设</h3>
         </div>
-        <p class="text-xs text-[#acb5c9]">新建会话时的默认语调，可在各功能页面临时修改。</p>
+        <p class="text-xs text-ui-muted">新建会话时的默认语调，可在各功能页面临时修改。</p>
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider">默认译文语调</label>
+          <label class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider">默认译文语调</label>
           <a-select
             v-model:value="defaultTone"
             size="small"
@@ -110,8 +110,8 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
     <div class="p-4 rounded border border-sky-500/20 bg-sky-500/5 flex items-start gap-3">
       <ShieldAlert class="w-5 h-5 text-sky-400 shrink-0 mt-0.5" />
       <div>
-        <span class="text-xs font-semibold text-white block">安全隔离说明</span>
-        <span class="text-xs text-[#acb5c9] leading-relaxed block mt-1">
+        <span class="text-xs font-semibold text-ui block">安全隔离说明</span>
+        <span class="text-xs text-ui-muted leading-relaxed block mt-1">
           API 密钥不会出现在浏览器中。所有大模型调用均通过 AdaAgent FastAPI Sidecar（端口 18765）在服务端完成。
         </span>
       </div>

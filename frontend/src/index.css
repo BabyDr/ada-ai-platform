@@ -1,15 +1,10 @@
 @import "tailwindcss";
 @import "ant-design-vue/dist/reset.css";
+@import "./styles/theme.css";
 @import "./styles/ant-controls.css";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
-:root {
-  --color-primary: #00a67e;
-  --color-background: #020c15;
-  --color-on-background: #d4e4fa;
-  --color-surface-container-lowest: #01060c;
-  --color-outline-variant: #26384d;
-}
+/* 滚动条等仍引用语义变量；默认值由 useThemeAttribute 写入 data-theme */
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -26,7 +21,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: var(--color-brand-primary);
 }
 
 html,

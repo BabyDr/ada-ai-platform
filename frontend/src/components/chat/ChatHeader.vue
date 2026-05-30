@@ -22,10 +22,10 @@ function onShareHint(): void {
 
 <template>
   <header
-    class="flex shrink-0 items-center justify-between gap-4 border-b border-[#26384d] bg-[#08121e]/90 px-5 py-3 backdrop-blur-sm"
+    class="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/90 px-5 py-3 backdrop-blur-sm"
   >
     <div class="flex min-w-0 flex-wrap items-center gap-3">
-      <span class="truncate font-mono text-sm font-semibold text-white">{{ currentModelId }}</span>
+      <span class="truncate font-mono text-sm font-semibold text-ui">{{ currentModelId }}</span>
       <span
         class="inline-flex items-center gap-1 rounded bg-[#00a67e]/10 border border-[#00a67e]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00a67e]"
       >

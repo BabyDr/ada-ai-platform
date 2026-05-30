@@ -1,5 +1,31 @@
 /* 与 TranslationView 等页面共用的 Ant Design Vue 控件微调 */
 
+/* 与 Tailwind `rounded` 一致；圆形/胶囊按钮除外 */
+:root {
+  --control-radius: 0.25rem;
+}
+
+.ant-btn:not(.ant-btn-circle):not(.ant-btn-round),
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-input-number-input,
+.ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-picker,
+.ant-radio-button-wrapper,
+.ant-textarea,
+#app textarea,
+#app input[type="text"],
+#app input[type="search"],
+#app input[type="password"],
+#app input[type="email"] {
+  border-radius: var(--control-radius) !important;
+}
+
+.ant-btn-circle {
+  border-radius: 50% !important;
+}
+
 .tone-radio-group,
 .filter-radio-group {
   display: flex;
@@ -13,7 +39,7 @@
   line-height: 26px;
   padding-inline: 10px;
   font-size: 12px;
-  border-radius: 0.25rem !important;
+  border-radius: var(--control-radius) !important;
   border-inline-start-width: 1px;
 }
 
@@ -118,6 +144,55 @@
   display: block;
 }
 
-textarea {
+textarea,
+input:not([type="range"]) {
   font-size: 14px;
+}
+
+/** 总结页要点数/字数 range：appearance-none 时需显式绘制轨道 */
+input[type="range"].range-control {
+  height: 1.5rem;
+  background: transparent;
+  accent-color: var(--color-range-thumb);
+  cursor: pointer;
+}
+
+input[type="range"].range-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="range"].range-control::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--control-radius);
+  background: var(--color-range-track);
+  border: none;
+}
+
+input[type="range"].range-control::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--color-range-thumb);
+  border: none;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+}
+
+input[type="range"].range-control::-moz-range-track {
+  height: 6px;
+  border-radius: var(--control-radius);
+  background: var(--color-range-track);
+  border: none;
+}
+
+input[type="range"].range-control::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-range-thumb);
+  border: none;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
 }

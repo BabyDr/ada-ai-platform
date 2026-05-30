@@ -166,16 +166,16 @@ async function handleTranslate(): Promise<void> {
 <template>
   <div class="space-y-6 p-8 max-w-6xl mx-auto" id="translation-view">
     <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#26384d]/40 pb-5"
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
     >
       <div>
         <h2
-          class="font-display text-2xl font-bold text-white flex items-center gap-2"
+          class="font-display text-2xl font-bold text-ui flex items-center gap-2"
         >
           <Languages class="w-6 h-6 text-[#00a67e]" />
           文本翻译器 · 双栏对照
         </h2>
-        <p class="text-xs text-[#acb5c9] mt-1">
+        <p class="text-xs text-ui-muted mt-1">
           覆盖 10 种全球语言，针对技术词汇与上下文一致性进行标准化翻译。
         </p>
       </div>
@@ -189,9 +189,9 @@ async function handleTranslate(): Promise<void> {
       description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 后重启 Sidecar。"
     />
 
-    <div class="p-4 rounded bg-[#08121e]/40 border border-[#26384d]/60">
+    <div class="p-4 rounded bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60">
       <label
-        class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2.5"
+        class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
       >
         选择译文语调
       </label>
@@ -222,13 +222,13 @@ async function handleTranslate(): Promise<void> {
       class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-y-6"
     >
       <div
-        class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between"
+          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
         >
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-[#acb5c9] shrink-0"
+            <span class="text-xs font-semibold text-ui-muted shrink-0"
               >源语言</span
             >
             <a-select
@@ -260,12 +260,12 @@ async function handleTranslate(): Promise<void> {
             placeholder="在此输入待翻译文本或原始文档…"
             :maxlength="MAX_INPUT_CHARS"
             :disabled="isStreaming"
-            class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
+            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-[var(--color-placeholder)] leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono"
+          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-3 text-xs text-ui-muted font-mono"
         >
           <span class="shrink min-w-0 truncate"
             >{{ inputText.length }} / {{ MAX_INPUT_CHARS.toLocaleString() }} 字符</span
@@ -313,13 +313,13 @@ async function handleTranslate(): Promise<void> {
       </div>
 
       <div
-        class="rounded border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between"
+          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
         >
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-[#acb5c9] shrink-0"
+            <span class="text-xs font-semibold text-ui-muted shrink-0"
               >目标语言</span
             >
             <a-select
@@ -357,7 +357,7 @@ async function handleTranslate(): Promise<void> {
           </div>
         </div>
 
-        <div ref="outputRef" class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[#020c15]/40">
+        <div ref="outputRef" class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40">
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
@@ -372,14 +372,14 @@ async function handleTranslate(): Promise<void> {
           >
             <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <span class="font-semibold text-white block">执行失败</span>
+              <span class="font-semibold text-ui block">执行失败</span>
               <span>{{ error }}</span>
             </div>
           </div>
 
           <div
             v-else-if="result"
-            class="text-white text-sm leading-relaxed select-text selection:bg-[#00a67e]/40 whitespace-pre-wrap wrap-break-word"
+            class="text-ui text-sm leading-relaxed select-text selection:bg-[#00a67e]/40 whitespace-pre-wrap wrap-break-word"
           >
             <TruncatedText :text="result" />
             <span
@@ -403,10 +403,10 @@ async function handleTranslate(): Promise<void> {
               </div>
             </div>
             <div class="text-center">
-              <span class="text-xs font-medium text-white block"
+              <span class="text-xs font-medium text-ui block"
                 >正在思考并翻译…</span
               >
-              <span class="text-[10px] text-[#bccac2]/70"
+              <span class="text-[10px] text-ui-subtle"
                 >流式连接已建立，等待首个 token</span
               >
             </div>
@@ -414,7 +414,7 @@ async function handleTranslate(): Promise<void> {
 
           <div
             v-else
-            class="flex-1 flex flex-col justify-center items-center text-center text-[#bccac2]/35"
+            class="flex-1 flex flex-col justify-center items-center text-center text-[var(--color-placeholder)]"
           >
             <Languages class="w-10 h-10 mb-2 stroke-[1.2]" />
             <span class="text-xs">翻译结果将显示在右侧。</span>
@@ -422,7 +422,7 @@ async function handleTranslate(): Promise<void> {
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between text-[10px] text-[#acb5c9] font-mono"
+          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between text-[10px] text-ui-muted font-mono"
         >
           <div class="flex items-center gap-1">
             <Clock class="w-3 h-3 text-[#00a67e]" />
