@@ -24,6 +24,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const quickText = ref("");
   const apiConnected = ref(false);
   const llmMode = ref("mock");
+  const defaultTone = ref("Professional");
   const activeTaskId = ref("");
   const isDark = ref<boolean>(readThemePreference());
   /** Linguist SSE 流式进行中（跨页路由守卫 #35） */
@@ -165,6 +166,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     quickText,
     apiConnected,
     llmMode,
+    defaultTone,
     activeTaskId,
     isDark,
     linguistStreaming,

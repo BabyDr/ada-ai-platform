@@ -6,6 +6,7 @@ import type {
   Select,
   Spin,
   Textarea,
+  Tooltip,
 } from "ant-design-vue";
 
 declare module "@vue/runtime-core" {
@@ -18,6 +19,7 @@ declare module "@vue/runtime-core" {
     ASelect: typeof Select;
     ASpin: typeof Spin;
     ATextarea: typeof Textarea;
+    ATooltip: typeof Tooltip;
   }
 }
 

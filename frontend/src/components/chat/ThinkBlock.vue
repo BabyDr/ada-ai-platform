@@ -8,7 +8,7 @@ const open = ref(true);
 </script>
 
 <template>
-  <div class="chat-align-column overflow-hidden rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/80">
+  <div class="chat-align-column overflow-hidden rounded border border-(--color-outline-variant) bg-(--color-surface-header)/80">
     <button
       type="button"
       class="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-[#162537]/40"
@@ -28,7 +28,7 @@ const open = ref(true);
       <span class="text-[11px] font-bold uppercase tracking-widest text-[#00a67e]">Think</span>
       <span class="ml-auto text-xs text-ui-muted">{{ open ? "收起" : "展开" }}</span>
     </button>
-    <div v-show="open" class="border-t border-[var(--color-outline-variant)]/60 px-4 pb-4 pt-1 text-sm leading-relaxed text-ui">
+    <div v-show="open" class="border-t border-(--color-outline-variant)/60 px-4 pb-4 pt-1 text-sm leading-relaxed text-ui">
       {{ content }}
     </div>
   </div>

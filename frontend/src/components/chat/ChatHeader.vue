@@ -32,7 +32,7 @@ function onShareHint(): void {
 
 <template>
   <header
-    class="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/90 px-3 py-3 backdrop-blur-sm sm:gap-4 sm:px-5"
+    class="flex shrink-0 items-center justify-between gap-2 border-b border-(--color-outline-variant) bg-(--color-surface-header)/90 px-3 py-3 backdrop-blur-sm sm:gap-4 sm:px-5"
   >
     <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
       <a-button
@@ -82,7 +82,7 @@ function onShareHint(): void {
         </template>
       </a-button>
       <div
-        class="ml-1 flex h-9 w-9 items-center justify-center rounded bg-gradient-to-br from-[#00a67e] to-[#008f6c] text-xs font-bold text-white"
+        class="ml-1 flex h-9 w-9 items-center justify-center rounded bg-linear-to-br from-[#00a67e] to-[#008f6c] text-xs font-bold text-white"
         title="本地用户"
       >
         U

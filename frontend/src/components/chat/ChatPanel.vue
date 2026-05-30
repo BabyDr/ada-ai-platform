@@ -43,12 +43,12 @@ async function onSubmitMessage(text: string) {
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1 flex-col bg-[var(--color-background)]/40">
+  <div class="flex min-h-0 flex-1 flex-col bg-(--color-background)/40">
     <div ref="chatListRef" class="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-10">
       <div class="mx-auto max-w-3xl">
         <div
           v-if="!messages.length"
-          class="flex flex-col items-center justify-center rounded border border-dashed border-[var(--color-outline-variant)] bg-[var(--color-surface)]/80 px-8 py-16 text-center"
+          class="flex flex-col items-center justify-center rounded border border-dashed border-(--color-outline-variant) bg-(--color-surface)/80 px-8 py-16 text-center"
         >
           <div
             class="mb-4 flex h-14 w-14 items-center justify-center rounded bg-[#00a67e]/10 border border-[#00a67e]/30 text-[#00a67e]"
@@ -78,7 +78,7 @@ async function onSubmitMessage(text: string) {
       </div>
     </div>
 
-    <div class="shrink-0 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/90 px-4 py-4 sm:px-10">
+    <div class="shrink-0 border-t border-(--color-outline-variant) bg-(--color-surface-header)/90 px-4 py-4 sm:px-10">
       <div class="mx-auto max-w-3xl">
         <InputBar @submit="onSubmitMessage" />
       </div>

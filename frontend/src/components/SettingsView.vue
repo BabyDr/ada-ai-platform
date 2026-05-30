@@ -15,9 +15,10 @@ import { useWorkspaceStore } from "../stores/workspace";
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
 
-const defaultTone = ref<
-  "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
->("Professional");
+const defaultTone = computed({
+  get: () => workspace.defaultTone as "Professional" | "Conversational" | "Technical" | "Academic" | "Creative",
+  set: (v) => { workspace.defaultTone = v; },
+});
 const preferredModel = ref(DEFAULT_GLM_MODEL);
 
 const modelOptions = [
@@ -35,7 +36,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
     class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden"
     id="settings-view"
   >
-    <div class="border-b border-[var(--color-outline-variant)]/40 pb-5">
+    <div class="border-b border-(--color-outline-variant)/40 pb-5">
       <h2
         class="font-display text-2xl font-bold text-ui flex items-center gap-2"
       >
@@ -48,11 +49,11 @@ const toneOptions = TONE_STYLES.map((t) => ({
     </div>
 
     <div
-      class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4"
+      class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 p-5 space-y-4"
     >
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <Lock class="w-4 h-4 text-[#00a67e]" />
+          <Lock :class="['w-4 h-4', apiConnected ? 'text-[#00a67e]' : 'text-amber-500']" />
           <div class="text-sm font-semibold text-ui">GLM API 密钥状态</div>
         </div>
         <span
@@ -60,10 +61,10 @@ const toneOptions = TONE_STYLES.map((t) => ({
             'px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wide border',
             apiConnected
               ? 'bg-[#00a67e]/10 text-[#00a67e] border-[#00a67e]/20'
-              : 'bg-red-500/10 text-red-400 border-red-500/20',
+              : 'bg-amber-500/10 text-amber-500 border-amber-500/20',
           ]"
         >
-          {{ apiConnected ? "引擎已就绪" : "离线" }}
+          {{ apiConnected ? "引擎已就绪" : "未配置" }}
         </span>
       </div>
 
@@ -73,7 +74,12 @@ const toneOptions = TONE_STYLES.map((t) => ({
       </p>
 
       <div
-        class="p-4 rounded bg-[var(--color-surface-header)]/80 border border-[var(--color-outline-variant)]/60 space-y-3"
+        :class="[
+          'p-4 rounded space-y-3',
+          apiConnected
+            ? 'bg-(--color-surface-header)/80 border border-(--color-outline-variant)/60'
+            : 'bg-amber-500/10 border border-amber-500/30',
+        ]"
       >
         <div class="flex gap-2.5 items-start text-xs text-ui">
           <component
@@ -88,14 +94,14 @@ const toneOptions = TONE_STYLES.map((t) => ({
               {{
                 apiConnected
                   ? "密钥已生效，服务已同步。"
-                  : "未检测到 GLM_API_KEY 环境变量。"
+                  : "未检测到 GLM_API_KEY"
               }}
             </span>
             <span class="text-ui-muted text-[11px] leading-relaxed">
               {{
                 apiConnected
                   ? "密钥已在 backend/.env 中注册，翻译与总结功能已解锁。"
-                  : "请在 backend/.env 中设置 GLM_API_KEY，并重启 Sidecar（npm run sidecar）。"
+                  : "模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 后重启 Sidecar。"
               }}
             </span>
           </div>
@@ -106,7 +112,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div
         id="settings-model-box"
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 p-5 space-y-4"
       >
         <div class="flex items-center gap-2">
           <Cpu class="w-4 h-4 text-[#00a67e]" />
@@ -132,7 +138,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
 
       <div
         id="settings-defaults-box"
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5 space-y-4"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 p-5 space-y-4"
       >
         <div class="flex items-center gap-2">
           <Settings class="w-4 h-4 text-[#00a67e]" />

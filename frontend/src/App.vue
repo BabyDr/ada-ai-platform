@@ -103,7 +103,7 @@ onMounted(() => {
       >
         <header
           v-if="isMobile"
-          class="flex shrink-0 items-center gap-3 border-b ui-border bg-[var(--color-background)] px-4 py-3"
+          class="flex shrink-0 items-center gap-3 border-b ui-border bg-(--color-background) px-4 py-3"
         >
           <a-button
             type="text"

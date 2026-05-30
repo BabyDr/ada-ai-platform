@@ -54,13 +54,13 @@ defineExpose({ onNew });
 <template>
   <aside
     :class="[
-      'flex min-h-0 flex-col overflow-hidden bg-[var(--color-background)]',
-      embedded ? 'h-full w-full' : 'h-full w-65 shrink-0 border-r border-[var(--color-outline-variant)]',
+      'flex min-h-0 flex-col overflow-hidden bg-(--color-background)',
+      embedded ? 'h-full w-full' : 'h-full w-65 shrink-0 border-r border-(--color-outline-variant)',
     ]"
   >
     <div class="flex items-start gap-3 px-4 pt-5 pb-4">
       <div
-        class="flex h-11 w-11 shrink-0 items-center justify-center rounded bg-gradient-to-tr from-[#00a67e]/20 to-[#00a67e]/40 border border-[#00a67e]/40 text-[#00a67e]"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded bg-linear-to-tr from-[#00a67e]/20 to-[#00a67e]/40 border border-[#00a67e]/40 text-[#00a67e]"
       >
         <MessageSquare class="h-6 w-6 text-[#00a67e]" />
       </div>
@@ -112,7 +112,7 @@ defineExpose({ onNew });
           @click="onSelect(s.id)"
         >
           <span
-            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[var(--color-surface-header)] text-[#00a67e] border border-[var(--color-outline-variant)]/60"
+            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-(--color-surface-header) text-[#00a67e] border border-(--color-outline-variant)/60"
             aria-hidden="true"
           >
             <svg
@@ -132,7 +132,7 @@ defineExpose({ onNew });
       </div>
     </a-spin>
 
-    <div class="mt-auto border-t border-[var(--color-outline-variant)] px-2 py-3 space-y-1">
+    <div class="mt-auto border-t border-(--color-outline-variant) px-2 py-3 space-y-1">
       <a-button
         block
         type="text"

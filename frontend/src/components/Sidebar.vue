@@ -75,7 +75,7 @@ const menuItems = [
   <aside
     id="sidebar-container"
     :class="[
-      'bg-[var(--color-background)] flex flex-col justify-between shrink-0',
+      'bg-(--color-background) flex flex-col justify-between shrink-0',
       props.embedded
         ? 'h-full w-full'
         : 'w-64 border-r ui-border h-screen sticky top-0',
@@ -85,7 +85,7 @@ const menuItems = [
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div
-            class="w-10 h-10 rounded bg-gradient-to-tr from-[#00a67e]/20 to-[#00a67e]/40 border border-[#00a67e]/40 flex items-center justify-center shrink-0"
+            class="w-10 h-10 rounded bg-linear-to-tr from-[#00a67e]/20 to-[#00a67e]/40 border border-[#00a67e]/40 flex items-center justify-center shrink-0"
           >
             <Sparkles class="w-5 h-5 text-[#00a67e]" />
           </div>
@@ -149,13 +149,21 @@ const menuItems = [
       </router-link>
     </nav>
 
-    <div class="p-4 border-t ui-border bg-[var(--color-sidebar-footer-bg)]">
+    <div class="p-4 border-t ui-border bg-(--color-sidebar-footer-bg)">
       <div class="flex gap-2 mb-2">
         <span
+          v-if="apiConnected"
           class="flex-1 justify-center px-2 py-1 rounded text-[10px] font-mono tracking-wider font-semibold text-[#00a67e] bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center gap-1 whitespace-nowrap"
         >
           <Sparkle class="w-2.5 h-2.5 animate-pulse shrink-0" />
           工作区已就绪
+        </span>
+        <span
+          v-else
+          class="flex-1 justify-center px-2 py-1 rounded text-[10px] font-mono tracking-wider font-semibold text-red-400 bg-red-500/10 border border-red-500/30 flex items-center gap-1 whitespace-nowrap"
+        >
+          <AlertCircle class="w-2.5 h-2.5 shrink-0" />
+          工作区未就绪
         </span>
         <span
           v-if="llmMode === 'mock'"
@@ -167,7 +175,7 @@ const menuItems = [
         </span>
       </div>
       <div
-        class="flex items-center justify-between p-3 rounded bg-[var(--color-sidebar-status-bg)] border ui-border"
+        class="flex items-center justify-between p-3 rounded bg-(--color-sidebar-status-bg) border ui-border"
       >
         <div class="flex items-center gap-2">
           <div class="relative flex h-2 w-2">

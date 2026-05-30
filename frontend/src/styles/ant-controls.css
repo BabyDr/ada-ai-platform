@@ -64,6 +64,11 @@
   font-size: 12px !important;
 }
 
+/* Select 下拉面板字号统一缩小 */
+.ant-select-dropdown .ant-select-item {
+  font-size: 12px;
+}
+
 .action-btn {
   white-space: nowrap;
 }
@@ -156,7 +161,7 @@ input:not([type="range"]) {
   }
 
   .action-btn.ant-btn {
-    min-height: 36px;
+    min-height: 26px;
   }
 }
 

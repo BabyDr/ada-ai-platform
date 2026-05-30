@@ -22,7 +22,7 @@ const canExpand = computed(() => props.text.length > props.limit);
 
 <template>
   <div>
-    <span class="whitespace-pre-wrap break-words">{{ displayText }}</span>
+    <span class="whitespace-pre-wrap wrap-break-word">{{ displayText }}</span>
     <button
       v-if="canExpand"
       type="button"

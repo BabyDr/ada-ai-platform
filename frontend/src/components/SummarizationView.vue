@@ -3,8 +3,9 @@
  * 智能总结页：配置参数、源文档输入、结构化结果展示。
  * 任务/日志/导出/文件导入分别见对应 composables。
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useAutoScroll } from "../composables/useAutoScroll";
+import { useWorkspaceStore } from "../stores/workspace";
 import {
   Sparkles,
   Copy,
@@ -20,7 +21,6 @@ import {
   Square,
 } from "lucide-vue-next";
 import { TONE_STYLES, SUMMARY_MODES, type SummaryMode } from "../types";
-import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
 import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
 import {
@@ -56,7 +56,20 @@ const keyPointsCount = ref(3);
 const wordLimit = ref(250);
 const selectedTone = ref<
   "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
->("Professional");
+>(
+  workspace.defaultTone as
+    | "Professional"
+    | "Conversational"
+    | "Technical"
+    | "Academic"
+    | "Creative",
+);
+watch(
+  () => workspace.defaultTone,
+  (v) => {
+    selectedTone.value = v as typeof selectedTone.value;
+  },
+);
 const elapsedTime = ref("--");
 const recoveryNotice = ref("");
 
@@ -69,10 +82,6 @@ const scrollTick = computed(() => {
 useAutoScroll(outputRef, scrollTick);
 
 const { copied, copyText } = useCopyFeedback();
-const toneOptions = TONE_STYLES.map((t) => ({
-  value: t.value,
-  label: t.label,
-}));
 
 /** 清空输出区（快捷预填时复用，不清输入框）。 */
 function resetOutputState(): void {
@@ -93,7 +102,6 @@ onMounted(async () => {
 
 const {
   dragActive,
-  fileInputRef,
   triggerFileSelect,
   handleFileChoose,
   handleDragOver,
@@ -200,7 +208,7 @@ async function handleSummarize(): Promise<void> {
     id="summarization-view"
   >
     <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-(--color-outline-variant)/40 pb-5"
     >
       <div>
         <h2
@@ -224,11 +232,41 @@ async function handleSummarize(): Promise<void> {
     />
 
     <div
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 p-4 sm:p-5 bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60 rounded"
+      class="grid grid-cols-1 sm:grid-cols-[3fr_2fr_1fr_1fr] gap-4 sm:gap-5 p-4 sm:p-5 bg-(--color-surface-header)/40 border border-(--color-outline-variant)/60 rounded overflow-hidden"
     >
-      <div id="cfg-summary-mode" class="md:col-span-2 lg:col-span-1">
+      <!-- 1. 语气风格 -->
+      <div id="cfg-tone-style" class="min-w-0 overflow-hidden">
         <label
-          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
+          >摘要语气风格</label
+        >
+        <a-radio-group
+          v-model:value="selectedTone"
+          size="small"
+          button-style="solid"
+          class="tone-radio-group"
+          :disabled="isStreaming"
+        >
+          <a-radio-button
+            v-for="t in TONE_STYLES"
+            :key="t.value"
+            :value="t.value"
+          >
+            <span class="inline-flex items-center gap-1">
+              <Sparkle
+                v-if="selectedTone === t.value"
+                class="w-3 h-3 fill-current"
+              />
+              {{ t.label }}
+            </span>
+          </a-radio-button>
+        </a-radio-group>
+      </div>
+
+      <!-- 2. 总结方式 -->
+      <div id="cfg-summary-mode" class="min-w-0 overflow-hidden">
+        <label
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
           >总结方式</label
         >
         <a-radio-group
@@ -238,74 +276,34 @@ async function handleSummarize(): Promise<void> {
           class="tone-radio-group"
           :disabled="isStreaming"
         >
-          <a-radio-button
+          <a-tooltip
             v-for="mode in SUMMARY_MODES"
             :key="mode.value"
-            :value="mode.value"
+            :title="mode.description"
           >
-            {{ mode.label }}
-          </a-radio-button>
+            <a-radio-button :value="mode.value">
+              <span class="inline-flex items-center gap-1">
+                <Sparkle
+                  v-if="summaryMode === mode.value"
+                  class="w-3 h-3 fill-current"
+                />
+                {{ mode.label }}
+              </span>
+            </a-radio-button>
+          </a-tooltip>
         </a-radio-group>
-        <p
-          class="text-[10px] text-[var(--color-mono-text)]/60 mt-2 leading-relaxed"
-        >
-          {{ SUMMARY_MODES.find((m) => m.value === summaryMode)?.description }}
-        </p>
       </div>
 
-      <div v-if="summaryMode === 'words'" id="cfg-word-limit">
-        <div
-          class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
+      <!-- 3. 每条要点字数（要点模式显示，字数模式隐藏但仍占位） -->
+      <div
+        :class="[summaryMode !== 'points' && 'invisible']"
+        id="cfg-point-word-limit"
+      >
+        <label
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
+          >每条要点字数</label
         >
-          <span>概要字数上限</span>
-          <span
-            class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
-            >{{ wordLimit }} 字</span
-          >
-        </div>
-        <input
-          v-model.number="wordLimit"
-          type="range"
-          min="50"
-          max="800"
-          step="50"
-          :disabled="isStreaming"
-          class="range-control w-full"
-        />
-      </div>
-
-      <template v-else>
-        <div id="cfg-points-count">
-          <div
-            class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
-          >
-            <span>要点数量</span>
-            <span
-              class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
-              >{{ keyPointsCount }} 条</span
-            >
-          </div>
-          <input
-            v-model.number="keyPointsCount"
-            type="range"
-            min="3"
-            max="10"
-            step="1"
-            :disabled="isStreaming"
-            class="range-control w-full"
-          />
-        </div>
-
-        <div id="cfg-point-word-limit">
-          <div
-            class="flex items-center justify-between text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
-          >
-            <span>每条要点字数</span>
-            <span
-              class="text-ui bg-[var(--color-input-bg)] px-1.5 py-0.5 rounded border border-[var(--color-outline-variant)]/60 font-semibold"
-              >{{ wordLimit }} 字</span
-            >
-          </div>
+        <div class="flex items-center gap-2">
           <input
             v-model.number="wordLimit"
             type="range"
@@ -313,32 +311,56 @@ async function handleSummarize(): Promise<void> {
             max="800"
             step="50"
             :disabled="isStreaming"
-            class="range-control w-full"
+            class="range-control flex-1"
           />
+          <span
+            class="text-xs font-mono font-semibold text-ui w-8 text-right shrink-0"
+            >{{ wordLimit }}</span
+          >
         </div>
-      </template>
+      </div>
 
-      <div id="cfg-tone-style">
+      <!-- 4. 要点数量 / 概要字数 -->
+      <div id="cfg-points-count">
         <label
-          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2"
-          >摘要语气风格</label
+          class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
+          >{{ summaryMode === "words" ? "概要字数上限" : "要点数量" }}</label
         >
-        <a-select
-          v-model:value="selectedTone"
-          size="small"
-          :options="toneOptions"
-          class="form-select w-full"
-          :disabled="isStreaming"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            v-if="summaryMode === 'words'"
+            v-model.number="wordLimit"
+            type="range"
+            min="50"
+            max="800"
+            step="50"
+            :disabled="isStreaming"
+            class="range-control flex-1"
+          />
+          <input
+            v-else
+            v-model.number="keyPointsCount"
+            type="range"
+            min="3"
+            max="10"
+            step="1"
+            :disabled="isStreaming"
+            class="range-control flex-1"
+          />
+          <span
+            class="text-xs font-mono font-semibold text-ui w-8 text-right shrink-0"
+            >{{ summaryMode === "words" ? wordLimit : keyPointsCount }}</span
+          >
+        </div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-2"
+          class="h-10 px-5 border-b border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between gap-2"
         >
           <span
             class="text-xs font-semibold text-ui-muted flex items-center gap-1.5 shrink min-w-0"
@@ -355,14 +377,17 @@ async function handleSummarize(): Promise<void> {
               @change="handleFileChoose"
             />
             <a-button
-              type="default"
+              type="text"
               size="small"
-              class="action-btn shrink-0"
+              shape="circle"
+              class="icon-only-btn shrink-0"
               :disabled="isStreaming"
+              :title="
+                isStreaming ? '正在生成总结，请稍后再试' : '导入 TXT/MD 文件'
+              "
               @click="triggerFileSelect"
             >
               <template #icon><Upload class="w-3.5 h-3.5" /></template>
-              导入 TXT/MD
             </a-button>
             <a-button
               v-if="inputText"
@@ -384,7 +409,7 @@ async function handleSummarize(): Promise<void> {
           @dragleave="handleDragLeave"
           @drop="handleDrop"
           :class="[
-            'p-4 sm:p-5 h-56 sm:h-[350px] overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
+            'p-4 sm:p-5 h-56 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
             dragActive
               ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60'
               : '',
@@ -395,11 +420,11 @@ async function handleSummarize(): Promise<void> {
             placeholder="粘贴日志、会议记录、草稿笔记，或拖放 .txt/.md 文件到此处…"
             maxlength="50000"
             :disabled="isStreaming"
-            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-[var(--color-placeholder)] leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
+            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-(--color-placeholder) leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
           <div
             v-if="dragActive"
-            class="absolute inset-0 bg-[var(--color-surface)]/90 flex flex-col items-center justify-center p-6 text-center"
+            class="absolute inset-0 bg-(--color-surface)/90 flex flex-col items-center justify-center p-6 text-center"
           >
             <Upload class="w-12 h-12 text-[#00a67e] mb-2 animate-bounce" />
             <span class="text-sm font-semibold text-ui">松开以导入文档</span>
@@ -407,7 +432,7 @@ async function handleSummarize(): Promise<void> {
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-3 text-xs text-ui-muted font-mono"
+          class="h-10 px-5 border-t border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between gap-3 text-[10px] text-ui-muted font-mono"
         >
           <span class="shrink min-w-0 truncate"
             >已加载 {{ inputText.length.toLocaleString() }} 字符</span
@@ -440,34 +465,35 @@ async function handleSummarize(): Promise<void> {
       </div>
 
       <div
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
+          class="h-10 px-5 border-b border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between"
         >
-          <span class="text-xs font-semibold text-ui-muted"
-            >执行摘要与要点</span
+          <span
+            class="text-xs font-semibold text-ui-muted flex items-center gap-1.5"
+            ><FileText class="w-3.5 h-3.5" />执行摘要与要点</span
           >
           <div
             v-if="(overviewText || keyPoints.length > 0) && !isStreaming"
             class="flex items-center gap-1"
           >
             <a-button
-              type="default"
+              type="text"
               size="small"
-              class="action-btn !text-xs"
+              shape="circle"
+              class="icon-only-btn"
+              :title="copied ? '已复制' : '复制'"
               @click="handleCopy"
             >
               <template #icon>
                 <Check v-if="copied" class="w-3.5 h-3.5 text-[#00a67e]" />
                 <Copy v-else class="w-3.5 h-3.5" />
               </template>
-              {{ copied ? "已复制" : "复制" }}
             </a-button>
             <a-button
-              type="default"
+              type="text"
               size="small"
-              shape="circle"
               class="icon-only-btn"
               title="下载"
               @click="handleDownload"
@@ -479,7 +505,7 @@ async function handleSummarize(): Promise<void> {
 
         <div
           ref="outputRef"
-          class="p-4 sm:p-5 h-56 sm:h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40"
+          class="p-4 sm:p-5 h-56 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-(--color-background)/40"
         >
           <div
             v-if="recoveryNotice"
@@ -502,7 +528,7 @@ async function handleSummarize(): Promise<void> {
 
           <div
             v-else-if="isStreaming && result"
-            class="text-xs text-[var(--color-mono-text)] font-mono leading-relaxed whitespace-pre-wrap break-words"
+            class="text-xs text-(--color-mono-text) font-mono leading-relaxed whitespace-pre-wrap wrap-break-word"
           >
             <span
               class="flex items-center gap-1.5 text-[10px] text-[#00a67e] tracking-wider uppercase font-semibold mb-2"
@@ -554,7 +580,7 @@ async function handleSummarize(): Promise<void> {
                 {{ summaryMode === "words" ? "概要总结" : "概述摘要" }}
               </span>
               <p
-                class="text-ui bg-[var(--color-chat-bubble)]/40 border border-[var(--color-outline-variant)]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40"
+                class="text-ui bg-(--color-chat-bubble)/40 border border-(--color-outline-variant)/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40"
               >
                 <TruncatedText :text="overviewText" />
               </p>
@@ -570,7 +596,7 @@ async function handleSummarize(): Promise<void> {
                 <li
                   v-for="(point, idx) in keyPoints"
                   :key="idx"
-                  class="flex gap-3 text-ui leading-relaxed text-xs p-3.5 rounded bg-[var(--color-surface-header)]/50 border border-[var(--color-outline-variant)]/40 items-start hover:border-[#00a67e]/30 transition-all"
+                  class="flex gap-3 text-ui leading-relaxed text-xs p-3.5 rounded bg-(--color-surface-header)/50 border border-(--color-outline-variant)/40 items-start hover:border-[#00a67e]/30 transition-all"
                 >
                   <span
                     class="w-5 h-5 rounded bg-[#00a67e]/10 border border-[#00a67e]/20 text-[#00a67e] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5"
@@ -585,7 +611,7 @@ async function handleSummarize(): Promise<void> {
 
           <div
             v-else
-            class="my-auto flex flex-col justify-center items-center text-center text-[var(--color-placeholder)]"
+            class="my-auto flex flex-col justify-center items-center text-center text-(--color-placeholder)"
           >
             <FileText class="w-10 h-10 mb-2 stroke-[1.2]" />
             <span class="text-xs">概述与要点将显示在此处。</span>
@@ -593,18 +619,25 @@ async function handleSummarize(): Promise<void> {
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between text-[10px] text-ui-muted font-mono"
+          class="px-5 py-2 border-t border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between text-[10px] text-ui-muted font-mono"
         >
+          <div class="flex flex-col gap-0.5">
+            <span
+              >语气：{{
+                TONE_STYLES.find((t) => t.value === selectedTone)?.label ??
+                selectedTone
+              }}</span
+            >
+            <span>{{
+              summaryMode === "words"
+                ? `方式：按字数总结 · ${wordLimit} 字`
+                : `方式：按要点总结 · ${keyPointsCount} 条`
+            }}</span>
+          </div>
           <div class="flex items-center gap-1">
             <Clock class="w-3 h-3 text-[#00a67e]" />
             <span>处理耗时：{{ elapsedTime }}</span>
           </div>
-          <span class="uppercase"
-            >语气：{{
-              TONE_STYLES.find((t) => t.value === selectedTone)?.label ??
-              selectedTone
-            }}</span
-          >
         </div>
       </div>
     </div>

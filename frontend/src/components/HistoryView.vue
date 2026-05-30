@@ -61,7 +61,7 @@ const {
         type="primary"
         danger
         size="small"
-        class="ml-auto md:ml-0 action-btn shrink-0"
+        class="self-center md:self-auto action-btn shrink-0"
         @click="workspace.clearHistory()"
       >
         <template #icon><Trash2 class="w-3.5 h-3.5" /></template>
@@ -107,7 +107,7 @@ const {
         v-for="log in filteredLogs"
         :key="log.id"
         @click="toggleExpand(log.id)"
-        class="rounded border border-(--color-outline-variant) bg-(--color-surface) hover:border-[#00a67e]/40 transition-all duration-150 cursor-pointer overflow-hidden"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 hover:border-[#00a67e]/40 transition-all duration-150 cursor-pointer overflow-hidden"
       >
         <div class="p-4 flex items-center justify-between gap-4 select-none">
           <div class="flex items-center gap-3">

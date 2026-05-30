@@ -6,9 +6,9 @@ defineProps<{ content: string }>();
 <template>
   <div class="chat-align-column flex justify-end text-right">
     <div
-      class="w-fit max-w-full rounded border border-[var(--color-outline-variant)] bg-[var(--color-chat-bubble)] px-4 py-3 text-[15px] leading-relaxed text-ui"
+      class="w-fit max-w-full rounded border border-(--color-outline-variant) bg-(--color-chat-bubble) px-4 py-3 text-[15px] leading-relaxed text-ui"
     >
-      <span class="whitespace-pre-wrap break-words">{{ content }}</span>
+      <span class="whitespace-pre-wrap wrap-break-word">{{ content }}</span>
     </div>
   </div>
 </template>

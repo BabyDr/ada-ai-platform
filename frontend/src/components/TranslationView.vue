@@ -3,8 +3,9 @@
  * 文本翻译页：双栏输入/输出 UI。
  * 任务流、日志、导出逻辑分别见 useTask / useLinguistTaskLog / useExportActions。
  */
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useAutoScroll } from "../composables/useAutoScroll";
+import { useWorkspaceStore } from "../stores/workspace";
 import {
   Sparkles,
   Copy,
@@ -14,12 +15,13 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   Languages,
+  Globe,
+  Target,
   Clock,
   Sparkle,
   Square,
 } from "lucide-vue-next";
 import { SUPPORTED_LANGUAGES, TONE_STYLES } from "../types";
-import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
 import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
 import { useCopyFeedback, downloadTextFile } from "../composables/useExportActions";
@@ -47,7 +49,8 @@ const sourceLang = ref("auto");
 const targetLang = ref("zh");
 const selectedTone = ref<
   "Professional" | "Conversational" | "Technical" | "Academic" | "Creative"
->("Professional");
+>(workspace.defaultTone as "Professional" | "Conversational" | "Technical" | "Academic" | "Creative");
+watch(() => workspace.defaultTone, (v) => { selectedTone.value = v as typeof selectedTone.value; });
 const elapsedTime = ref("--");
 const recoveryNotice = ref("");
 
@@ -166,7 +169,7 @@ async function handleTranslate(): Promise<void> {
 <template>
   <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="translation-view">
     <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-(--color-outline-variant)/40 pb-5"
     >
       <div>
         <h2
@@ -189,7 +192,7 @@ async function handleTranslate(): Promise<void> {
       description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 后重启 Sidecar。"
     />
 
-    <div class="p-4 rounded bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60">
+    <div class="p-4 sm:p-5 rounded bg-(--color-surface-header)/40 border border-(--color-outline-variant)/60">
       <label
         class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider mb-2.5"
       >
@@ -222,24 +225,22 @@ async function handleTranslate(): Promise<void> {
       class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-y-6"
     >
       <div
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
+          class="h-10 px-5 border-b border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between"
         >
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-ui-muted shrink-0"
-              >源语言</span
-            >
-            <a-select
-              v-model:value="sourceLang"
-              size="small"
-              :options="sourceLanguageOptions"
-              class="lang-select min-w-30"
-              popup-class-name="lang-select-dropdown"
-              :disabled="isStreaming"
-            />
-          </div>
+          <span class="text-xs font-semibold text-ui-muted shrink-0 flex items-center gap-1.5"
+            ><Globe class="w-3.5 h-3.5" />源语言</span
+          >
+          <a-select
+            v-model:value="sourceLang"
+            size="small"
+            :options="sourceLanguageOptions"
+            class="lang-select min-w-30"
+            popup-class-name="lang-select-dropdown"
+            :disabled="isStreaming"
+          />
           <a-button
             v-if="inputText"
             type="text"
@@ -260,12 +261,12 @@ async function handleTranslate(): Promise<void> {
             placeholder="在此输入待翻译文本或原始文档…"
             :maxlength="MAX_INPUT_CHARS"
             :disabled="isStreaming"
-            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-[var(--color-placeholder)] leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
+            class="resize-none w-full flex-1 bg-transparent text-ui text-sm focus:outline-none placeholder-(--color-placeholder) leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between gap-3 text-xs text-ui-muted font-mono"
+          class="h-10 px-5 border-t border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between gap-3 text-[10px] text-ui-muted font-mono"
         >
           <span class="shrink min-w-0 truncate"
             >{{ inputText.length }} / {{ MAX_INPUT_CHARS.toLocaleString() }} 字符</span
@@ -326,24 +327,22 @@ async function handleTranslate(): Promise<void> {
       </div>
 
       <div
-        class="rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden"
+        class="rounded border border-(--color-outline-variant)/60 bg-(--color-surface-header)/40 flex flex-col justify-between overflow-hidden"
       >
         <div
-          class="px-5 py-3 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between"
+          class="h-10 px-5 border-b border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between"
         >
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-ui-muted shrink-0"
-              >目标语言</span
-            >
-            <a-select
-              v-model:value="targetLang"
-              size="small"
-              :options="targetLanguageOptions"
-              class="lang-select min-w-30"
-              popup-class-name="lang-select-dropdown"
-              :disabled="isStreaming"
-            />
-          </div>
+          <span class="text-xs font-semibold text-ui-muted shrink-0 flex items-center gap-1.5"
+            ><Target class="w-3.5 h-3.5" />目标语言</span
+          >
+          <a-select
+            v-model:value="targetLang"
+            size="small"
+            :options="targetLanguageOptions"
+            class="lang-select min-w-30"
+            popup-class-name="lang-select-dropdown"
+            :disabled="isStreaming"
+          />
           <div v-if="result" class="flex items-center gap-1">
             <a-button
               type="default"
@@ -370,7 +369,7 @@ async function handleTranslate(): Promise<void> {
           </div>
         </div>
 
-        <div ref="outputRef" class="p-4 sm:p-5 h-64 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40">
+        <div ref="outputRef" class="p-4 sm:p-5 h-64 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-(--color-background)/40">
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
@@ -427,7 +426,7 @@ async function handleTranslate(): Promise<void> {
 
           <div
             v-else
-            class="flex-1 flex flex-col justify-center items-center text-center text-[var(--color-placeholder)]"
+            class="flex-1 flex flex-col justify-center items-center text-center text-(--color-placeholder)"
           >
             <Languages class="w-10 h-10 mb-2 stroke-[1.2]" />
             <span class="text-xs">翻译结果将显示在右侧。</span>
@@ -435,13 +434,13 @@ async function handleTranslate(): Promise<void> {
         </div>
 
         <div
-          class="px-5 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-header)] flex items-center justify-between text-[10px] text-ui-muted font-mono"
+          class="h-10 px-5 border-t border-(--color-outline-variant) bg-(--color-surface-header) flex items-center justify-between text-[10px] text-ui-muted font-mono"
         >
+          <span>语调：{{ selectedToneLabel }}</span>
           <div class="flex items-center gap-1">
             <Clock class="w-3 h-3 text-[#00a67e]" />
             <span>耗时：{{ elapsedTime }}</span>
           </div>
-          <span>语调：{{ selectedToneLabel }}</span>
         </div>
       </div>
     </div>

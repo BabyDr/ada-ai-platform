@@ -21,7 +21,7 @@ function onSubmit() {
 <template>
   <div>
     <div
-      class="chat-input-bar flex items-center gap-2 rounded border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-2 sm:gap-3"
+      class="chat-input-bar flex items-center gap-2 rounded border border-(--color-outline-variant) bg-(--color-surface) p-2 sm:gap-3"
     >
       <a-button type="text" shape="circle" size="large" class="icon-only-btn shrink-0" title="附件（占位）">
         <template #icon>
