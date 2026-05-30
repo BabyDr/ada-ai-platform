@@ -195,7 +195,10 @@ async function handleSummarize(): Promise<void> {
 </script>
 
 <template>
-  <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="summarization-view">
+  <div
+    class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden"
+    id="summarization-view"
+  >
     <div
       class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
     >
@@ -217,7 +220,7 @@ async function handleSummarize(): Promise<void> {
 
     <ApiKeyBanner
       :connected="apiConnected"
-      description="请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 以启用总结功能。"
+      description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 后重启 Sidecar。"
     />
 
     <div

@@ -16,6 +16,8 @@ const emit = defineEmits<{
 }>();
 import {
   Sparkles,
+  Sparkle,
+  FlaskConical,
   LayoutDashboard,
   Languages,
   FileText,
@@ -32,6 +34,7 @@ import { useWorkspaceStore } from "../stores/workspace";
 const route = useRoute();
 const workspace = useWorkspaceStore();
 const apiConnected = computed(() => workspace.apiConnected);
+const llmMode = computed(() => workspace.llmMode);
 
 const menuItems = [
   {
@@ -147,6 +150,22 @@ const menuItems = [
     </nav>
 
     <div class="p-4 border-t ui-border bg-[var(--color-sidebar-footer-bg)]">
+      <div class="flex gap-2 mb-2">
+        <span
+          class="flex-1 justify-center px-2 py-1 rounded text-[10px] font-mono tracking-wider font-semibold text-[#00a67e] bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center gap-1 whitespace-nowrap"
+        >
+          <Sparkle class="w-2.5 h-2.5 animate-pulse shrink-0" />
+          工作区已就绪
+        </span>
+        <span
+          v-if="llmMode === 'mock'"
+          class="flex-1 justify-center px-2 py-1 rounded text-[10px] font-mono tracking-wider font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 flex items-center gap-1 whitespace-nowrap"
+          title="当前为 Mock 模式，未调用真实大模型"
+        >
+          <FlaskConical class="w-2.5 h-2.5 shrink-0" />
+          Mock 模式
+        </span>
+      </div>
       <div
         class="flex items-center justify-between p-3 rounded bg-[var(--color-sidebar-status-bg)] border ui-border"
       >

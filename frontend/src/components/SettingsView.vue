@@ -32,7 +32,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
 
 <template>
   <div
-    class="space-y-6 p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full min-w-0 overflow-x-hidden"
+    class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden"
     id="settings-view"
   >
     <div class="border-b border-[var(--color-outline-variant)]/40 pb-5">
@@ -53,7 +53,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
           <Lock class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-ui">GLM API 密钥状态</h3>
+          <div class="text-sm font-semibold text-ui">GLM API 密钥状态</div>
         </div>
         <span
           :class="[
@@ -67,7 +67,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
         </span>
       </div>
 
-      <p class="text-xs text-ui-muted leading-relaxed">
+      <p class="text-xs text-ui-muted leading-relaxed mb-1!">
         AdaWorks AI通过 AdaWorks Python Sidecar 调用
         GLM，密钥仅保存在服务端，不会暴露给浏览器。
       </p>
@@ -95,7 +95,7 @@ const toneOptions = TONE_STYLES.map((t) => ({
               {{
                 apiConnected
                   ? "密钥已在 backend/.env 中注册，翻译与总结功能已解锁。"
-                  : "请在 backend/.env 中设置 GLM_API_KEY 或 ZHIPU_API_KEY，并重启 Sidecar（npm run sidecar）。"
+                  : "请在 backend/.env 中设置 GLM_API_KEY，并重启 Sidecar（npm run sidecar）。"
               }}
             </span>
           </div>
@@ -110,12 +110,12 @@ const toneOptions = TONE_STYLES.map((t) => ({
       >
         <div class="flex items-center gap-2">
           <Cpu class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-ui">主引擎选择</h3>
+          <div class="text-sm font-semibold text-ui">主引擎选择</div>
         </div>
         <p class="text-xs text-ui-muted">
           翻译与总结默认使用智谱 GLM OpenAPI。
         </p>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 mt-1">
           <label
             class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider"
             >当前模型</label
@@ -136,12 +136,12 @@ const toneOptions = TONE_STYLES.map((t) => ({
       >
         <div class="flex items-center gap-2">
           <Settings class="w-4 h-4 text-[#00a67e]" />
-          <h3 class="text-sm font-semibold text-ui">工作区默认预设</h3>
+          <div class="text-sm font-semibold text-ui">工作区默认预设</div>
         </div>
         <p class="text-xs text-ui-muted">
           新建会话时的默认语调，可在各功能页面临时修改。
         </p>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 mt-1">
           <label
             class="block text-[10px] font-mono text-ui-muted uppercase tracking-wider"
             >默认译文语调</label

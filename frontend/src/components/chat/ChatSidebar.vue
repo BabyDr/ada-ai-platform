@@ -2,6 +2,7 @@
 store，View 层仅做布局与错误提示。 */
 <script setup lang="ts">
 import { message } from "ant-design-vue";
+import { MessageSquare } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import { useChatStore } from "@/stores/chat";
 
@@ -61,15 +62,7 @@ defineExpose({ onNew });
       <div
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded bg-gradient-to-tr from-[#00a67e]/20 to-[#00a67e]/40 border border-[#00a67e]/40 text-[#00a67e]"
       >
-        <svg
-          class="h-6 w-6"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-        </svg>
+        <MessageSquare class="h-6 w-6 text-[#00a67e]" />
       </div>
       <div class="min-w-0 pt-0.5">
         <h1

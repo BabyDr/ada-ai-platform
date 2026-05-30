@@ -14,6 +14,7 @@ import {
   CornerDownLeft,
   Cpu,
   Sparkle,
+  LayoutDashboard,
 } from "lucide-vue-next";
 import { DEFAULT_GLM_MODEL } from "../types";
 import { useDashboardMetrics } from "../composables/useDashboardMetrics";
@@ -33,29 +34,13 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
       class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[var(--color-outline-variant)]/40 pb-6"
     >
       <div>
-        <div class="flex items-center gap-2 mb-2">
-          <span
-            class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wider font-semibold text-[#00a67e] bg-[#00a67e]/10 border border-[#00a67e]/30 flex items-center gap-1"
-          >
-            <Sparkle class="w-2.5 h-2.5 animate-pulse" />
-            工作区已就绪
-          </span>
-          <span
-            v-if="llmMode === 'mock'"
-            class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wider font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30"
-            title="当前为 Mock 模式，未调用真实大模型"
-          >
-            Mock 模式
-          </span>
-        </div>
         <h2
-          class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-ui"
+          class="font-display text-xl sm:text-2xl font-bold text-ui flex items-center gap-2"
         >
+          <LayoutDashboard class="w-6 h-6 text-[#00a67e]" />
           AI Native Workbench
         </h2>
-        <p
-          class="text-xs md:text-sm text-ui-muted mt-1 leading-relaxed max-w-xl"
-        >
+        <p class="text-xs text-ui-muted mt-1">
           简化全球文档工作流。通过服务端安全代理调用低延迟 GLM
           模型，完成翻译与文档总结。
         </p>
@@ -162,7 +147,7 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
               <Languages class="w-6 h-6 text-[#00a67e]" />
             </div>
             <span
-              class="text-[10px] font-mono text-[var(--color-mono-text)] uppercase tracking-wider"
+              class="text-[10px] font-mono text-[#00a67e] uppercase tracking-wider"
               >多语调翻译器</span
             >
           </div>
@@ -224,9 +209,9 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
     >
       <div class="flex items-center gap-2 mb-4">
         <Sparkles class="w-4 h-4 text-[#00a67e]" />
-        <h4 class="text-sm font-semibold text-ui font-display">
+        <div class="text-sm font-semibold text-ui font-display">
           智能输入控制台
-        </h4>
+        </div>
       </div>
 
       <p class="text-xs text-ui-muted mb-4">

@@ -186,7 +186,7 @@ async function handleTranslate(): Promise<void> {
 
     <ApiKeyBanner
       :connected="apiConnected"
-      description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 后重启 Sidecar。"
+      description="模型服务当前离线。请在 backend/.env 中配置 GLM_API_KEY 后重启 Sidecar。"
     />
 
     <div class="p-4 rounded bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60">

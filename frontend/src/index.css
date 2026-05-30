@@ -86,3 +86,8 @@ body {
 pre {
   font-size: 14px;
 }
+
+/** 全局重置 h / p 标签默认 margin，避免与 flex 对齐冲突 */
+h1, h2, h3, h4, h5, h6, p {
+  margin: 4px 0;
+}
