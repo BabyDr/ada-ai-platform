@@ -10,6 +10,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { ChatMessage, MessageRole, ServerMessage, Session } from "@/types/chat";
 import { createSession, getSessionMessages, getSessions, postChat } from "@/services/api";
+import { randomUUID } from "@/utils/randomId";
 
 /** 将服务端消息转为前端列表项 */
 function fromServer(m: ServerMessage): ChatMessage {
@@ -96,7 +97,7 @@ export const useChatStore = defineStore("chat", () => {
    * - `agent:error`：展示错误文案。
    */
   function applyAgentEvent(type: string, payload: Record<string, unknown>) {
-    const genId = () => crypto.randomUUID();
+    const genId = () => randomUUID();
 
     if (type === "agent:think") {
       messages.value.push({

@@ -3,15 +3,18 @@
  * 智能体对话页壳：挂载侧栏 + 顶栏 + ChatPanel，初始化默认会话。
  */
 import { message } from "ant-design-vue";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useChatStore } from "@/stores/chat";
 import ChatPanel from "@/components/chat/ChatPanel.vue";
 import ChatSidebar from "@/components/chat/ChatSidebar.vue";
 import ChatHeader from "@/components/chat/ChatHeader.vue";
+import { useBreakpoint } from "@/composables/useBreakpoint";
 
 const chat = useChatStore();
 const { sessions, activeSessionId } = storeToRefs(chat);
+const { isMobile } = useBreakpoint();
+const sessionDrawerOpen = ref(false);
 
 const BACKEND_HINT =
   "请先在仓库根目录执行：npm run sidecar:setup，再 npm run dev:all（或另开终端 npm run sidecar）";
@@ -44,12 +47,36 @@ function onHelp(): void {
 
 <template>
   <div
-    class="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden app-main-gradient font-sans text-ui"
+    class="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-hidden overflow-x-hidden app-main-gradient font-sans text-ui"
   >
-    <ChatSidebar @settings="onSettings" @help="onHelp" />
+    <ChatSidebar
+      v-if="!isMobile"
+      @settings="onSettings"
+      @help="onHelp"
+    />
+
+    <a-drawer
+      v-if="isMobile"
+      v-model:open="sessionDrawerOpen"
+      placement="left"
+      :width="280"
+      :closable="true"
+      :body-style="{ padding: 0, height: '100%' }"
+      title="会话"
+    >
+      <ChatSidebar
+        embedded
+        @settings="onSettings"
+        @help="onHelp"
+        @navigate="sessionDrawerOpen = false"
+      />
+    </a-drawer>
 
     <main class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <ChatHeader />
+      <ChatHeader
+        :show-session-menu="isMobile"
+        @open-sessions="sessionDrawerOpen = true"
+      />
 
       <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
         <ChatPanel v-if="activeSessionId" class="min-h-0 flex-1" />

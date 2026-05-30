@@ -4,7 +4,17 @@
 <script setup lang="ts">
 import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
+import { PanelLeft } from "lucide-vue-next";
 import { useChatStore } from "@/stores/chat";
+
+defineProps<{
+  /** 移动端显示会话列表入口。 */
+  showSessionMenu?: boolean;
+}>();
+
+const emit = defineEmits<{
+  openSessions: [];
+}>();
 
 const chat = useChatStore();
 const { currentModelId } = storeToRefs(chat);
@@ -22,16 +32,29 @@ function onShareHint(): void {
 
 <template>
   <header
-    class="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/90 px-5 py-3 backdrop-blur-sm"
+    class="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-header)]/90 px-3 py-3 backdrop-blur-sm sm:gap-4 sm:px-5"
   >
-    <div class="flex min-w-0 flex-wrap items-center gap-3">
-      <span class="truncate font-mono text-sm font-semibold text-ui">{{ currentModelId }}</span>
+    <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+      <a-button
+        v-if="showSessionMenu"
+        type="text"
+        size="small"
+        shape="circle"
+        class="icon-only-btn shrink-0 md:hidden"
+        title="打开会话列表"
+        @click="emit('openSessions')"
+      >
+        <template #icon><PanelLeft class="h-4 w-4 text-ui" /></template>
+      </a-button>
+      <div class="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+        <span class="truncate font-mono text-xs font-semibold text-ui sm:text-sm">{{ currentModelId }}</span>
       <span
         class="inline-flex items-center gap-1 rounded bg-[#00a67e]/10 border border-[#00a67e]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00a67e]"
       >
         <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00a67e]" />
         在线
       </span>
+      </div>
     </div>
     <div class="flex shrink-0 items-center gap-1">
       <a-button type="text" size="small" shape="circle" class="icon-only-btn" title="历史" @click="onHistoryHint">

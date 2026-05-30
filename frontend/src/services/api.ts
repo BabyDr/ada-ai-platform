@@ -8,7 +8,7 @@ import type { ChatAck, ChatRequest, ServerMessage, Session } from "@/types/chat"
 import { errorMessage } from "@/utils/safeAsync";
 
 /** Sidecar HTTP 根路径（与 spec §8.2、.env.development 一致） */
-const BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:18765/api";
+const BASE = (import.meta.env.VITE_API_BASE || "/api").replace(/\/$/, "");
 
 /** 包装 fetch：失败时抛出带 HTTP 状态或网络原因的 Error。 */
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {

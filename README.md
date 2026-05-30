@@ -1,8 +1,8 @@
 # AdaAgent · Linguist AI / AI TextFlow
 
-面向 [AI Native 开发工程师笔试](docs/ai-native/ai-requirement.md) 的 AI 文本处理应用：在现有 **Linguist AI** 工作区上增量演进，提供多语言翻译、智能要点总结、SSE 流式输出与任务取消，并附带 Agent 对话、调用记录与 CLI/Agent 工具链。
+面向 [AI Native 开发工程师笔试](docs/ai-native/ai-requirement.md) 的 AI 文本处理应用，提供多语言翻译、智能要点总结、SSE 流式输出与任务取消，并附带 Agent 对话、调用记录与 CLI/Agent 工具链。
 
-> 详细方案见 [`docs/ai-native/plan.md`](docs/ai-native/plan.md) · 规范见 [`spec/`](spec/) · 使用手册见 [`docs/manual.md`](docs/manual.md) · Agent 协作见 [`agent.md`](agent.md)
+> 详细方案见 [`docs/ai-native/plan.md`](docs/ai-native/plan.md) · 规范见 [`docs/spec/`](docs/spec/) · 使用手册见 [`docs/manual.md`](docs/manual.md) · Agent 协作见 [`agent.md`](agent.md)
 
 ---
 
@@ -22,7 +22,7 @@
 - **智能要点总结**：要点数 / 字数上限 / 语调、文件导入、概述 + 要点结构化展示
 - **运行日志**：记录每次调用的输入、输出、耗时与状态（内存环形缓冲，分页查询）
 - **智能体对话**：GLM/Gemini/Mock Agent，WebSocket 流式回复
-- **CLI + skill.md**：`ai-app translate` / `summarize` / `list`，供 Claude Code 等 Agent 调用
+- **CLI + SKILL.md**：`ai-app translate` / `summarize` / `list`，供 Claude Code 等 Agent 调用
 - **工程加分**：明暗主题（Ant Design + `theme.css` 语义变量）、响应式布局、任务刷新恢复、16ms 流式渲染缓冲、统一错误处理与 Request ID
 
 ### CLI 演示
@@ -72,12 +72,13 @@ AdaAgent/
 │   ├── api/                 # functions, task, schemas
 │   └── services/            # llm, prompt, task_manager, task_sweeper
 ├── cli/                     # ai-app CLI
-├── .claude/skills/skill.md  # Agent 技能描述
-├── spec/                    # 需求、API、页面、任务拆分
+├── .claude/skills/SKILL.md  # Agent 技能描述
 ├── docs/
+│   ├── architecture.md      # 模块架构说明（Backend/Frontend/CLI 结构与依赖）
 │   ├── manual.md            # 系统使用手册
-│   ├── ai-native/           # 笔试需求与实现方案
-│   └── verification/        # 手动验收清单与截图目录
+│   ├── spec/                # 规范契约：需求、API 设计、页面原型、开发标准、任务拆分
+│   ├── ai-native/           # 笔试相关：原始需求、技术方案、实现任务、异常清单
+│   └── verification/        # 手动验收截图（light/dark/mobile）+ 清单
 ├── agent.md                 # AI Agent 协作记录
 └── scripts/sidecar.mjs
 ```
@@ -165,7 +166,7 @@ npm run build --prefix frontend
 
 ## API 接口文档
 
-完整规范见 [`spec/api-design.md`](spec/api-design.md)。
+完整规范见 [`docs/spec/api-design.md`](docs/spec/api-design.md)。
 
 Base URL：`http://127.0.0.1:18765`
 
@@ -264,12 +265,12 @@ curl -sf http://127.0.0.1:18765/api/functions
 | 项目源码 | 本仓库 | ✅ |
 | README（介绍 / 技术栈 / 运行 / API） | `README.md` | ✅ |
 | CLI 工具 | `cli/ai_app.py` | ✅ |
-| skill.md | `.claude/skills/skill.md` | ✅ |
-| Agent 调用截图 | `docs/verification/agent-skill-invoke.png` | ⚠️ **待补** |
+| SKILL.md | `.claude/skills/SKILL.md` | ✅ |
+| Agent 调用截图 | `docs/verification/agent-skill-invoke.png` | ✅ |
 | agent.md | `agent.md` | ✅ |
-| spec/ 规范目录 | `spec/` | ✅ |
+| spec/ 规范目录 | `docs/spec/` | ✅ |
 | 系统使用手册 | `docs/manual.md` | ✅ |
-| 手动验收截图 | `docs/verification/*.png` | ⚠️ **待补** |
+| 手动验收截图 | `docs/verification/`（light/dark/mobile） | ✅ |
 | Docker | `Dockerfile` + `docker-compose.yml` | ✅（后端） |
 | 异常场景清单 | `docs/ai-native/exception-checklist.md` | ✅ |
 
@@ -279,15 +280,29 @@ curl -sf http://127.0.0.1:18765/api/functions
 
 ## 相关文档
 
+**快速理解项目**（推荐阅读顺序）：
+
+| 顺序 | 文档 | 说明 |
+|------|------|------|
+| 1 | [docs/architecture.md](docs/architecture.md) | **模块架构说明**（Backend/Frontend/CLI 结构与依赖） |
+| 2 | 本文件 README.md | 项目介绍、运行指南、API 文档 |
+| 3 | [docs/manual.md](docs/manual.md) | 系统使用手册 |
+
+**规范与实现**：
+
 | 文档 | 说明 |
 |------|------|
-| [docs/manual.md](docs/manual.md) | 系统使用手册（活文档） |
+| [docs/spec/](docs/spec/) | 需求、API 契约、页面原型、开发规范 |
+| [docs/ai-native/ai-requirement.md](docs/ai-native/ai-requirement.md) | 笔试原始需求 |
+| [docs/ai-native/exception-checklist.md](docs/ai-native/exception-checklist.md) | 异常场景评估与验收（57 条） |
+
+**Agent 与交付**：
+
+| 文档 | 说明 |
+|------|------|
 | [agent.md](agent.md) | AI Agent 角色与协作决策 |
-| [spec/](spec/) | 需求、API、页面原型、任务拆分 |
-| [.claude/skills/skill.md](.claude/skills/skill.md) | CLI Agent 技能 |
-| [docs/ai-native/](docs/ai-native/) | 笔试需求、实现方案、任务清单 |
-| [docs/ai-native/exception-checklist.md](docs/ai-native/exception-checklist.md) | 异常场景评估与验收 |
-| [docs/verification/](docs/verification/) | 手动验收清单与截图目录 |
+| [.claude/skills/SKILL.md](.claude/skills/SKILL.md) | CLI Agent 技能描述 |
+| [docs/verification/](docs/verification/) | 手动验收清单与截图 |
 
 ---
 

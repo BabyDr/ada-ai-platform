@@ -1,6 +1,6 @@
 # API 设计规范
 
-> 开发规范（注释、try/catch、SRP）见 `spec/development-standards.md`。
+> 开发规范（注释、try/catch、SRP）见 `development-standards.md`。
 
 Base URL：`http://127.0.0.1:18765`  
 前缀：所有 REST 路径以 `/api` 开头

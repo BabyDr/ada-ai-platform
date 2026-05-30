@@ -1,6 +1,7 @@
 import type {
   Button,
   ConfigProvider,
+  Drawer,
   Radio,
   Select,
   Spin,
@@ -11,6 +12,7 @@ declare module "@vue/runtime-core" {
   interface GlobalComponents {
     AButton: typeof Button;
     AConfigProvider: typeof ConfigProvider;
+    ADrawer: typeof Drawer;
     ARadioGroup: typeof Radio.Group;
     ARadioButton: typeof Radio.Button;
     ASelect: typeof Select;

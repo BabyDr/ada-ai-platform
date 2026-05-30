@@ -6,7 +6,7 @@
 
 ## 1. 单一职责（SRP）
 
-详见 `docs/ai-navitve/plan.md` §6.3。
+详见 `../ai-native/plan.md` §6.3。
 
 | 层级 | 路径 | 职责 |
 |------|------|------|
@@ -74,7 +74,7 @@
 | DELETE | `/api/task/{taskId}` | 取消任务 |
 | GET | `/api/task/{taskId}` | 查询状态 |
 
-**不提供** 也 **禁止新增** 独立的 `POST /api/translate`、`POST /api/summarize` 等非流式路由。详见 `spec/api-design.md`。
+**不提供** 也 **禁止新增** 独立的 `POST /api/translate`、`POST /api/summarize` 等非流式路由。详见 `api-design.md`。
 
 ---
 

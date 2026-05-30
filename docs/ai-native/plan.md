@@ -34,7 +34,7 @@
 | F3 | 总结页 | `[必做]` | **保留现有** `SummarizationView`：要点数/字数上限/语调/文件导入；底层改为 SSE 流式 + 停止 |
 | F4 | SSE 流式渲染 | `[必做]` `[亮点]` | 前端接收 SSE 逐 token 渲染，打字机效果 |
 | F5 | 停止/取消任务 | `[必做]` `[亮点]` | 前端中断 SSE 连接 + 调用 DELETE 接口取消后端任务 |
-| F6 | GET /api/functions | `[必做]` | 返回功能列表及描述（**供 CLI / skill.md 使用**；前端工作台不依赖此接口） |
+| F6 | GET /api/functions | `[必做]` | 返回功能列表及描述（**供 CLI / SKILL.md 使用**；前端工作台不依赖此接口） |
 | F7 | POST /api/task (SSE) | `[必做]` `[亮点]` | 提交任务，SSE 流式返回 taskId + 结果 |
 | F8 | DELETE /api/task/{taskId} | `[必做]` | 取消正在执行的任务 |
 | F9 | LLM 调用层 | `[必做]` | 封装大模型调用，保留真实调用链路，支持 mock 模式 |
@@ -44,7 +44,7 @@
 | # | 功能 | 优先级 | 说明 |
 |---|------|--------|------|
 | F10 | CLI 工具 | `[必做]` `[亮点]` | `ai-app translate` / `ai-app summarize` 命令，调用后端 API |
-| F11 | skill.md | `[必做]` `[亮点]` | Agent 可识别的技能描述文件，含调用协议 |
+| F11 | SKILL.md | `[必做]` `[亮点]` | Agent 可识别的技能描述文件，含调用协议 |
 | F12 | Agent 调用截图 | `[必做]` | Claude Code 发现并执行 CLI 工具的截图证据 |
 
 ### Phase 3 — 加分项（约 1 天，按性价比排序）
@@ -52,7 +52,7 @@
 | # | 功能 | 优先级 | 说明 |
 |---|------|--------|------|
 | F13 | agent.md | `[加分]` `[亮点]` | 描述 AI Agent 在项目中的角色、协作方式、开发流程 |
-| F14 | spec/ 规范目录 | `[加分]` `[亮点]` | 需求拆分、接口设计、页面原型等规范文件 |
+| F14 | docs/spec/ 规范目录 | `[加分]` `[亮点]` | 需求拆分、接口设计、页面原型等规范文件 |
 | F15 | 请求参数校验 | `[加分]` | Pydantic schema 校验，统一错误响应格式 |
 | F16 | 统一错误处理 | `[加分]` | 全局异常中间件，标准化错误码 |
 | F17 | 日志追踪 | `[加分]` | 请求级 traceId 贯穿前后端日志 |
@@ -298,7 +298,7 @@ ai-app list
 - 直接调用后端 API（非绕过后端直接调 LLM）
 - 支持流式输出（终端逐字打印）
 
-### 2.6 skill.md 设计 (`[必做]` `[亮点]`)
+### 2.6 SKILL.md 设计 (`[必做]` `[亮点]`)
 
 ```markdown
 # AI Text Processing Tool
@@ -329,9 +329,9 @@ ai-app summarize --text "..." --max-points 5
 - 人机协作边界（人类决策 vs Agent 执行）
 - Prompt 策略和迭代记录
 
-**spec/ 目录结构**：
+**docs/spec/ 目录结构**：
 ```
-spec/
+docs/spec/
 ├── requirements.md     # 需求拆分（功能点 → 子任务）
 ├── api-design.md       # 接口规范（请求/响应/错误码）
 ├── page-mockup.md      # 页面线框图（ASCII 或描述）
@@ -346,9 +346,9 @@ spec/
 
 | 考察维度 | 对应功能 | 体现方式 |
 |----------|----------|----------|
-| **AI Agent 理解** | skill.md + Agent 调用截图 | 证明理解 Agent 工具链协议，能设计 Agent 可调用的工具 |
+| **AI Agent 理解** | SKILL.md + Agent 调用截图 | 证明理解 Agent 工具链协议，能设计 Agent 可调用的工具 |
 | **流式处理能力** | SSE 全链路 | 前后端 SSE 闭环，是 AI 应用的基础能力 |
-| **工程规范意识** | spec/ + agent.md + SDD/TDD | 证明不是随便写 demo，而是有规范驱动的工程素养 |
+| **工程规范意识** | docs/spec/ + agent.md + SDD/TDD | 证明不是随便写 demo，而是有规范驱动的工程素养 |
 | **全栈能力** | 前端 + 后端 + CLI + Docker | 端到端交付能力 |
 | **AI 辅助开发** | agent.md 中的协作描述 | 证明能高效利用 AI 工具开发（这就是 AI Native 的核心） |
 
@@ -370,12 +370,12 @@ spec/
 ### Day 2 — 取消闭环 + CLI + real 模式
 - [ ] `task_manager.py` 取消 + 超时；前后端取消闭环验收
 - [ ] 接入真实 GLM API（`LLM_MODE=real`）；mock 无 Key 演示路径保留
-- [ ] CLI 工具 + skill.md；参数校验 + 统一错误处理
+- [ ] CLI 工具 + SKILL.md；参数校验 + 统一错误处理
 
 ### Day 3 — 加分项 + 文档
 - [ ] 任务状态轮询（可选 GET /api/task/{id}）
 - [ ] Ant Design Vue 明暗主题切换（`a-config-provider`）
-- [ ] Docker 支持；agent.md + spec/ 目录；README 完善
+- [ ] Docker 支持；agent.md + docs/spec/ 目录；README 完善
 
 ---
 
@@ -420,8 +420,8 @@ AdaAgent/
 ├── cli/                             # 新增 [F10]
 │   ├── ai_app.py
 │   └── setup.py
-├── .claude/skills/skill.md          # 新增 [F11]
-├── spec/                            # 新增 [F14]
+├── .claude/skills/SKILL.md          # 新增 [F11]
+├── docs/spec/                            # 新增 [F14]
 ├── agent.md                         # 新增 [F13]
 ├── Dockerfile + docker-compose.yml  # 新增 [F24]
 ├── scripts/sidecar.mjs              # 已有 — 启动 Sidecar
@@ -561,7 +561,7 @@ CREATE TABLE messages (
 
 ### 6.7 开发规范（强制）
 
-完整条文见 **`spec/development-standards.md`**，摘要：
+完整条文见 **`docs/spec/development-standards.md`**，摘要：
 
 | 条目 | 要求 |
 |------|------|

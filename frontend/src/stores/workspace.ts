@@ -11,13 +11,21 @@ import * as api from "../services/linguistApi";
 
 const THEME_KEY = "adaagent-dark";
 
+function readThemePreference(): boolean {
+  try {
+    return localStorage.getItem(THEME_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
 export const useWorkspaceStore = defineStore("workspace", () => {
   const logs = ref<LogEntry[]>([]);
   const quickText = ref("");
   const apiConnected = ref(false);
   const llmMode = ref("mock");
   const activeTaskId = ref("");
-  const isDark = ref<boolean>(localStorage.getItem(THEME_KEY) !== "false");
+  const isDark = ref<boolean>(readThemePreference());
   /** Linguist SSE 流式进行中（跨页路由守卫 #35） */
   const linguistStreaming = ref(false);
   let linguistCancelHandler: (() => Promise<void>) | null = null;
@@ -137,7 +145,11 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   /** 切换明暗主题并持久化到 localStorage。 */
   function toggleTheme(): void {
     isDark.value = !isDark.value;
-    localStorage.setItem(THEME_KEY, String(isDark.value));
+    try {
+      localStorage.setItem(THEME_KEY, String(isDark.value));
+    } catch {
+      /* 隐私模式等无法写入 localStorage */
+    }
   }
 
   return {

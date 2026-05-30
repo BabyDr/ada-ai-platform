@@ -164,13 +164,13 @@ async function handleTranslate(): Promise<void> {
 </script>
 
 <template>
-  <div class="space-y-6 p-8 max-w-6xl mx-auto" id="translation-view">
+  <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="translation-view">
     <div
       class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
     >
       <div>
         <h2
-          class="font-display text-2xl font-bold text-ui flex items-center gap-2"
+          class="font-display text-xl sm:text-2xl font-bold text-ui flex items-center gap-2"
         >
           <Languages class="w-6 h-6 text-[#00a67e]" />
           文本翻译器 · 双栏对照
@@ -254,7 +254,7 @@ async function handleTranslate(): Promise<void> {
           </a-button>
         </div>
 
-        <div class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col">
+        <div class="p-4 sm:p-5 h-64 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col">
           <textarea
             v-model="inputText"
             placeholder="在此输入待翻译文本或原始文档…"
@@ -297,6 +297,19 @@ async function handleTranslate(): Promise<void> {
             </a-button>
           </div>
         </div>
+      </div>
+
+      <div class="flex lg:hidden items-center justify-center py-1">
+        <a-button
+          shape="circle"
+          size="small"
+          class="icon-only-btn shadow-md"
+          title="交换语言"
+          :disabled="isStreaming"
+          @click="handleSwapLanguages"
+        >
+          <template #icon><ArrowRightLeft class="w-3.5 h-3.5" /></template>
+        </a-button>
       </div>
 
       <div class="hidden lg:flex items-center justify-center self-center px-3">
@@ -357,7 +370,7 @@ async function handleTranslate(): Promise<void> {
           </div>
         </div>
 
-        <div ref="outputRef" class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40">
+        <div ref="outputRef" class="p-4 sm:p-5 h-64 sm:h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40">
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"

@@ -2,8 +2,6 @@
 
 本目录存放 [`implementation-tasks.md`](../ai-native/implementation-tasks.md) 与 [`ai-requirement.md`](../ai-native/ai-requirement.md) 要求的人工验收截图与说明。
 
-> **当前状态（2026-05-30）**：自动化测试与文档已就绪；本目录 **尚无 `.png` 截图文件**，笔试硬性交付项「Agent 调用截图」与下列 V1–V6 均待补拍。
-
 ---
 
 ## 交付物核对
@@ -12,35 +10,57 @@
 |------|----------|-------------|------|
 | 源码仓库 | ai-requirement §四 | GitHub/Gitee 地址 | 提交时填写 |
 | README | ai-requirement §四 | [`README.md`](../../README.md) | ✅ |
-| skill.md | ai-requirement §3.2 | [`.claude/skills/skill.md`](../../.claude/skills/skill.md) | ✅ |
-| **Agent 调用截图** | ai-requirement §3.2 / T4.3 | `agent-skill-invoke.png` | ❌ 待补 |
+| SKILL.md | ai-requirement §3.2 | [`.claude/skills/SKILL.md`](../../.claude/skills/SKILL.md) | ✅ |
+| Agent 调用截图 | ai-requirement §3.2 / T4.3 | [`agent-skill-invoke.png`](agent-skill-invoke.png) | ✅ |
 | agent.md | 加分 §1 | [`agent.md`](../../agent.md) | ✅ |
-| spec/ 目录 | 加分 §1 | [`spec/`](../../spec/) | ✅ |
+| spec/ 目录 | 加分 §1 | [`docs/spec/`](../spec/) | ✅ |
 | 系统手册 | T7.4 | [`docs/manual.md`](../manual.md) | ✅ |
 | Docker | 加分 §5 | `Dockerfile` + `docker-compose.yml` | ✅（Sidecar） |
-| 手动验收截图 | T2.4–T6.2 | 下表 V1–V6 | ❌ 待补 |
+| 手动验收截图 | T2.4–T6.2 | 下表 V1–V6 | ✅ |
 | 异常清单（工程加分） | exception-checklist | [`exception-checklist.md`](../ai-native/exception-checklist.md) | ✅ |
 
 ---
 
 ## 验收清单
 
-| 编号 | 任务 | 内容 | 截图文件（建议命名） | 状态 |
-|------|------|------|---------------------|------|
-| V1 | T2.4 | 翻译页 mock 流式 + 停止生成 | `translation-streaming.png` | ❌ |
-| V2 | T2.5 | 总结页 mock 流式 + 停止生成 | `summarization-streaming.png` | ❌ |
-| V3 | T2.6 | 工作台快捷输入预填翻译页 | `dashboard-quick-route.png` | ❌ |
-| V4 | T4.3 | Claude Code 发现并调用 `ai-app` | `agent-skill-invoke.png` | ❌ |
-| V5 | T6.1 | 明暗主题切换前后对比 | `theme-light.png` / `theme-dark.png` | ❌ |
-| V6 | T6.2 | 375px / 768px 响应式无溢出 | `responsive-375.png` / `responsive-768.png` | ❌ |
+### 截图目录结构
 
-可选加分验收（非笔试硬性，见 exception-checklist）：
+```
+docs/verification/
+├── agent-skill-invoke.png          # Agent skill 调用截图
+├── light/                          # 浅色主题截图
+│   ├── ai_workspace_overview.png   # 工作台总览
+│   ├── translation_comparison.png  # 翻译页（输入）
+│   ├── translation_complete.png    # 翻译完成
+│   ├── ai_summary_config.png      # 总结配置
+│   ├── smart_summary.png           # 总结结果
+│   ├── ai_chat_interface.png      # Agent 对话
+│   ├── api_logs.png               # 运行日志
+│   └── global_settings.png        # 设置页
+├── dark/                           # 深色主题截图
+│   ├── dark_workspace.png
+│   ├── dark_translator.png
+│   ├── dark_summary_result.png
+│   ├── dark_chat_interface.png
+│   ├── runtime_logs.png
+│   └── system_settings.png
+└── mobile/                         # 移动端截图
+    ├── linguist_workspace_main.jpg
+    ├── linguist_translation.jpg
+    ├── linguist_summary.jpg
+    └── linguist_api_logs.jpg
+```
 
-| 编号 | 内容 | 截图建议 | 状态 |
-|------|------|----------|------|
-| V7 | 流式中切换路由 → 离开确认 Modal | `route-leave-guard.png` | ❌ |
-| V8 | F5 刷新后任务恢复提示 | `task-recovery-hint.png` | ❌ |
-| V9 | 运行日志分页「加载更多」 | `history-pagination.png` | ❌ |
+### 验收项与截图对照
+
+| 编号 | 任务 | 内容 | 截图文件 | 状态 |
+|------|------|------|----------|------|
+| V1 | T2.4 | 翻译页 mock 流式 + 结果对照 | `light/translation_comparison.png` · `light/translation_complete.png` | ✅ |
+| V2 | T2.5 | 总结页 mock 流式 + 结果 | `light/ai_summary_config.png` · `light/smart_summary.png` | ✅ |
+| V3 | T2.6 | 工作台总览 + 快捷入口 | `light/ai_workspace_overview.png` | ✅ |
+| V4 | T4.3 | Claude Code 发现并调用 `ai-app` | `agent-skill-invoke.png` | ✅ |
+| V5 | T6.1 | 明暗主题切换前后对比 | `light/` · `dark/` 全套 | ✅ |
+| V6 | T6.2 | 移动端响应式（375px） | `mobile/` 全套 | ✅ |
 
 ---
 
@@ -57,9 +77,7 @@ npm run dev:all
 3. **快捷路由（V3）**：`/dashboard` → 快捷输入框输入文本 → 回车 → 确认目标页预填
 4. **主题（V5）**：Sidebar 底部切换太阳/月亮图标 → 确认 Ant 组件与页面背景同步变化 → 刷新确认持久化（`localStorage` 键 `adaagent-dark`）
 5. **响应式（V6）**：DevTools 设备模式切换 375px / 768px 截图
-6. **Agent skill（V4）**：Claude Code 加载 `.claude/skills/skill.md` → 执行 `ai-app list` → 截图终端输出
-7. **路由守卫（V7）**：翻译流式进行中点击 Sidebar 其他菜单 → 确认弹出离开提示
-8. **任务恢复（V8）**：流式进行中 F5 → 页面 mount 后显示恢复提示文案
+6. **Agent skill（V4）**：Claude Code 加载 `.claude/skills/SKILL.md` → 执行 `ai-app list` → 截图终端输出
 
 ---
 

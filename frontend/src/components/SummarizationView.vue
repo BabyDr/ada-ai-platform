@@ -195,13 +195,13 @@ async function handleSummarize(): Promise<void> {
 </script>
 
 <template>
-  <div class="space-y-6 p-8 max-w-6xl mx-auto" id="summarization-view">
+  <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="summarization-view">
     <div
       class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5"
     >
       <div>
         <h2
-          class="font-display text-2xl font-bold text-ui flex items-center gap-2"
+          class="font-display text-xl sm:text-2xl font-bold text-ui flex items-center gap-2"
         >
           <FileText class="w-6 h-6 text-[#00a67e]" />
           智能要点总结
@@ -221,7 +221,7 @@ async function handleSummarize(): Promise<void> {
     />
 
     <div
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60 rounded"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 p-4 sm:p-5 bg-[var(--color-surface-header)]/40 border border-[var(--color-outline-variant)]/60 rounded"
     >
       <div id="cfg-summary-mode" class="md:col-span-2 lg:col-span-1">
         <label
@@ -381,7 +381,7 @@ async function handleSummarize(): Promise<void> {
           @dragleave="handleDragLeave"
           @drop="handleDrop"
           :class="[
-            'p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
+            'p-4 sm:p-5 h-56 sm:h-[350px] overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
             dragActive
               ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60'
               : '',
@@ -476,7 +476,7 @@ async function handleSummarize(): Promise<void> {
 
         <div
           ref="outputRef"
-          class="p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40"
+          class="p-4 sm:p-5 h-56 sm:h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-background)]/40"
         >
           <div
             v-if="recoveryNotice"

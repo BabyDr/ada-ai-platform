@@ -1,7 +1,7 @@
 # AI Native 异常场景 Checklist
 
 > 面向 AdaAgent（翻译 / 总结 SSE 主路径 + Agent Chat 加分路径）的异常场景评估、实现方案与验收清单。
-> 关联需求：[ai-requirement.md](../ai-navitve/ai-requirement.md) · API 契约：[spec/api-design.md](../../spec/api-design.md)
+> 关联需求：[ai-requirement.md](ai-requirement.md) · API 契约：[api-design.md](../spec/api-design.md)
 
 ---
 
@@ -281,7 +281,7 @@ flowchart TD
 - [x] 总结 `task_done.result` 通过 Pydantic 校验
 - [x] `keyPoints` 数量与请求参数一致（±0）
 - [x] 翻译结果仅为 `{ text: string }`，无多余字段
-- [x] Schema 定义与 `spec/api-design.md` 一致（`schemas.py`）
+- [x] Schema 定义与 `docs/spec/api-design.md` 一致（`schemas.py`）
 
 ---
 

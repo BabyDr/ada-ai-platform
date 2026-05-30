@@ -184,3 +184,9 @@
 .chat-align-column {
   width: 100%;
 }
+
+/** 移动端导航 Drawer：去掉默认内边距，侧栏内容撑满 */
+.mobile-nav-drawer .ant-drawer-body {
+  padding: 0;
+  overflow: hidden;
+}

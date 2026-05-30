@@ -243,7 +243,7 @@ ai-app summarize --text "长文本…" --max-points 3 --word-limit 250
 
 ## 5. 作为 Agent 工具被调用
 
-技能描述文件：`.claude/skills/skill.md`
+技能描述文件：`.claude/skills/SKILL.md`
 
 Claude Code 等 Agent 可发现 `ai-app` 命令并调用翻译/总结能力，也可直接 HTTP 调用 `/api/functions` + `/api/task`。
 
@@ -316,9 +316,9 @@ Sidebar 底部点击 **太阳/月亮** 图标切换主题。选择持久化至 `
 | 文档 | 说明 |
 |------|------|
 | [README.md](../README.md) | 项目概览与 API 速查 |
-| [spec/api-design.md](../spec/api-design.md) | API 完整规范 |
+| [spec/api-design.md](spec/api-design.md) | API 完整规范 |
 | [agent.md](../agent.md) | AI Agent 协作记录 |
-| [.claude/skills/skill.md](../.claude/skills/skill.md) | CLI Agent 技能 |
+| [.claude/skills/SKILL.md](../.claude/skills/SKILL.md) | CLI Agent 技能 |
 | [docs/ai-native/](./ai-native/) | 笔试需求与实现方案 |
 | [docs/ai-native/exception-checklist.md](./ai-native/exception-checklist.md) | 异常场景 Checklist |
 | [docs/verification/](./verification/) | 手动验收清单与截图目录 |

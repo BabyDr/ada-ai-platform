@@ -1,7 +1,7 @@
 # 需求规格 — AI TextFlow
 
-> 来源：[docs/ai-navitve/ai-requirement.md](../docs/ai-navitve/ai-requirement.md)  
-> 策略：在现有 Linguist AI 上**增量改造**，UI 保持现状
+> 来源：[ai-requirement.md](../ai-native/ai-requirement.md)  
+> 策略：面向 AI Native 开发工程师笔试，从零构建 AI 文本处理平台
 
 ---
 
@@ -40,7 +40,7 @@
 | F-CLI-01 | `ai-app translate` | `cli/ai_app.py` |
 | F-CLI-02 | `ai-app summarize` | `cli/ai_app.py` |
 | F-CLI-03 | `ai-app list` | `cli/ai_app.py` |
-| F-CLI-04 | skill.md 供 Agent 发现 | `.claude/skills/skill.md` |
+| F-CLI-04 | SKILL.md 供 Agent 发现 | `.claude/skills/SKILL.md` |
 
 ---
 

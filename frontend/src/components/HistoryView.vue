@@ -37,7 +37,7 @@ const {
 </script>
 
 <template>
-  <div class="space-y-6 p-8 max-w-6xl mx-auto" id="history-logs-view">
+  <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="history-logs-view">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-outline-variant)]/40 pb-5">
       <div>
         <h2 class="font-display text-2xl font-bold text-ui flex items-center gap-2">

@@ -9,11 +9,11 @@
 
 | 角色 | 说明 |
 |------|------|
-| **需求分析** | 阅读 `docs/ai-navitve/ai-requirement.md`，对照现有 Linguist AI 代码库，输出增量改造方案（`plan.md` / `implementation-solution.md`） |
+| **需求分析** | 阅读 `docs/ai-native/ai-requirement.md`，对照现有 Linguist AI 代码库，输出增量改造方案（`plan.md` / `implementation-solution.md`） |
 | **任务拆分** | 将方案拆为可验收的小任务（`implementation-tasks.md`），标注依赖与并行项 |
 | **实现编码** | 后端 SSE 契约、前端 composable、Vue Router 迁移、CLI、测试用例 |
 | **测试与验证** | 编写 pytest / vitest，运行 `make test` 确认 mock 全链路 |
-| **文档交付** | 维护 README、`spec/`、skill.md、本文件 |
+| **文档交付** | 维护 README、`docs/spec/`、SKILL.md、本文件 |
 
 Agent **不负责**的最终决策（由人类确认）：
 
@@ -43,8 +43,8 @@ Agent：按阶段 0→7 实施 + 测试
 
 ### 规范驱动（SDD）
 
-1. **先 spec 后 code**：`spec/requirements.md`、`spec/api-design.md` 定义契约
-2. **开发规范**：`spec/development-standards.md`（SRP、注释、try/catch、后端兜底）
+1. **先 spec 后 code**：`docs/spec/requirements.md`、`docs/spec/api-design.md` 定义契约
+2. **开发规范**：`docs/spec/development-standards.md`（SRP、注释、try/catch、后端兜底）
 3. **测试即验收**：每个任务自带测试用例；后端 pytest、前端 vitest 覆盖核心 composable
 4. **活文档**：README 与 API 示例与实现保持一致
 
@@ -53,7 +53,7 @@ Agent：按阶段 0→7 实施 + 测试
 | 工具 | 用途 |
 |------|------|
 | Cursor Agent | 主开发、多文件改造、测试运行 |
-| Claude Code + skill.md | 外部 Agent 发现 `ai-app` CLI 并调用 |
+| Claude Code + SKILL.md | 外部 Agent 发现 `ai-app` CLI 并调用 |
 | `make test` | 统一后端 + CLI 测试入口 |
 | `npm run test --prefix frontend` | 前端 vitest |
 
@@ -76,11 +76,11 @@ Agent：按阶段 0→7 实施 + 测试
 |--------|------|------|
 | M1 | Vue Router + 后端 mock SSE + 前端流式翻译 | ✅ |
 | M2 | 任务取消 + summarize + 旧接口移除 | ✅ |
-| M3 | CLI + skill.md + `dev:all` | ✅ |
-| M4 | agent.md + spec/ + docs/manual.md + vitest + README + Docker | ✅ |
+| M3 | CLI + SKILL.md + `dev:all` | ✅ |
+| M4 | agent.md + docs/spec/ + docs/manual.md + vitest + README + Docker | ✅ |
 
 ---
 
 ## 5. Future Scope（本期未实现）
 
-见 `spec/task-breakdown.md`：Tauri 桌面壳、RAG 知识库、MCP 工具、Redis 任务队列等。Docker 一键部署见根目录 `docker-compose.yml`。
+见 `docs/spec/task-breakdown.md`：Tauri 桌面壳、RAG 知识库、MCP 工具、Redis 任务队列等。Docker 一键部署见根目录 `docker-compose.yml`。

@@ -3,13 +3,11 @@
  * 根路径来自 Vite 环境变量 VITE_API_BASE，默认 /api。
  * 所有请求均含 try/catch 兜底（开发规范 §3.1）。
  */
+import { randomRequestId } from "../utils/randomId";
+
 const API_BASE = (import.meta.env.VITE_API_BASE || "/api").replace(/\/$/, "");
 
-function newRequestId(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-}
-
-let activeRequestId = newRequestId();
+let activeRequestId = randomRequestId();
 
 /** 拼接 Sidecar API 完整 URL。 */
 export function apiUrl(path: string): string {
@@ -26,7 +24,7 @@ function jsonHeaders(): Record<string, string> {
 
 /** 包装 fetch：网络/解析失败时抛出带上下文的 Error。 */
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  activeRequestId = newRequestId();
+  activeRequestId = randomRequestId();
   try {
     const res = await fetch(apiUrl(path), {
       ...init,
@@ -113,7 +111,7 @@ export function createTaskSSE(
   body: { type: string; params: Record<string, unknown> },
   signal?: AbortSignal,
 ): Promise<Response> {
-  activeRequestId = newRequestId();
+  activeRequestId = randomRequestId();
   try {
     return fetch(apiUrl("/task"), {
       method: "POST",

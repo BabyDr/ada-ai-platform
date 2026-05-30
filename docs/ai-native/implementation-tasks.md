@@ -168,7 +168,7 @@
 
 ---
 
-## 阶段 4：CLI + skill.md（P1 必做-完整）
+## 阶段 4：CLI + SKILL.md（P1 必做-完整）
 
 > 依赖后端 mock 可用（18765）。
 
@@ -182,8 +182,8 @@
 - 交付物：`console_scripts: ai-app=ai_app:cli`。
 - 测试用例：`pip install -e . && ai-app --help` 列出三命令。
 
-### T4.3 [P] `.claude/skills/skill.md` [F11/F12]
-- 交付物：skill.md（name/description + 三命令 + 前置条件 18765 + 示例）。
+### T4.3 [P] `.claude/skills/SKILL.md` [F11/F12]
+- 交付物：SKILL.md（name/description + 三命令 + 前置条件 18765 + 示例）。
 - 测试用例：frontmatter 校验；人工：Claude Code 发现并调用（截图存 `docs/`）。
 - 手册更新：手册「5. 作为 Agent 工具被调用」。
 
@@ -234,7 +234,7 @@
 - 交付物：Agent 角色/人类决策/协作工具记录。
 - 测试用例：含职责/决策/执行/工具四要素。
 
-### T7.2 [P] `spec/` 目录 [F14]
+### T7.2 [P] `docs/spec/` 目录 [F14]
 - 交付物：`requirements.md`、`api-design.md`、`page-mockup.md`、`task-breakdown.md`（标注 future scope：Tauri/RAG/MCP 等）。
 - 测试用例：四文件非空；`api-design.md` 含 functions/task/cancel 三端点。
 
@@ -295,4 +295,4 @@
 
 ### 8.5 后续扩展（本期不实现，见 plan.md §6.6）
 
-Tauri 桌面壳、RAG 知识库、MCP 工具接入等——仅在 `spec/` 标注 future scope。
+Tauri 桌面壳、RAG 知识库、MCP 工具接入等——仅在 `docs/spec/` 标注 future scope。

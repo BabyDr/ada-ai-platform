@@ -24,7 +24,7 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
 </script>
 
 <template>
-  <div class="space-y-8 p-8 max-w-6xl mx-auto" id="dashboard-view">
+  <div class="space-y-8 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden" id="dashboard-view">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[var(--color-outline-variant)]/40 pb-6">
       <div>
         <div class="flex items-center gap-2 mb-2">
@@ -42,7 +42,7 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
             Mock 模式
           </span>
         </div>
-        <h2 class="font-display text-3xl font-bold tracking-tight text-ui">智能工作区</h2>
+        <h2 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-ui">智能工作区</h2>
         <p class="text-xs md:text-sm text-ui-muted mt-1 leading-relaxed max-w-xl">
           简化全球文档工作流。通过服务端安全代理调用低延迟 GLM 模型，完成翻译与文档总结。
         </p>

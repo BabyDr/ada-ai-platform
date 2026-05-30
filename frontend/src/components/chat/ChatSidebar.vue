@@ -5,9 +5,18 @@ import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
 import { useChatStore } from "@/stores/chat";
 
+withDefaults(
+  defineProps<{
+    /** 嵌入 Drawer 时使用全高布局。 */
+    embedded?: boolean;
+  }>(),
+  { embedded: false },
+);
+
 const emit = defineEmits<{
   settings: [];
   help: [];
+  navigate: [];
 }>();
 
 const chat = useChatStore();
@@ -20,6 +29,7 @@ const BACKEND_HINT =
 async function onSelect(id: string): Promise<void> {
   try {
     await chat.selectSession(id);
+    emit("navigate");
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     message.error(`${detail}。${BACKEND_HINT}`, 6);
@@ -30,6 +40,7 @@ async function onSelect(id: string): Promise<void> {
 async function onNew(): Promise<void> {
   try {
     await chat.addSession();
+    emit("navigate");
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     message.error(`${detail}。${BACKEND_HINT}`, 6);
@@ -41,7 +52,10 @@ defineExpose({ onNew });
 
 <template>
   <aside
-    class="flex h-full min-h-0 w-65 shrink-0 flex-col overflow-hidden border-r border-[var(--color-outline-variant)] bg-[var(--color-background)]"
+    :class="[
+      'flex min-h-0 flex-col overflow-hidden bg-[var(--color-background)]',
+      embedded ? 'h-full w-full' : 'h-full w-65 shrink-0 border-r border-[var(--color-outline-variant)]',
+    ]"
   >
     <div class="flex items-start gap-3 px-4 pt-5 pb-4">
       <div

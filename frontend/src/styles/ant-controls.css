@@ -149,6 +149,17 @@ input:not([type="range"]) {
   font-size: 14px;
 }
 
+@media (max-width: 767px) {
+  textarea,
+  input:not([type="range"]) {
+    font-size: 14px;
+  }
+
+  .action-btn.ant-btn {
+    min-height: 36px;
+  }
+}
+
 /** 总结页要点数/字数 range：appearance-none 时需显式绘制轨道 */
 input[type="range"].range-control {
   height: 1.5rem;

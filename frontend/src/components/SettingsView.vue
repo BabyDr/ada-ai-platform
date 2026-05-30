@@ -19,7 +19,7 @@ const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }))
 </script>
 
 <template>
-  <div class="space-y-6 p-8 max-w-4xl mx-auto" id="settings-view">
+  <div class="space-y-6 p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full min-w-0 overflow-x-hidden" id="settings-view">
     <div class="border-b border-[var(--color-outline-variant)]/40 pb-5">
       <h2 class="font-display text-2xl font-bold text-ui flex items-center gap-2">
         <Settings class="w-6 h-6 text-[#00a67e]" />

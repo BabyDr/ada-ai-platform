@@ -36,8 +36,8 @@ AdaAgent/
 ├── frontend/              # 现有 Vue 3 + Ant Design Vue + Tailwind
 ├── backend/adaagent/      # 现有 FastAPI 包，增量新增 services/ api/
 ├── cli/                   # 新增
-├── .claude/skills/        # 新增 skill.md
-├── spec/                  # 新增规范目录
+├── .claude/skills/        # 新增 SKILL.md
+├── docs/docs/spec/              # 新增规范目录
 ├── scripts/sidecar.mjs    # 已有 — 启动 Sidecar :18765
 └── README.md
 ```
@@ -253,7 +253,7 @@ class FunctionItem(BaseModel):
 
 #### `functions.py` — GET /api/functions [F6]
 
-返回 **translate + summarize** 两项（供 CLI / skill.md；前端工作台不消费）：
+返回 **translate + summarize** 两项（供 CLI / SKILL.md；前端工作台不消费）：
 
 ```python
 FUNCTIONS = [
@@ -638,9 +638,9 @@ ai-app summarize --text "长文本" --max-points 3
 
 ---
 
-## 五、skill.md 编写 [F11]
+## 五、SKILL.md 编写 [F11]
 
-文件位置：`.claude/skills/skill.md`
+文件位置：`.claude/skills/SKILL.md`
 
 ```markdown
 ---
@@ -688,14 +688,14 @@ ai-app summarize --text "Very long text here..." --max-points 3
 - Agent 执行：代码编写、bug 修复、文档生成
 - 协作工具：Claude Code（本项目即用此开发）
 
-### `spec/` 目录 [F14]
+### `docs/spec/` 目录 [F14]
 
 | 文件 | 内容 |
 |------|------|
-| `spec/requirements.md` | 功能清单，来源于 plan.md Phase 1-3 |
-| `spec/api-design.md` | 接口规范，包含本方案的 API 设计 |
-| `spec/page-mockup.md` | 页面线框图，包含本方案的 ASCII 原型 |
-| `spec/task-breakdown.md` | 任务分解，来源于 plan.md 排期 |
+| `docs/spec/requirements.md` | 功能清单，来源于 plan.md Phase 1-3 |
+| `docs/spec/api-design.md` | 接口规范，包含本方案的 API 设计 |
+| `docs/spec/page-mockup.md` | 页面线框图，包含本方案的 ASCII 原型 |
+| `docs/spec/task-breakdown.md` | 任务分解，来源于 plan.md 排期 |
 
 ### `README.md`
 
@@ -704,7 +704,7 @@ ai-app summarize --text "Very long text here..." --max-points 3
 2. 技术栈说明（Vue 3 + Ant Design Vue + FastAPI adaagent）
 3. 本地运行：`npm run dev:all`（sidecar 18765 + frontend 1420）；`LLM_MODE=mock` 零配置
 4. API 接口文档（functions / task SSE / cancel 三端点）
-5. CLI 使用说明 + skill.md 路径
+5. CLI 使用说明 + SKILL.md 路径
 6. Docker（可选）与 mock/real 切换说明
 
 ---
@@ -733,8 +733,8 @@ ai-app summarize --text "Very long text here..." --max-points 3
 - [ ] `task_manager.py` 取消 + 超时
 - [ ] 接入真实 GLM（`LLM_MODE=real`）；mock 路径保留
 
-### Step 4: CLI + skill.md
-- [ ] `cli/ai_app.py` + `setup.py` + `.claude/skills/skill.md`
+### Step 4: CLI + SKILL.md
+- [ ] `cli/ai_app.py` + `setup.py` + `.claude/skills/SKILL.md`
 - [ ] **验证**：`ai-app translate --text "Hello" --from en --to zh` 终端流式输出
 
 ### Step 5: 工程增强
@@ -742,7 +742,7 @@ ai-app summarize --text "Very long text here..." --max-points 3
 - [ ] 响应式：已有 Tailwind 断点，核对即可
 
 ### Step 6: 文档交付
-- [ ] `agent.md` + `spec/` + `README.md`
+- [ ] `agent.md` + `docs/spec/` + `README.md`
 
 > **可选加分**：统一错误处理中间件、Docker 部署。
 

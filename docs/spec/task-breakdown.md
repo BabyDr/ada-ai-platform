@@ -1,6 +1,6 @@
 # 任务拆分与交付状态
 
-> 详细任务见 [docs/ai-navitve/implementation-tasks.md](../docs/ai-navitve/implementation-tasks.md)
+> 详细任务见 [implementation-tasks.md](../ai-native/implementation-tasks.md)
 
 ---
 
@@ -12,7 +12,7 @@
 | 1 | 后端 SSE 模块 | P0 | ✅ |
 | 2 | 前端 SSE 对接 | P0 | ✅ |
 | 3 | 任务取消 + real 模式 | P0 | ✅ |
-| 4 | CLI + skill.md | P1 | ✅ |
+| 4 | CLI + SKILL.md | P1 | ✅ |
 | 5 | 启动联调 + 统一测试 | P1 | ✅ |
 | 6 | 加分项（主题/响应式/traceId/Docker） | P2 | 部分 |
 | 7 | 文档交付 | P3 | ✅ |
@@ -36,7 +36,7 @@
 | 任务 | 交付物 | 测试 |
 |------|--------|------|
 | T4.1–T4.2 | `cli/ai_app.py`、`setup.py` | pytest 2 项 |
-| T4.3 | `.claude/skills/skill.md` | 人工 Agent 截图 |
+| T4.3 | `.claude/skills/SKILL.md` | 人工 Agent 截图 |
 | T5.1 | `npm run dev:all`、`.env.example` | curl + 手动 |
 | T5.2 | 根 `Makefile` `make test` | 退出码 |
 

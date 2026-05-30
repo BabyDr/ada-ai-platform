@@ -39,8 +39,8 @@ make build                # cd frontend && npm run build (includes vue-tsc type 
 - **`frontend/`** — Vue 3 + TypeScript + Vite. Ant Design Vue + Tailwind CSS v4.
 - **`backend/`** — Python FastAPI. SQLite via aiosqlite. LLM: Zhipu GLM / Google Gemini / mock mode.
 - **`cli/`** — Python Click CLI (`ai-app` command). Calls backend SSE API via httpx.
-- **`spec/`** — API design specs, development standards, requirements.
-- **`docs/`** — User manual, verification docs, AI-native specs.
+- **`docs/spec/`** — API design specs, development standards, requirements.
+- **`docs/`** — User manual, verification docs, AI-native specs, architecture.
 
 ### Frontend Layer Pattern (SRP)
 
@@ -75,7 +75,7 @@ All text processing goes through a single SSE endpoint:
 | DELETE | `/api/task/{taskId}` | Cancel running task |
 | GET | `/api/task/{taskId}` | Query task status |
 
-**Do not create** separate REST endpoints like `POST /api/translate`. See `spec/api-design.md`.
+**Do not create** separate REST endpoints like `POST /api/translate`. See `docs/spec/api-design.md`.
 
 ### Key Real-Time Patterns
 
@@ -87,7 +87,7 @@ All text processing goes through a single SSE endpoint:
 
 Backend config via environment variables (see `config.py`): `LLM_MODE` (mock/real), `TASK_TIMEOUT_SECONDS`, `MAX_CONCURRENT_TASKS`, `MAX_LOGS`. Frontend config via Vite env: `VITE_API_BASE`, `VITE_WS_BASE`.
 
-## Development Standards (from spec/development-standards.md)
+## Development Standards (from docs/spec/development-standards.md)
 
 1. **Comments required**: All modules and exported functions need docstrings/JSDoc explaining purpose, boundary conditions, collaborators.
 2. **Error handling required**: All async/IO must use try/catch (frontend: `runSafe()` from `utils/safeAsync.ts`; backend: `http_safe.register_global_exception_handler`).

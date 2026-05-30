@@ -5,6 +5,11 @@
 
 /** 拼接 spec §5.2 约定的对话 WebSocket URL */
 export function getChatWebSocketUrl(sessionId: string): string {
-  const base = import.meta.env.VITE_WS_BASE ?? "ws://127.0.0.1:18765";
-  return `${base.replace(/\/$/, "")}/ws/chat/${sessionId}`;
+  const configured = import.meta.env.VITE_WS_BASE?.trim();
+  if (configured) {
+    return `${configured.replace(/\/$/, "")}/ws/chat/${sessionId}`;
+  }
+  // 开发默认走当前页面 host，Vite 将 /ws 代理到 Sidecar（支持局域网手机访问）
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}/ws/chat/${sessionId}`;
 }

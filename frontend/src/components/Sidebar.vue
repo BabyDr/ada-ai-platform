@@ -2,6 +2,18 @@
 /** 全局侧栏导航：路由菜单、主题切换、API 连接状态指示。 */
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+
+const props = withDefaults(
+  defineProps<{
+    /** 嵌入 Drawer 时使用全高布局，去掉 sticky 与固定宽度。 */
+    embedded?: boolean;
+  }>(),
+  { embedded: false },
+);
+
+const emit = defineEmits<{
+  navigate: [];
+}>();
 import {
   Sparkles,
   LayoutDashboard,
@@ -59,7 +71,12 @@ const menuItems = [
 <template>
   <aside
     id="sidebar-container"
-    class="w-64 border-r ui-border bg-[var(--color-background)] flex flex-col justify-between h-screen sticky top-0 shrink-0"
+    :class="[
+      'bg-[var(--color-background)] flex flex-col justify-between shrink-0',
+      props.embedded
+        ? 'h-full w-full'
+        : 'w-64 border-r ui-border h-screen sticky top-0',
+    ]"
   >
     <div class="p-6">
       <div class="flex items-center justify-between gap-3">
@@ -105,6 +122,7 @@ const menuItems = [
         :key="item.name"
         :id="'sidebar-btn-' + item.name"
         :to="{ name: item.name }"
+        @click="emit('navigate')"
         :class="[
           'w-full flex items-center gap-3 px-4 py-3 rounded text-sm font-medium transition-all duration-150',
           route.name === item.name

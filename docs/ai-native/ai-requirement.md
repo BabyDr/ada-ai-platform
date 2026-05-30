@@ -41,9 +41,9 @@
   ai-app summarize --text "长文本..." --max-points 3
   ```
 
-- **3.2 skill.md**
+- **3.2 SKILL.md**
 
-  编写 skill.md，描述如何通过这个 CLI 工具被 OpenClaw/Claude Code 等 Agent 识别并调用。需给出 Agent 调用的截图，证明工具可被 Agent 发现并执行。
+  编写 SKILL.md，描述如何通过这个 CLI 工具被 OpenClaw/Claude Code 等 Agent 识别并调用。需给出 Agent 调用的截图，证明工具可被 Agent 发现并执行。
 
 ## 二、加分项
 
@@ -52,7 +52,7 @@
 使用 AI 编程工具开发，遵循规范驱动开发（SDD）或测试驱动开发（TDD）。仓库中需包含：
 
 - `agent.md` —— 描述 AI Agent 在本项目中承担的角色、协作方式。
-- `spec/` 目录 —— 含需求拆分、接口设计、页面原型等规范文件。
+- `docs/spec/` 目录 —— 含需求拆分、接口设计、页面原型等规范文件。
 
 ### 2. 全栈深度
 
@@ -83,6 +83,6 @@
 ## 四、交付物
 
 1. 项目源码仓库地址。
-2. skill.md 及 Agent 调用的截图。
+2. SKILL.md 及 Agent 调用的截图。
 3. 加分项相关文件。
 4. README.md 包含项目介绍与功能演示，技术栈说明，本地运行指南，API 接口文档。
