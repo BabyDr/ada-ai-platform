@@ -68,7 +68,7 @@ const pageTitles: Record<string, string> = {
 };
 
 const mobileTitle = computed(
-  () => pageTitles[String(route.name ?? "")] ?? "Linguist AI",
+  () => pageTitles[String(route.name ?? "")] ?? "AdaWorks AI",
 );
 
 onMounted(() => {
@@ -79,7 +79,9 @@ onMounted(() => {
 
 <template>
   <a-config-provider :locale="zhCN" :theme="antTheme">
-    <div class="flex app-shell-bg min-h-screen h-screen w-full max-w-full overflow-hidden overflow-x-hidden">
+    <div
+      class="flex app-shell-bg min-h-screen h-screen w-full max-w-full overflow-hidden overflow-x-hidden"
+    >
       <Sidebar v-if="!isMobile" />
 
       <a-drawer
@@ -95,7 +97,9 @@ onMounted(() => {
         <Sidebar embedded @navigate="sidebarOpen = false" />
       </a-drawer>
 
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden max-w-full">
+      <div
+        class="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden max-w-full"
+      >
         <header
           v-if="isMobile"
           class="flex shrink-0 items-center gap-3 border-b ui-border bg-[var(--color-background)] px-4 py-3"

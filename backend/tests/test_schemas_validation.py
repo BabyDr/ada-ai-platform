@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from adaagent.api.schemas import TaskCreateRequest
-from adaagent.api.validators import MAX_CHARS, sanitize_upstream_message, validate_text
+from adaworks.api.schemas import TaskCreateRequest
+from adaworks.api.validators import MAX_CHARS, sanitize_upstream_message, validate_text
 
 
 def test_validate_text_rejects_control_char() -> None:

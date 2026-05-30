@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from adaagent.services.task_manager import task_manager
+from adaworks.services.task_manager import task_manager
 
-_log = logging.getLogger("adaagent")
+_log = logging.getLogger("adaworks")
 
 
 async def run_task_sweeper(interval_seconds: int = 60) -> None:

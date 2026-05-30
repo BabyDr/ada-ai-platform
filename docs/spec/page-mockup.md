@@ -1,20 +1,20 @@
 # 页面原型说明
 
-> **原则**：沿用现有 Linguist AI UI，不重做视觉；仅导航改为 Vue Router，数据层改为 SSE。
+> **原则**：沿用现有AdaWorks AIUI，不重做视觉；仅导航改为 Vue Router，数据层改为 SSE。
 
 ---
 
 ## 路由表
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/` | redirect → `/dashboard` | 默认入口 |
-| `/dashboard` | `DashboardView` | 工作台 |
-| `/translation` | `TranslationView` | 文本翻译 |
-| `/summarization` | `SummarizationView` | 智能要点总结 |
-| `/chat` | `ChatView` | 智能体对话 |
-| `/history` | `HistoryView` | 运行日志 |
-| `/settings` | `SettingsView` | 设置 |
+| 路径             | 组件                    | 说明         |
+| ---------------- | ----------------------- | ------------ |
+| `/`              | redirect → `/dashboard` | 默认入口     |
+| `/dashboard`     | `DashboardView`         | 工作台       |
+| `/translation`   | `TranslationView`       | 文本翻译     |
+| `/summarization` | `SummarizationView`     | 智能要点总结 |
+| `/chat`          | `ChatView`              | 智能体对话   |
+| `/history`       | `HistoryView`           | 运行日志     |
+| `/settings`      | `SettingsView`          | 设置         |
 
 布局：`App.vue` = Sidebar + `<router-view>`，`a-config-provider` 包裹全局主题。
 
@@ -24,7 +24,7 @@
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│ Sidebar │  Linguist AI 工作台                               │
+│ Sidebar │ AdaWorks AI工作台                               │
 │         │  ┌─────────────────┐  ┌─────────────────┐        │
 │ 工作台  │  │ 文本翻译空间     │  │ 智能要点总结     │        │
 │ 翻译    │  │ 多语言·语调      │  │ 要点·字数控制    │        │
@@ -95,8 +95,8 @@
 
 ## 6. 全局状态
 
-| Store / Composable | 职责 |
-|--------------------|------|
-| `workspace` | logs、quickText、apiConnected、isDark |
-| `chat` | Agent 会话与消息 |
+| Store / Composable   | 职责                                        |
+| -------------------- | ------------------------------------------- |
+| `workspace`          | logs、quickText、apiConnected、isDark       |
+| `chat`               | Agent 会话与消息                            |
 | `useTask` / `useSSE` | 翻译/总结流式任务（页面级 ref，不进 store） |

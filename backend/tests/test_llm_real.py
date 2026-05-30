@@ -8,7 +8,7 @@ import os
 import httpx
 import pytest
 
-from adaagent.services import llm as llm_mod
+from adaworks.services import llm as llm_mod
 
 _HAS_GLM_KEY = bool(os.environ.get("GLM_API_KEY") or os.environ.get("ZHIPU_API_KEY"))
 

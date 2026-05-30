@@ -10,4 +10,4 @@ COPY backend/ .
 ENV LLM_MODE=mock
 EXPOSE 18765
 
-CMD ["python", "-m", "uvicorn", "adaagent.main:app", "--host", "0.0.0.0", "--port", "18765"]
+CMD ["python", "-m", "uvicorn", "adaworks.main:app", "--host", "0.0.0.0", "--port", "18765"]

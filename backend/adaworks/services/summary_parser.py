@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
-from adaagent.services.prompt_security import detect_output_language
+from adaworks.services.prompt_security import detect_output_language
 
 
 class SummaryResult(BaseModel):

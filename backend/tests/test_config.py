@@ -6,7 +6,7 @@ import pytest
 
 
 def test_default_mode() -> None:
-    from adaagent.config import Settings
+    from adaworks.config import Settings
 
     s = Settings(_env_file=None)
     assert s.llm_mode == "mock"
@@ -14,7 +14,7 @@ def test_default_mode() -> None:
 
 
 def test_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
-    from adaagent.config import Settings
+    from adaworks.config import Settings
 
     monkeypatch.setenv("LLM_MODE", "real")
     monkeypatch.setenv("TASK_TIMEOUT_SECONDS", "5")

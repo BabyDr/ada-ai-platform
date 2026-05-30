@@ -35,6 +35,6 @@ describe("useWorkspaceStore", () => {
     const initial = store.isDark;
     store.toggleTheme();
     expect(store.isDark).toBe(!initial);
-    expect(localStorage.getItem("adaagent-dark")).toBe(String(!initial));
+    expect(localStorage.getItem("adaworks-dark")).toBe(String(!initial));
   });
 });

@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// 本文件在 scripts/ 下，上一级即仓库根 AdaAgent/
+// 本文件在 scripts/ 下，上一级即仓库根 AdaWorks/
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pyDir = path.join(root, "backend");
 const isWin = process.platform === "win32";
@@ -20,8 +20,8 @@ const venvPy = path.join(pyDir, ".venv", isWin ? "Scripts/python.exe" : "bin/pyt
 
 // 有虚拟环境就用 .venv，否则退回系统 python3（或 Windows 的 py 启动器）。
 const exe = fs.existsSync(venvPy) ? venvPy : isWin ? "py" : "python3";
-// uvicorn 加载 adaagent.main:app 即 FastAPI 实例；端口与前端 .env.development 中 VITE_* 一致。
-const args = ["-m", "uvicorn", "adaagent.main:app", "--host", "127.0.0.1", "--port", "18765"];
+// uvicorn 加载 adaworks.main:app 即 FastAPI 实例；端口与前端 .env.development 中 VITE_* 一致。
+const args = ["-m", "uvicorn", "adaworks.main:app", "--host", "127.0.0.1", "--port", "18765"];
 
 const child = spawn(exe, args, {
   cwd: pyDir,

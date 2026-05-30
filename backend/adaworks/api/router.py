@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from adaagent.api.functions import router as functions_router
-from adaagent.api.task import router as task_router
+from adaworks.api.functions import router as functions_router
+from adaworks.api.task import router as task_router
 
 api_router = APIRouter()
 api_router.include_router(functions_router)

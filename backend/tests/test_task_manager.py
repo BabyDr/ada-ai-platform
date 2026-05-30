@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaagent.services.task_manager import TaskManager, TaskStatus
+from adaworks.services.task_manager import TaskManager, TaskStatus
 
 
 def test_create_and_get() -> None:

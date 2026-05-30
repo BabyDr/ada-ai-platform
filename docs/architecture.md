@@ -1,6 +1,6 @@
 # 模块架构说明
 
-> 本文档描述 AdaAgent 三大模块（Backend · Frontend · CLI）的目录结构、各模块功能与依赖关系。
+> 本文档描述 AdaWorks 三大模块（Backend · Frontend · CLI）的目录结构、各模块功能与依赖关系。
 > 建议阅读顺序：先通读本页，再按 Backend → Frontend → CLI 逐层深入。
 
 ---
@@ -44,7 +44,7 @@
 
 ```
 backend/
-├── adaagent/
+├── adaworks/
 │   ├── main.py                 # FastAPI 应用入口
 │   ├── config.py               # 环境变量配置（pydantic-settings）
 │   ├── db.py                   # SQLite 持久层（会话 + 消息）

@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from adaagent.linguist_service import add_log, update_log
-from adaagent.services.prompt import build_summarize_messages, build_translate_messages
+from adaworks.linguist_service import add_log, update_log
+from adaworks.services.prompt import build_summarize_messages, build_translate_messages
 
 
 def log_type_for_task(task_type: str) -> str:

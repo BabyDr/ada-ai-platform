@@ -17,11 +17,11 @@ import aiosqlite
 
 
 def default_db_path() -> Path:
-    """默认数据库文件路径；测试可通过环境变量 ADAAGENT_DB_PATH 覆盖。"""
-    override = os.environ.get("ADAAGENT_DB_PATH")
+    """默认数据库文件路径；测试可通过环境变量 ADAWORKS_DB_PATH 覆盖。"""
+    override = os.environ.get("ADAWORKS_DB_PATH")
     if override:
         return Path(override)
-    return Path(__file__).resolve().parents[2] / "data" / "db" / "adaagent.db"
+    return Path(__file__).resolve().parents[2] / "data" / "db" / "adaworks.db"
 
 
 SCHEMA = """

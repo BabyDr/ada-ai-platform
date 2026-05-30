@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from adaagent.api.schemas import FunctionItem, FunctionsResponse
+from adaworks.api.schemas import FunctionItem, FunctionsResponse
 
 router = APIRouter()
 

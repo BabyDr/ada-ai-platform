@@ -90,11 +90,11 @@ const menuItems = [
             <h1
               class="font-display font-semibold text-ui tracking-wide text-base leading-tight"
             >
-              Linguist AI
+              AdaWorks
             </h1>
             <span
-              class="font-mono text-[10px] text-ui-subtle uppercase tracking-wider"
-              >工作区 v1.2</span
+              class="font-mono text-[10px] text-ui-subtle tracking-wider"
+              >AI Workbench v0.x</span
             >
           </div>
         </div>

@@ -1,6 +1,6 @@
 # AI Native 异常场景 Checklist
 
-> 面向 AdaAgent（翻译 / 总结 SSE 主路径 + Agent Chat 加分路径）的异常场景评估、实现方案与验收清单。
+> 面向 AdaWorks（翻译 / 总结 SSE 主路径 + Agent Chat 加分路径）的异常场景评估、实现方案与验收清单。
 > 关联需求：[ai-requirement.md](ai-requirement.md) · API 契约：[api-design.md](../spec/api-design.md)
 
 ---
@@ -1065,7 +1065,7 @@ flowchart TD
 
 - [x] 错误 API Base 时 Dashboard health 失败有明确文案
 - [ ] README 含 VITE_API_BASE 与 Sidecar 端口说明
-- [x] 生产 CORS 仅允许配置域名（[`main.py`](backend/adaagent/main.py) CORSMiddleware）
+- [x] 生产 CORS 仅允许配置域名（[`main.py`](backend/adaworks/main.py) CORSMiddleware）
 
 ---
 
@@ -1129,7 +1129,7 @@ flowchart TD
 | **合理性** | **建议** — Chat 消息持久化失败时的降级 |
 | **适用路径** | Agent / Backend |
 | **优先级** | P2 |
-| **当前状态** | ⚠️ [`db.py`](backend/adaagent/db.py) 有 async lock，无超时 |
+| **当前状态** | ⚠️ [`db.py`](backend/adaworks/db.py) 有 async lock，无超时 |
 | **推荐方案** | 写 DB `wait_for` 5s；失败 → WS `agent:error` + 内存-only 降级（可选） |
 
 **验收 Checklist**
@@ -1182,7 +1182,7 @@ flowchart TD
 | **合理性** | **建议** — CLI 120s vs Server 60s 导致 CLI 空等 |
 | **适用路径** | CLI |
 | **优先级** | P2 |
-| **当前状态** | ⚠️ [`cli/ai_app.py`](cli/ai_app.py) timeout=120；[`config.py`](backend/adaagent/config.py) task_timeout=60 |
+| **当前状态** | ⚠️ [`cli/ai_app.py`](cli/ai_app.py) timeout=120；[`config.py`](backend/adaworks/config.py) task_timeout=60 |
 | **推荐方案** | CLI timeout = server timeout + 10s buffer；或 CLI 读 `/api/health` 配置 |
 
 **验收 Checklist**

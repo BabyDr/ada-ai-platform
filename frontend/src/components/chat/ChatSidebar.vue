@@ -75,7 +75,7 @@ defineExpose({ onNew });
         <h1
           class="text-[15px] font-bold leading-tight tracking-tight text-ui"
         >
-          AdaAgent
+          AdaWorks
         </h1>
         <p
           class="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-ui-muted"

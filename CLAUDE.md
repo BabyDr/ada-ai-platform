@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AdaAgent is a full-stack AI text processing platform with a Vue 3 frontend, Python FastAPI backend (called "Sidecar"), and a Click CLI. It provides translation, summarization (via SSE streaming), and agent chat (via WebSocket).
+AdaWorks is a full-stack AI text processing platform with a Vue 3 frontend, Python FastAPI backend (called "Sidecar"), and a Click CLI. It provides translation, summarization (via SSE streaming), and agent chat (via WebSocket).
 
 ## Common Commands
 

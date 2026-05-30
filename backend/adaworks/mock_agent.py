@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import aiosqlite
 
-    from adaagent.ws_hub import ChatHub
+    from adaworks.ws_hub import ChatHub
 
 
 async def _insert_message(
@@ -75,7 +75,7 @@ async def run_mock_agent(
     await _insert_message(db, lock, session_id, "observe", observe)
 
     await asyncio.sleep(0.4)
-    final_text = "（Mock 最终回答）这是 AdaAgent 开发阶段的示例回复。"
+    final_text = "（Mock 最终回答）这是 AdaWorks 开发阶段的示例回复。"
     for i in range(0, len(final_text), 12):
         await hub.broadcast(session_id, "agent:delta", {"content": final_text[i : i + 12]})
         await asyncio.sleep(0.06)

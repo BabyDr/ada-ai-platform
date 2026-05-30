@@ -1,5 +1,5 @@
 """
-Linguist AI 运行日志（进程内内存）。
+AdaWorks AI 运行日志（进程内内存）。
 
 翻译 / 总结任务经 SSE（api/task.py）执行；本模块仅负责日志 CRUD 与语言展示名。
 """
@@ -10,8 +10,8 @@ import json
 import time
 from typing import Any
 
-from adaagent.config import settings
-from adaagent.services.log_sanitize import sanitize_log_fields
+from adaworks.config import settings
+from adaworks.services.log_sanitize import sanitize_log_fields
 
 # 与 linguist-ai 一致的初始 mock 日志
 _SEED_LOGS: list[dict[str, Any]] = [
@@ -75,10 +75,10 @@ _SEED_LOGS: list[dict[str, Any]] = [
         "timestamp": "Yesterday",
         "date": "Oct 23",
         "type": "summarization",
-        "input": "Linguist AI Launch Strategy: 1. Target professional localization engineers. 2. Highlight server-side secure credentials.",
+        "input": "AdaWorks AI Launch Strategy: 1. Target professional localization engineers. 2. Highlight server-side secure credentials.",
         "output": json.dumps(
             {
-                "overview": "Launch strategy for Linguist AI emphasizing structural safety, clean visuals, and localized precision.",
+                "overview": "Launch strategy forAdaWorks AIemphasizing structural safety, clean visuals, and localized precision.",
                 "keyPoints": [
                     "Focus on key localization and translation professionals during early deployment.",
                     "Highlight security advantage of full-stack server-side isolation of credentials.",

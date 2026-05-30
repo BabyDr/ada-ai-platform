@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-from adaagent.linguist_service import lang_display
-from adaagent.services.prompt_security import (
+from adaworks.linguist_service import lang_display
+from adaworks.services.prompt_security import (
     SUMMARIZE_ANTI_INJECTION,
     TRANSLATE_ANTI_INJECTION,
     detect_output_language,

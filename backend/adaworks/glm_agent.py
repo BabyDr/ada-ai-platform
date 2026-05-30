@@ -19,14 +19,14 @@ from typing import TYPE_CHECKING
 
 import httpx
 
-from adaagent.env_secrets import read_first_secret
-from adaagent.mock_agent import _insert_message
-from adaagent.services.prompt_security import build_glm_chat_messages
+from adaworks.env_secrets import read_first_secret
+from adaworks.mock_agent import _insert_message
+from adaworks.services.prompt_security import build_glm_chat_messages
 
 if TYPE_CHECKING:
     import aiosqlite
 
-    from adaagent.ws_hub import ChatHub
+    from adaworks.ws_hub import ChatHub
 
 # 默认模型与网关：可通过环境变量 GLM_MODEL / GLM_API_BASE 覆盖。
 DEFAULT_GLM_MODEL = "glm-4-flash"

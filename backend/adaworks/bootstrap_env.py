@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 
 def load_app_dotenv() -> None:
-    """AdaAgent/.env 与 backend/.env 均会读取，便于把密钥放在仓库根。"""
+    """AdaWorks/.env 与 backend/.env 均会读取，便于把密钥放在仓库根。"""
     backend_dir = Path(__file__).resolve().parent.parent
     repo_root = backend_dir.parent
     load_dotenv(repo_root / ".env")

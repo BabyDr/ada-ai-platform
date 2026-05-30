@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from adaagent.env_secrets import coalesce_key_from_env_value, read_first_secret
+from adaworks.env_secrets import coalesce_key_from_env_value, read_first_secret
 
 
 def test_coalesce_plain_string() -> None:

@@ -9,7 +9,7 @@ import { ref } from "vue";
 import type { LogEntry } from "../types";
 import * as api from "../services/linguistApi";
 
-const THEME_KEY = "adaagent-dark";
+const THEME_KEY = "adaworks-dark";
 
 function readThemePreference(): boolean {
   try {

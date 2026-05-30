@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from adaagent.services.llm import LLMService, effective_mode
+from adaworks.services.llm import LLMService, effective_mode
 
 
 def test_mock_mode_default() -> None:
@@ -36,7 +36,7 @@ def test_mock_summarize_is_json() -> None:
 
 
 def test_mock_translate_respects_target_language() -> None:
-    from adaagent.services.prompt import build_translate_messages
+    from adaworks.services.prompt import build_translate_messages
 
     async def run(system: str) -> str:
         svc = LLMService()
@@ -53,7 +53,7 @@ def test_mock_translate_respects_target_language() -> None:
 def test_mock_summarize_words_mode() -> None:
     import json
 
-    from adaagent.services.prompt import build_summarize_messages
+    from adaworks.services.prompt import build_summarize_messages
 
     async def run(system: str) -> str:
         svc = LLMService()

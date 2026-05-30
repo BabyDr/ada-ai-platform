@@ -1,5 +1,5 @@
 /** #13：刷新后 taskId 持久化（sessionStorage，配额 fallback）。 */
-const STORAGE_KEY = "adaagent-active-task";
+const STORAGE_KEY = "adaworks-active-task";
 
 export interface PersistedTask {
   taskId: string;

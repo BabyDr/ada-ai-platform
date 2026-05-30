@@ -22,12 +22,12 @@ from typing import Any, AsyncIterator
 from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 
-from adaagent.api.schemas import CancelResponse, TaskCreateRequest
-from adaagent.config import settings
-from adaagent.services.llm import llm_service
-from adaagent.services.prompt import build_summarize_messages, build_translate_messages
-from adaagent.services.summary_parser import validate_summary
-from adaagent.services.task_log import (
+from adaworks.api.schemas import CancelResponse, TaskCreateRequest
+from adaworks.config import settings
+from adaworks.services.llm import llm_service
+from adaworks.services.prompt import build_summarize_messages, build_translate_messages
+from adaworks.services.summary_parser import validate_summary
+from adaworks.services.task_log import (
     create_processing_log,
     mark_log_cancelled,
     mark_log_failed,
@@ -35,7 +35,7 @@ from adaagent.services.task_log import (
     mark_log_success_translate,
     mark_log_timeout,
 )
-from adaagent.services.task_manager import TaskStatus, task_manager
+from adaworks.services.task_manager import TaskStatus, task_manager
 
 router = APIRouter()
 

@@ -1,19 +1,19 @@
 # AI Agent 在本项目中的角色与协作方式
 
-> AdaAgent / Linguist AI · AI TextFlow 笔试交付  
+> AdaWorks /AdaWorks AI· AI TextFlow 笔试交付  
 > 开发方式：Vibe Coding + 规范驱动（SDD），Human-in-the-loop
 
 ---
 
 ## 1. Agent 承担的角色
 
-| 角色 | 说明 |
-|------|------|
-| **需求分析** | 阅读 `docs/ai-native/ai-requirement.md`，对照现有 Linguist AI 代码库，输出增量改造方案（`plan.md` / `implementation-solution.md`） |
-| **任务拆分** | 将方案拆为可验收的小任务（`implementation-tasks.md`），标注依赖与并行项 |
-| **实现编码** | 后端 SSE 契约、前端 composable、Vue Router 迁移、CLI、测试用例 |
-| **测试与验证** | 编写 pytest / vitest，运行 `make test` 确认 mock 全链路 |
-| **文档交付** | 维护 README、`docs/spec/`、SKILL.md、本文件 |
+| 角色           | 说明                                                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **需求分析**   | 阅读 `docs/ai-native/ai-requirement.md`，对照现有AdaWorks AI代码库，输出增量改造方案（`plan.md` / `implementation-solution.md`） |
+| **任务拆分**   | 将方案拆为可验收的小任务（`implementation-tasks.md`），标注依赖与并行项                                                          |
+| **实现编码**   | 后端 SSE 契约、前端 composable、Vue Router 迁移、CLI、测试用例                                                                   |
+| **测试与验证** | 编写 pytest / vitest，运行 `make test` 确认 mock 全链路                                                                          |
+| **文档交付**   | 维护 README、`docs/spec/`、SKILL.md、本文件                                                                                      |
 
 Agent **不负责**的最终决策（由人类确认）：
 
@@ -50,34 +50,34 @@ Agent：按阶段 0→7 实施 + 测试
 
 ### 工具链
 
-| 工具 | 用途 |
-|------|------|
-| Cursor Agent | 主开发、多文件改造、测试运行 |
-| Claude Code + SKILL.md | 外部 Agent 发现 `ai-app` CLI 并调用 |
-| `make test` | 统一后端 + CLI 测试入口 |
-| `npm run test --prefix frontend` | 前端 vitest |
+| 工具                             | 用途                                |
+| -------------------------------- | ----------------------------------- |
+| Cursor Agent                     | 主开发、多文件改造、测试运行        |
+| Claude Code + SKILL.md           | 外部 Agent 发现 `ai-app` CLI 并调用 |
+| `make test`                      | 统一后端 + CLI 测试入口             |
+| `npm run test --prefix frontend` | 前端 vitest                         |
 
 ---
 
 ## 3. 人类决策记录
 
-| 日期 | 议题 | 决策 |
-|------|------|------|
+| 日期    | 议题         | 决策                                                                                                                      |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05 | LLM 环境变量 | **方案 A**：task 管线与 Agent Chat 共用 `GLM_API_KEY` / `GLM_API_BASE` / `GLM_MODEL`，`LLM_MODE=mock\|real` 控制翻译/总结 |
-| 2026-05 | UI 策略 | 保留现有 Dashboard / Translation / Summarization 页面，不新建 HomeView |
-| 2026-05 | 工作台入口 | 双卡片 + 快捷输入，非三卡片 functions 列表 |
-| 2026-05 | 文本处理能力 | 翻译/总结统一经 `POST /api/task` SSE 契约（`type`: translate \| summarize） |
+| 2026-05 | UI 策略      | 保留现有 Dashboard / Translation / Summarization 页面，不新建 HomeView                                                    |
+| 2026-05 | 工作台入口   | 双卡片 + 快捷输入，非三卡片 functions 列表                                                                                |
+| 2026-05 | 文本处理能力 | 翻译/总结统一经 `POST /api/task` SSE 契约（`type`: translate \| summarize）                                               |
 
 ---
 
 ## 4. 执行记录（里程碑）
 
-| 里程碑 | 内容 | 状态 |
-|--------|------|------|
-| M1 | Vue Router + 后端 mock SSE + 前端流式翻译 | ✅ |
-| M2 | 任务取消 + summarize + 旧接口移除 | ✅ |
-| M3 | CLI + SKILL.md + `dev:all` | ✅ |
-| M4 | agent.md + docs/spec/ + docs/manual.md + vitest + README + Docker | ✅ |
+| 里程碑 | 内容                                                              | 状态 |
+| ------ | ----------------------------------------------------------------- | ---- |
+| M1     | Vue Router + 后端 mock SSE + 前端流式翻译                         | ✅   |
+| M2     | 任务取消 + summarize + 旧接口移除                                 | ✅   |
+| M3     | CLI + SKILL.md + `dev:all`                                        | ✅   |
+| M4     | agent.md + docs/spec/ + docs/manual.md + vitest + README + Docker | ✅   |
 
 ---
 

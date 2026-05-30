@@ -14,3 +14,6 @@ frontend/.tmp-pkgs/
 
 # IDE personal workspace (layout differs per developer)
 *.code-workspace
+
+# Personal interview guide (not for commit)
+docs/INTERVIEW_GUIDE.md

@@ -20,10 +20,10 @@ from typing import AsyncIterator
 
 import httpx
 
-from adaagent.config import settings
-from adaagent.api.validators import sanitize_upstream_message
-from adaagent.env_secrets import read_first_secret
-from adaagent.glm_agent import DEFAULT_GLM_BASE, DEFAULT_GLM_MODEL
+from adaworks.config import settings
+from adaworks.api.validators import sanitize_upstream_message
+from adaworks.env_secrets import read_first_secret
+from adaworks.glm_agent import DEFAULT_GLM_BASE, DEFAULT_GLM_MODEL
 
 _MOCK_TRANSLATE_BY_TARGET: dict[str, str] = {
     "Chinese (Simplified)": "这是本地模拟的逐字翻译流，用于零配置演示。",

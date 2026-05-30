@@ -15,7 +15,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 
-from adaagent.config import settings
+from adaworks.config import settings
 
 
 class TaskStatus(str, Enum):

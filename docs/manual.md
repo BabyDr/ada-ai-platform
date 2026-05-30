@@ -1,4 +1,4 @@
-# AI TextFlow / Linguist AI — 系统使用手册
+# AI TextFlow /AdaWorks AI— 系统使用手册
 
 > 活文档：与 [`implementation-tasks.md`](./ai-native/implementation-tasks.md) 各任务「手册更新」章节对应。  
 > 最后核对：2026-05-30
@@ -15,18 +15,18 @@
 ### 安装与启动
 
 ```bash
-git clone <repo-url> AdaAgent && cd AdaAgent
+git clone <repo-url> AdaWorks && cd AdaWorks
 npm install
 npm run sidecar:setup          # 创建 backend/.venv 并安装依赖
 cp backend/.env.example backend/.env   # 或 cp .env.example .env
 npm run dev:all
 ```
 
-| 服务 | 地址 |
-|------|------|
-| 前端 Web UI | http://localhost:1420 |
-| 后端 Sidecar | http://127.0.0.1:18765 |
-| 健康检查 | http://127.0.0.1:18765/api/health |
+| 服务         | 地址                              |
+| ------------ | --------------------------------- |
+| 前端 Web UI  | http://localhost:1420             |
+| 后端 Sidecar | http://127.0.0.1:18765            |
+| 健康检查     | http://127.0.0.1:18765/api/health |
 
 验证 Sidecar：
 
@@ -38,19 +38,19 @@ curl -sf http://127.0.0.1:18765/api/functions
 
 开发环境默认配置见 `frontend/.env.development`：
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `VITE_API_BASE` | `http://127.0.0.1:18765/api` | REST 请求前缀 |
-| `VITE_WS_BASE` | `ws://127.0.0.1:18765` | Agent Chat WebSocket |
+| 变量            | 默认值                       | 说明                 |
+| --------------- | ---------------------------- | -------------------- |
+| `VITE_API_BASE` | `http://127.0.0.1:18765/api` | REST 请求前缀        |
+| `VITE_WS_BASE`  | `ws://127.0.0.1:18765`       | Agent Chat WebSocket |
 
 修改 Sidecar 端口或部署分离时，须同步调整上述变量后重新 `npm run dev`。
 
 ### Mock / Real 模式
 
-| 模式 | 配置 | 说明 |
-|------|------|------|
-| `mock` | `LLM_MODE=mock`（默认） | 本地预设逐字流，零配置演示 |
-| `real` | `LLM_MODE=real` + `GLM_API_KEY` | 调用智谱 GLM 流式接口 |
+| 模式   | 配置                            | 说明                       |
+| ------ | ------------------------------- | -------------------------- |
+| `mock` | `LLM_MODE=mock`（默认）         | 本地预设逐字流，零配置演示 |
+| `real` | `LLM_MODE=real` + `GLM_API_KEY` | 调用智谱 GLM 流式接口      |
 
 工作台在 mock 模式下显示 **Mock 模式** 琥珀色徽章；`/api/health` 返回 `{ status, llm, keyLoaded }`。
 
@@ -73,7 +73,7 @@ make test    # 后端 pytest + CLI + 前端 vitest
 
 ## 1. 产品概览
 
-AdaAgent（Linguist AI）提供两条能力线：
+AdaWorks（AdaWorks AI）提供两条能力线：
 
 1. **文本处理主线**：工作台 → 翻译 / 总结 → SSE 流式输出 → 停止生成 → 历史记录
 2. **Agent Chat（加分）**：WebSocket 多轮对话，ReAct 步骤展示，会话 SQLite 持久化
@@ -86,15 +86,15 @@ AdaAgent（Linguist AI）提供两条能力线：
 
 应用使用 **Vue Router 4**，Sidebar 左侧导航，浏览器后退/前进与刷新均保持当前页（Chat 页除外，使用 `keep-alive` 排除）。
 
-| 路径 | 页面 | 说明 |
-|------|------|------|
-| `/` | 重定向 | → `/dashboard` |
-| `/dashboard` | 工作台 | 指标概览、功能卡片、快捷输入、Mock 徽章 |
-| `/translation` | 文本翻译 | 10 语言 × 5 语调，双栏对照 |
-| `/summarization` | 智能总结 | 要点数 / 字数 / 语调，结构化输出 |
-| `/chat` | 智能体对话 | WebSocket Agent Chat |
-| `/history` | 运行日志 | 翻译/总结调用记录（分页加载） |
-| `/settings` | 设置 | API 密钥状态、默认语调（模型只读占位） |
+| 路径             | 页面       | 说明                                    |
+| ---------------- | ---------- | --------------------------------------- |
+| `/`              | 重定向     | → `/dashboard`                          |
+| `/dashboard`     | 工作台     | 指标概览、功能卡片、快捷输入、Mock 徽章 |
+| `/translation`   | 文本翻译   | 10 语言 × 5 语调，双栏对照              |
+| `/summarization` | 智能总结   | 要点数 / 字数 / 语调，结构化输出        |
+| `/chat`          | 智能体对话 | WebSocket Agent Chat                    |
+| `/history`       | 运行日志   | 翻译/总结调用记录（分页加载）           |
+| `/settings`      | 设置       | API 密钥状态、默认语调（模型只读占位）  |
 
 **快捷输入**：在工作台底部输入文本并发送，系统根据长度与关键词识别意图（`useQuickRoute`），跳转到翻译或总结页并将文本预填至输入框（`workspace.quickText`）。
 
@@ -153,12 +153,12 @@ curl -N -X POST http://127.0.0.1:18765/api/task \
 
 **参数说明：**
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `text` | string | 是 | 待翻译文本，最长 50,000 字符 |
-| `sourceLang` | string | 否 | 源语言代码，默认 `auto` |
-| `targetLang` | string | 否 | 目标语言代码，默认 `zh` |
-| `tone` | string | 否 | Professional / Conversational / Technical / Academic / Creative |
+| 参数         | 类型   | 必填 | 说明                                                            |
+| ------------ | ------ | ---- | --------------------------------------------------------------- |
+| `text`       | string | 是   | 待翻译文本，最长 50,000 字符                                    |
+| `sourceLang` | string | 否   | 源语言代码，默认 `auto`                                         |
+| `targetLang` | string | 否   | 目标语言代码，默认 `zh`                                         |
+| `tone`       | string | 否   | Professional / Conversational / Technical / Academic / Creative |
 
 ### 3.3 总结
 
@@ -231,11 +231,11 @@ ai-app translate --text "Hello world" --from en --to zh
 ai-app summarize --text "长文本…" --max-points 3 --word-limit 250
 ```
 
-| 选项 | 说明 | 默认 |
-|------|------|------|
-| `--max-points` | 总结要点数 | 3 |
-| `--word-limit` | 概述字数上限 | 250 |
-| `--tone` | 语调 | Professional |
+| 选项           | 说明         | 默认         |
+| -------------- | ------------ | ------------ |
+| `--max-points` | 总结要点数   | 3            |
+| `--word-limit` | 概述字数上限 | 250          |
+| `--tone`       | 语调         | Professional |
 
 默认连接 `http://127.0.0.1:18765`（环境变量 `BASE_URL` 可覆盖）。**须先启动 Sidecar**。
 
@@ -281,7 +281,7 @@ Claude Code 等 Agent 可发现 `ai-app` 命令并调用翻译/总结能力，�
 
 ### 7.1 深色/浅色主题
 
-Sidebar 底部点击 **太阳/月亮** 图标切换主题。选择持久化至 `localStorage`（键 **`adaagent-dark`**，`true` 为深色），刷新后保持。
+Sidebar 底部点击 **太阳/月亮** 图标切换主题。选择持久化至 `localStorage`（键 **`adaworks-dark`**，`true` 为深色），刷新后保持。
 
 实现层次：
 
@@ -293,11 +293,11 @@ Sidebar 底部点击 **太阳/月亮** 图标切换主题。选择持久化至 `
 
 各页面使用 Tailwind 断点（`md:` 768px、`lg:` 1024px）。建议在以下宽度手动验收：
 
-| 宽度 | 检查项 |
-|------|--------|
-| 375px | 移动端：Sidebar 折叠、双栏变单栏、按钮不溢出 |
-| 768px | 平板：网格列数切换正常 |
-| 1280px+ | 桌面：最大宽度 `max-w-6xl` 居中 |
+| 宽度    | 检查项                                       |
+| ------- | -------------------------------------------- |
+| 375px   | 移动端：Sidebar 折叠、双栏变单栏、按钮不溢出 |
+| 768px   | 平板：网格列数切换正常                       |
+| 1280px+ | 桌面：最大宽度 `max-w-6xl` 居中              |
 
 验收截图说明见 [`docs/verification/`](./verification/README.md)。
 
@@ -313,12 +313,12 @@ Sidebar 底部点击 **太阳/月亮** 图标切换主题。选择持久化至 `
 
 ## 8. 相关文档
 
-| 文档 | 说明 |
-|------|------|
-| [README.md](../README.md) | 项目概览与 API 速查 |
-| [spec/api-design.md](spec/api-design.md) | API 完整规范 |
-| [agent.md](../agent.md) | AI Agent 协作记录 |
-| [.claude/skills/SKILL.md](../.claude/skills/SKILL.md) | CLI Agent 技能 |
-| [docs/ai-native/](./ai-native/) | 笔试需求与实现方案 |
-| [docs/ai-native/exception-checklist.md](./ai-native/exception-checklist.md) | 异常场景 Checklist |
-| [docs/verification/](./verification/) | 手动验收清单与截图目录 |
+| 文档                                                                        | 说明                   |
+| --------------------------------------------------------------------------- | ---------------------- |
+| [README.md](../README.md)                                                   | 项目概览与 API 速查    |
+| [spec/api-design.md](spec/api-design.md)                                    | API 完整规范           |
+| [agent.md](../agent.md)                                                     | AI Agent 协作记录      |
+| [.claude/skills/SKILL.md](../.claude/skills/SKILL.md)                       | CLI Agent 技能         |
+| [docs/ai-native/](./ai-native/)                                             | 笔试需求与实现方案     |
+| [docs/ai-native/exception-checklist.md](./ai-native/exception-checklist.md) | 异常场景 Checklist     |
+| [docs/verification/](./verification/)                                       | 手动验收清单与截图目录 |

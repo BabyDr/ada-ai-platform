@@ -6,8 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from adaagent.api.validators import validate_text
-from adaagent.linguist_service import _LANG_NAMES
+from adaworks.api.validators import validate_text
+from adaworks.linguist_service import _LANG_NAMES
 
 ToneLiteral = Literal["Professional", "Conversational", "Technical", "Academic", "Creative"]
 SummaryModeLiteral = Literal["points", "words"]

@@ -2,39 +2,39 @@
 
 > 基于 [plan.md](./plan.md) 的落地实现指南，面向 3 天交付
 > 技术栈：Vue 3 + TypeScript + Vite + Ant Design Vue + Tailwind + FastAPI + Python Click
-> **在现有 AdaAgent / Linguist AI 代码上增量改造**，UI 样式保留，底层接入 SSE task 契约。
+> **在现有 AdaWorks /AdaWorks AI代码上增量改造**，UI 样式保留，底层接入 SSE task 契约。
 
 ### 改造原则（与 plan.md §〇 对齐）
 
-| 原则 | 说明 |
-|------|------|
-| UI 不动 | 保留 `DashboardView` / `TranslationView` / `SummarizationView` 等现有页面样式 |
-| Vue Router | `activeView` → Vue Router 4 + `<router-view>`；跨页状态进 `stores/workspace.ts` |
+| 原则       | 说明                                                                               |
+| ---------- | ---------------------------------------------------------------------------------- |
+| UI 不动    | 保留 `DashboardView` / `TranslationView` / `SummarizationView` 等现有页面样式      |
+| Vue Router | `activeView` → Vue Router 4 + `<router-view>`；跨页状态进 `stores/workspace.ts`    |
 | 多语言翻译 | task `type: translate`，params 含 `sourceLang/targetLang/tone`（10 语言 + 5 语调） |
-| 后端增量 | 在 `backend/adaagent/` 包内新增 `config.py`、`services/`、`api/` |
-| 主题 | Ant Design Vue `a-config-provider` 切换 `darkAlgorithm` / `defaultAlgorithm` |
+| 后端增量   | 在 `backend/adaworks/` 包内新增 `config.py`、`services/`、`api/`                   |
+| 主题       | Ant Design Vue `a-config-provider` 切换 `darkAlgorithm` / `defaultAlgorithm`       |
 
 ### 交付范围说明
 
 本期实现 **Step 0–6**（Router 迁移 + 核心 SSE + CLI + 主题 + 文档），以下项标注为后续或可选：
 
-| 项 | 说明 |
-|----|------|
-| 统一错误处理中间件 | `middleware/error_handler.py`，加分项，可增量接入 |
-| Docker 部署 | `Dockerfile` + `docker-compose.yml`，加分项 |
-| Agent Chat | **已有**，保留为加分展示（WebSocket 流式），本期不改造 |
-| HistoryView | **已有**（内存日志），保留现状，SSE 完成后写入同一套 logs |
+| 项                 | 说明                                                      |
+| ------------------ | --------------------------------------------------------- |
+| 统一错误处理中间件 | `middleware/error_handler.py`，加分项，可增量接入         |
+| Docker 部署        | `Dockerfile` + `docker-compose.yml`，加分项               |
+| Agent Chat         | **已有**，保留为加分展示（WebSocket 流式），本期不改造    |
+| HistoryView        | **已有**（内存日志），保留现状，SSE 完成后写入同一套 logs |
 
 ---
 
 ## 一、项目初始化
 
-### 1.1 仓库结构（现有 AdaAgent，增量扩展）
+### 1.1 仓库结构（现有 AdaWorks，增量扩展）
 
 ```
-AdaAgent/
+AdaWorks/
 ├── frontend/              # 现有 Vue 3 + Ant Design Vue + Tailwind
-├── backend/adaagent/      # 现有 FastAPI 包，增量新增 services/ api/
+├── backend/adaworks/      # 现有 FastAPI 包，增量新增 services/ api/
 ├── cli/                   # 新增
 ├── .claude/skills/        # 新增 SKILL.md
 ├── docs/docs/spec/              # 新增规范目录
@@ -64,6 +64,7 @@ cd frontend && npm install vue-router@4
 ### 1.4 环境变量设计
 
 **根目录 `.env.example`**
+
 ```env
 # 后端
 LLM_MODE=mock                          # mock | real
@@ -80,13 +81,13 @@ VITE_API_BASE=http://127.0.0.1:18765/api
 
 ## 二、后端实现（FastAPI）
 
-### 2.1 应用入口 — 在 `backend/adaagent/main.py` 挂载新路由
+### 2.1 应用入口 — 在 `backend/adaworks/main.py` 挂载新路由
 
 在现有 `create_app()` 中 `include_router(api_router, prefix="/api")`，**保留** sessions/chat/logs/health 等已有路由。
 
-新增模块位于 `backend/adaagent/api/router.py`，聚合 `functions` 与 `task` 子路由。
+新增模块位于 `backend/adaworks/api/router.py`，聚合 `functions` 与 `task` 子路由。
 
-### 2.2 配置管理 — `backend/adaagent/config.py`
+### 2.2 配置管理 — `backend/adaworks/config.py`
 
 使用 `pydantic-settings` 读取环境变量，统一管理所有配置项。
 
@@ -106,7 +107,7 @@ class Settings(BaseSettings):
 settings = Settings()
 ```
 
-### 2.3 LLM 调用层 — `backend/adaagent/services/llm.py`
+### 2.3 LLM 调用层 — `backend/adaworks/services/llm.py`
 
 核心设计：统一的 `AsyncIterator[str]` 接口，mock/real 通过 `config.settings.llm_mode` 切换。
 
@@ -162,7 +163,7 @@ class LLMService:
 llm_service = LLMService()
 ```
 
-### 2.4 Prompt 模板 — `backend/adaagent/services/prompt.py`
+### 2.4 Prompt 模板 — `backend/adaworks/services/prompt.py`
 
 承接现有 `linguist_service.py` 的 system prompt 逻辑：
 
@@ -176,7 +177,7 @@ def build_summarize_prompt(text: str, key_points_count: int = 5, word_limit: int
     ...
 ```
 
-### 2.5 任务管理器 — `backend/adaagent/services/task_manager.py`
+### 2.5 任务管理器 — `backend/adaworks/services/task_manager.py`
 
 纯内存字典，`asyncio.Task` 引用实现取消。不做过度设计。
 
@@ -294,7 +295,7 @@ async def create_task(req: TaskCreateRequest):
 
 ---
 
-## 三、前端实现（基于现有 Linguist AI，UI 不动）
+## 三、前端实现（基于现有 AdaWorks AI，UI 不动）
 
 ### 3.1 Vite 配置 — `frontend/vite.config.ts`
 
@@ -312,22 +313,46 @@ server: {
 ### 3.2 路由 — `frontend/src/router/index.ts` [F0]
 
 ```typescript
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/dashboard' },
-    { path: '/dashboard', name: 'dashboard', component: () => import('../components/DashboardView.vue') },
-    { path: '/translation', name: 'translation', component: () => import('../components/TranslationView.vue') },
-    { path: '/summarization', name: 'summarization', component: () => import('../components/SummarizationView.vue') },
-    { path: '/chat', name: 'chat', component: () => import('../views/ChatView.vue') },
-    { path: '/history', name: 'history', component: () => import('../components/HistoryView.vue') },
-    { path: '/settings', name: 'settings', component: () => import('../components/SettingsView.vue') },
+    { path: "/", redirect: "/dashboard" },
+    {
+      path: "/dashboard",
+      name: "dashboard",
+      component: () => import("../components/DashboardView.vue"),
+    },
+    {
+      path: "/translation",
+      name: "translation",
+      component: () => import("../components/TranslationView.vue"),
+    },
+    {
+      path: "/summarization",
+      name: "summarization",
+      component: () => import("../components/SummarizationView.vue"),
+    },
+    {
+      path: "/chat",
+      name: "chat",
+      component: () => import("../views/ChatView.vue"),
+    },
+    {
+      path: "/history",
+      name: "history",
+      component: () => import("../components/HistoryView.vue"),
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: () => import("../components/SettingsView.vue"),
+    },
   ],
-})
+});
 
-export default router
+export default router;
 ```
 
 `main.ts` 增加 `app.use(router)`；`App.vue` 主内容区改为 `<router-view />`，移除 `activeView` / `<component :is>`。
@@ -354,24 +379,28 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
 ```typescript
 export async function getFunctions() {
-  const res = await fetch(`${API_BASE}/functions`)
-  return res.json() // { functions: FunctionItem[] }
+  const res = await fetch(`${API_BASE}/functions`);
+  return res.json(); // { functions: FunctionItem[] }
 }
 
-export function createTaskSSE(body: { type: string; params: Record<string, unknown> }) {
+export function createTaskSSE(body: {
+  type: string;
+  params: Record<string, unknown>;
+}) {
   return fetch(`${API_BASE}/task`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  })
+  });
 }
 
 export async function cancelTask(taskId: string) {
-  return fetch(`${API_BASE}/task/${taskId}`, { method: 'DELETE' })
+  return fetch(`${API_BASE}/task/${taskId}`, { method: "DELETE" });
 }
 ```
 
 task 参数约定：
+
 - `translate`: `{ text, sourceLang, targetLang, tone? }`
 - `summarize`: `{ text, keyPointsCount?, wordLimit?, tone? }`
 
@@ -380,64 +409,61 @@ task 参数约定：
 #### `useSSE.ts` [F4] — 核心 composable
 
 ```typescript
-import { ref } from 'vue'
+import { ref } from "vue";
 
 export function useSSE() {
-  const result = ref('')
-  const isStreaming = ref(false)
-  const error = ref('')
-  const currentTaskId = ref('')
-  let abortController: AbortController | null = null
+  const result = ref("");
+  const isStreaming = ref(false);
+  const error = ref("");
+  const currentTaskId = ref("");
+  let abortController: AbortController | null = null;
 
-  async function startSSE(
-    url: string,
-    body: Record<string, unknown>,
-  ) {
-    result.value = ''
-    error.value = ''
-    isStreaming.value = true
-    abortController = new AbortController()
+  async function startSSE(url: string, body: Record<string, unknown>) {
+    result.value = "";
+    error.value = "";
+    isStreaming.value = true;
+    abortController = new AbortController();
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         signal: abortController.signal,
         body: JSON.stringify(body),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      if (!reader) throw new Error('No readable stream')
+      if (!reader) throw new Error("No readable stream");
 
-      let buffer = ''
+      let buffer = "";
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (line.startsWith('event: ')) {
+          if (line.startsWith("event: ")) {
             // 事件类型在下一行 data 中处理
-            continue
+            continue;
           }
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6)
+          if (line.startsWith("data: ")) {
+            const jsonStr = line.slice(6);
             try {
-              const data = JSON.parse(jsonStr)
+              const data = JSON.parse(jsonStr);
               // 根据不同 SSE 事件处理（event 信息在上一行）
               if (data.taskId && !data.content) {
-                currentTaskId.value = data.taskId
+                currentTaskId.value = data.taskId;
               } else if (data.content) {
-                result.value += data.content
+                result.value += data.content;
               }
             } catch {
               // 非 JSON 数据，跳过
@@ -446,45 +472,53 @@ export function useSSE() {
         }
       }
     } catch (e: unknown) {
-      if (e instanceof DOMException && e.name === 'AbortError') {
+      if (e instanceof DOMException && e.name === "AbortError") {
         // 用户主动取消，不算错误
       } else {
-        error.value = e instanceof Error ? e.message : String(e)
+        error.value = e instanceof Error ? e.message : String(e);
       }
     } finally {
-      isStreaming.value = false
+      isStreaming.value = false;
     }
   }
 
   function stop() {
-    abortController?.abort()
-    isStreaming.value = false
+    abortController?.abort();
+    isStreaming.value = false;
   }
 
-  return { result, isStreaming, error, currentTaskId, startSSE, stop }
+  return { result, isStreaming, error, currentTaskId, startSSE, stop };
 }
 ```
 
 #### `useTask.ts` [F5, F7, F8]
 
 ```typescript
-import { useSSE } from './useSSE'
-import { cancelTask } from '../services/linguistApi'
+import { useSSE } from "./useSSE";
+import { cancelTask } from "../services/linguistApi";
 
 export function useTask() {
-  const { result, isStreaming, error, currentTaskId, startSSE, stop } = useSSE()
-  const baseUrl = import.meta.env.VITE_API_BASE || '/api'
+  const { result, isStreaming, error, currentTaskId, startSSE, stop } =
+    useSSE();
+  const baseUrl = import.meta.env.VITE_API_BASE || "/api";
 
   async function submitTask(type: string, params: Record<string, unknown>) {
-    await startSSE(`${baseUrl}/task`, { type, params })
+    await startSSE(`${baseUrl}/task`, { type, params });
   }
 
   async function cancelCurrentTask() {
-    stop()
-    if (currentTaskId.value) await cancelTask(currentTaskId.value)
+    stop();
+    if (currentTaskId.value) await cancelTask(currentTaskId.value);
   }
 
-  return { result, isStreaming, error, currentTaskId, submitTask, cancelCurrentTask }
+  return {
+    result,
+    isStreaming,
+    error,
+    currentTaskId,
+    submitTask,
+    cancelCurrentTask,
+  };
 }
 ```
 
@@ -518,14 +552,14 @@ export function useTask() {
 
 ```vue
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { theme } from 'ant-design-vue'
+import { ref, computed } from "vue";
+import { theme } from "ant-design-vue";
 
-const isDark = ref(true)
+const isDark = ref(true);
 const antTheme = computed(() => ({
   algorithm: isDark.value ? theme.darkAlgorithm : theme.defaultAlgorithm,
-  token: { colorPrimary: '#00A67E', /* 沿用现有 token */ },
-}))
+  token: { colorPrimary: "#00A67E" /* 沿用现有 token */ },
+}));
 </script>
 
 <template>
@@ -630,6 +664,7 @@ setup(
 ```
 
 安装后即可全局使用：
+
 ```bash
 cd cli && pip install -e .
 ai-app translate --text "你好" --from zh --to en
@@ -655,22 +690,27 @@ This tool provides AI-powered text translation and summarization.
 ## Commands
 
 ### translate
+
 Translate text between Chinese and English.
 Usage: `ai-app translate --text "TEXT" --from zh|en --to zh|en`
 
 ### summarize
+
 Summarize long text into key points.
 Usage: `ai-app summarize --text "TEXT" --max-points N`
 
 ### list
+
 List all available functions.
 Usage: `ai-app list`
 
 ## Prerequisites
+
 - Backend server running at http://127.0.0.1:18765
 - CLI installed: `cd cli && pip install -e .`
 
 ## Examples
+
 ai-app translate --text "Hello world" --from en --to zh
 ai-app translate --text "你好世界" --from zh --to en
 ai-app summarize --text "Very long text here..." --max-points 3
@@ -683,6 +723,7 @@ ai-app summarize --text "Very long text here..." --max-points 3
 ### `agent.md` [F13]
 
 记录 AI Agent 在开发中的角色：
+
 - Agent 承担的职责：架构设计、代码生成、测试用例编写
 - 人类决策：技术栈选型、功能优先级、UI 交互设计
 - Agent 执行：代码编写、bug 修复、文档生成
@@ -690,18 +731,19 @@ ai-app summarize --text "Very long text here..." --max-points 3
 
 ### `docs/spec/` 目录 [F14]
 
-| 文件 | 内容 |
-|------|------|
-| `docs/spec/requirements.md` | 功能清单，来源于 plan.md Phase 1-3 |
-| `docs/spec/api-design.md` | 接口规范，包含本方案的 API 设计 |
-| `docs/spec/page-mockup.md` | 页面线框图，包含本方案的 ASCII 原型 |
-| `docs/spec/task-breakdown.md` | 任务分解，来源于 plan.md 排期 |
+| 文件                          | 内容                                |
+| ----------------------------- | ----------------------------------- |
+| `docs/spec/requirements.md`   | 功能清单，来源于 plan.md Phase 1-3  |
+| `docs/spec/api-design.md`     | 接口规范，包含本方案的 API 设计     |
+| `docs/spec/page-mockup.md`    | 页面线框图，包含本方案的 ASCII 原型 |
+| `docs/spec/task-breakdown.md` | 任务分解，来源于 plan.md 排期       |
 
 ### `README.md`
 
 结构：
+
 1. 项目介绍 + 功能截图（含 Agent Chat）
-2. 技术栈说明（Vue 3 + Ant Design Vue + FastAPI adaagent）
+2. 技术栈说明（Vue 3 + Ant Design Vue + FastAPI adaworks）
 3. 本地运行：`npm run dev:all`（sidecar 18765 + frontend 1420）；`LLM_MODE=mock` 零配置
 4. API 接口文档（functions / task SSE / cancel 三端点）
 5. CLI 使用说明 + SKILL.md 路径
@@ -714,34 +756,41 @@ ai-app summarize --text "Very long text here..." --max-points 3
 按依赖关系排序，每一步都是可验证的增量。
 
 ### Step 0: Vue Router 迁移 [F0]
+
 - [ ] 安装 `vue-router@4`；新增 `router/index.ts`
 - [ ] `App.vue` 改 `<router-view>`；`Sidebar` 改 `router-link`
 - [ ] 新增 `stores/workspace.ts`；各 View 从 store 读写 logs/quickText
 
 ### Step 1: 后端 SSE + Mock LLM
-- [ ] `adaagent/config.py` + `services/llm.py`（mock）+ `services/prompt.py`
+
+- [ ] `adaworks/config.py` + `services/llm.py`（mock）+ `services/prompt.py`
 - [ ] `GET /api/functions`、`POST /api/task` SSE、`DELETE /api/task/{id}`
 - [ ] **验证**：`curl http://127.0.0.1:18765/api/functions` 返回 translate/summarize
 - [ ] **验证**：`POST /api/task` type=translate + sourceLang/targetLang 看到 SSE 流
 
 ### Step 2: 前端 SSE 对接（UI 不动）
+
 - [ ] `useSSE.ts` + `useTask.ts`；改造 `linguistApi.ts`
 - [ ] `TranslationView` / `SummarizationView` 接入流式 + 停止按钮
 - [ ] **验证**：工作台 → 翻译页，mock 下结果区逐字输出
 
 ### Step 3: 任务取消 + real 模式
+
 - [ ] `task_manager.py` 取消 + 超时
 - [ ] 接入真实 GLM（`LLM_MODE=real`）；mock 路径保留
 
 ### Step 4: CLI + SKILL.md
+
 - [ ] `cli/ai_app.py` + `setup.py` + `.claude/skills/SKILL.md`
 - [ ] **验证**：`ai-app translate --text "Hello" --from en --to zh` 终端流式输出
 
 ### Step 5: 工程增强
+
 - [ ] Ant Design Vue 明暗主题（`a-config-provider` algorithm 切换）
 - [ ] 响应式：已有 Tailwind 断点，核对即可
 
 ### Step 6: 文档交付
+
 - [ ] `agent.md` + `docs/spec/` + `README.md`
 
 > **可选加分**：统一错误处理中间件、Docker 部署。
@@ -750,13 +799,13 @@ ai-app summarize --text "Very long text here..." --max-points 3
 
 ## 八、关键技术决策说明
 
-| 决策 | 选择 | 理由 |
-|------|------|------|
-| 改造策略 | 现有 Linguist AI 增量演进 | UI 已完备，只改底层 SSE/task 契约 |
-| 导航 | Vue Router 4 | 替代 activeView；URL 可直达、支持浏览器历史 |
-| 前端 UI | Ant Design Vue + Tailwind | 已有工程栈；主题用 ConfigProvider algorithm |
-| SSE 客户端 | 原生 fetch + ReadableStream | 不引入 eventsource 库 |
-| 状态管理 | Pinia workspace + composable | logs/quickText 跨页；流式数据在 composable ref |
-| LLM 调用 | httpx 流式 + mock 开关 | 复用 glm_agent SSE 解析；无 Key 可演示 |
-| 任务队列 | 纯内存 dict + asyncio.Task | 足够演示 cancel/timeout |
-| 翻译参数 | 多语言 translate type | 与现有 TranslationView 10 语言 + 语调对齐 |
+| 决策       | 选择                         | 理由                                           |
+| ---------- | ---------------------------- | ---------------------------------------------- |
+| 改造策略   | 现有AdaWorks AI增量演进      | UI 已完备，只改底层 SSE/task 契约              |
+| 导航       | Vue Router 4                 | 替代 activeView；URL 可直达、支持浏览器历史    |
+| 前端 UI    | Ant Design Vue + Tailwind    | 已有工程栈；主题用 ConfigProvider algorithm    |
+| SSE 客户端 | 原生 fetch + ReadableStream  | 不引入 eventsource 库                          |
+| 状态管理   | Pinia workspace + composable | logs/quickText 跨页；流式数据在 composable ref |
+| LLM 调用   | httpx 流式 + mock 开关       | 复用 glm_agent SSE 解析；无 Key 可演示         |
+| 任务队列   | 纯内存 dict + asyncio.Task   | 足够演示 cancel/timeout                        |
+| 翻译参数   | 多语言 translate type        | 与现有 TranslationView 10 语言 + 语调对齐      |

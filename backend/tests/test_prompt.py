@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from adaagent.services.prompt import build_summarize_messages, build_translate_messages
+from adaworks.services.prompt import build_summarize_messages, build_translate_messages
 
 
 def test_translate_prompt_has_target_lang() -> None:

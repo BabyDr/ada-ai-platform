@@ -16,16 +16,16 @@ from typing import TYPE_CHECKING
 from google import genai
 from google.genai import errors, types
 
-from adaagent.env_secrets import read_first_secret
-from adaagent.mock_agent import _insert_message
-from adaagent.services.prompt_security import CHAT_SYSTEM_PROMPT, build_gemini_chat_contents
+from adaworks.env_secrets import read_first_secret
+from adaworks.mock_agent import _insert_message
+from adaworks.services.prompt_security import CHAT_SYSTEM_PROMPT, build_gemini_chat_contents
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 if TYPE_CHECKING:
     import aiosqlite
 
-    from adaagent.ws_hub import ChatHub
+    from adaworks.ws_hub import ChatHub
 
 
 def gemini_api_key_configured() -> bool:

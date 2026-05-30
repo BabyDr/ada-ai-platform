@@ -161,4 +161,4 @@ Base URL：`http://127.0.0.1:18765`
 | `GLM_MODEL` | `glm-4-flash` | |
 | `TASK_TIMEOUT_SECONDS` | `60` | 单任务超时 |
 
-实现位置：`backend/adaagent/config.py`、`services/llm.py`
+实现位置：`backend/adaworks/config.py`、`services/llm.py`

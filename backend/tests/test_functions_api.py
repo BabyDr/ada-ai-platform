@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from adaagent.main import create_app
+from adaworks.main import create_app
 
 
 @pytest.fixture()

@@ -1,5 +1,5 @@
 """
-AdaAgent Python Sidecar（FastAPI）· Author: RenXiaodi
+AdaWorks Python Sidecar（FastAPI）· Author: RenXiaodi
 
 职责概览：
 
@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from adaagent.bootstrap_env import load_app_dotenv
+from adaworks.bootstrap_env import load_app_dotenv
 
 load_app_dotenv()
 
@@ -28,21 +28,21 @@ from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from adaagent.api.router import api_router
-from adaagent.db import connect, row_to_message, row_to_session
-from adaagent.gemini_agent import gemini_api_key_configured, run_gemini_agent
-from adaagent.glm_agent import DEFAULT_GLM_MODEL, glm_api_key_configured, run_glm_agent
-from adaagent.linguist_service import (
+from adaworks.api.router import api_router
+from adaworks.db import connect, row_to_message, row_to_session
+from adaworks.gemini_agent import gemini_api_key_configured, run_gemini_agent
+from adaworks.glm_agent import DEFAULT_GLM_MODEL, glm_api_key_configured, run_glm_agent
+from adaworks.linguist_service import (
     add_log,
     list_logs,
     update_log,
 )
-from adaagent.middleware.body_limit import BodyLimitMiddleware
-from adaagent.middleware.request_id import RequestIdMiddleware
-from adaagent.mock_agent import run_mock_agent
-from adaagent.http_safe import register_global_exception_handler
-from adaagent.services.task_sweeper import run_task_sweeper
-from adaagent.ws_hub import ChatHub
+from adaworks.middleware.body_limit import BodyLimitMiddleware
+from adaworks.middleware.request_id import RequestIdMiddleware
+from adaworks.mock_agent import run_mock_agent
+from adaworks.http_safe import register_global_exception_handler
+from adaworks.services.task_sweeper import run_task_sweeper
+from adaworks.ws_hub import ChatHub
 
 
 def _active_llm_mode() -> str:
@@ -100,7 +100,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         app.state.db = conn
         app.state.hub = hub
         app.state.db_lock = db_lock
-        log = logging.getLogger("adaagent")
+        log = logging.getLogger("adaworks")
         mode = _active_llm_mode()
         if mode == "glm":
             log.warning("LLM 模式: GLM（已检测到 GLM_API_KEY 或 ZHIPU_API_KEY）")
@@ -115,7 +115,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         sweeper.cancel()
         await conn.close()
 
-    app = FastAPI(title="AdaAgent Sidecar", lifespan=lifespan)
+    app = FastAPI(title="AdaWorks Sidecar", lifespan=lifespan)
     app.add_middleware(BodyLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(

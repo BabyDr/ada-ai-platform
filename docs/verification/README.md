@@ -75,7 +75,7 @@ npm run dev:all
 1. **翻译流式（V1）**：`/translation` → 输入「你好」→ 开始翻译 → 观察打字机效果 → 点击停止
 2. **总结流式（V2）**：`/summarization` → 粘贴长文本 → 生成总结 → 停止
 3. **快捷路由（V3）**：`/dashboard` → 快捷输入框输入文本 → 回车 → 确认目标页预填
-4. **主题（V5）**：Sidebar 底部切换太阳/月亮图标 → 确认 Ant 组件与页面背景同步变化 → 刷新确认持久化（`localStorage` 键 `adaagent-dark`）
+4. **主题（V5）**：Sidebar 底部切换太阳/月亮图标 → 确认 Ant 组件与页面背景同步变化 → 刷新确认持久化（`localStorage` 键 `adaworks-dark`）
 5. **响应式（V6）**：DevTools 设备模式切换 375px / 768px 截图
 6. **Agent skill（V4）**：Claude Code 加载 `.claude/skills/SKILL.md` → 执行 `ai-app list` → 截图终端输出
 

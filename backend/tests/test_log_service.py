@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from adaagent.linguist_service import add_log, list_logs, logs_db
-from adaagent.services.log_sanitize import redact_secrets
+from adaworks.linguist_service import add_log, list_logs, logs_db
+from adaworks.services.log_sanitize import redact_secrets
 
 
 def test_redact_api_key() -> None:

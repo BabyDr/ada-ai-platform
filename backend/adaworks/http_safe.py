@@ -16,7 +16,7 @@ from starlette.responses import JSONResponse
 if TYPE_CHECKING:
     from fastapi import FastAPI, Request
 
-_log = logging.getLogger("adaagent")
+_log = logging.getLogger("adaworks")
 
 
 def _request_id(request: Request) -> str | None:

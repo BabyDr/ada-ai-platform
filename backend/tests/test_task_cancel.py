@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 
-from adaagent.api.task import _task_generator
-from adaagent.services.task_manager import task_manager
+from adaworks.api.task import _task_generator
+from adaworks.services.task_manager import task_manager
 
 
 class _MockRequest:
