@@ -33,3 +33,33 @@ def test_mock_summarize_is_json() -> None:
     data = json.loads(raw)
     assert "overview" in data
     assert isinstance(data["keyPoints"], list)
+
+
+def test_mock_translate_respects_target_language() -> None:
+    from adaagent.services.prompt import build_translate_messages
+
+    async def run(system: str) -> str:
+        svc = LLMService()
+        return "".join([t async for t in svc.stream(system, "user", task_type="translate")])
+
+    system_zh, _ = build_translate_messages("测试", "auto", "zh", "Professional")
+    system_en, _ = build_translate_messages("hello", "en", "en", "Professional")
+    zh_out = asyncio.run(run(system_zh))
+    en_out = asyncio.run(run(system_en))
+    assert "这是本地模拟" in zh_out
+    assert "mock streaming translation" in en_out.lower()
+
+
+def test_mock_summarize_words_mode() -> None:
+    import json
+
+    from adaagent.services.prompt import build_summarize_messages
+
+    async def run(system: str) -> str:
+        svc = LLMService()
+        return "".join([t async for t in svc.stream(system, "user", task_type="summarize")])
+
+    system, _ = build_summarize_messages("text", summary_mode="words")
+    raw = asyncio.run(run(system))
+    data = json.loads(raw)
+    assert data["keyPoints"] == []

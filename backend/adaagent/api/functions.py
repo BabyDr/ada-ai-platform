@@ -23,11 +23,12 @@ FUNCTIONS: list[FunctionItem] = [
     FunctionItem(
         id="summarize",
         name="智能要点总结",
-        description="长文本总结，支持要点数 / 字数上限 / 语调。",
+        description="长文本总结，支持按要点 / 按字数两种模式。",
         params={
             "text": "string",
-            "keyPointsCount": "number",
-            "wordLimit": "number",
+            "summaryMode": "string (points|words)",
+            "keyPointsCount": "number (points 模式)",
+            "wordLimit": "number (points=每条要点字数, words=概要字数上限)",
             "tone": "string",
         },
     ),

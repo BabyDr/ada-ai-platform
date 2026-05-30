@@ -4,8 +4,10 @@
  */
 import { message } from "ant-design-vue";
 import { storeToRefs } from "pinia";
+import { computed, ref } from "vue";
 import { useChatStore } from "@/stores/chat";
 import { useChatStream } from "@/composables/useChatStream";
+import { useAutoScroll } from "@/composables/useAutoScroll";
 import MessageBubble from "./MessageBubble.vue";
 import InputBar from "./InputBar.vue";
 import ThinkBlock from "./ThinkBlock.vue";
@@ -17,6 +19,17 @@ const chat = useChatStore();
 const { messages, activeSessionId } = storeToRefs(chat);
 
 useChatStream(activeSessionId);
+
+/** 消息列表容器，用于自动滚动到底部。 */
+const chatListRef = ref<HTMLElement | null>(null);
+/** O(1) 滚动触发器：捕获新消息和流式内容追加。 */
+const scrollTick = computed(() => {
+  const len = messages.value.length;
+  if (len === 0) return 0;
+  const last = messages.value[len - 1];
+  return `${len}:${last.content.length}`;
+});
+useAutoScroll(chatListRef, scrollTick);
 
 /** 提交用户消息到 chat store（HTTP）；ReAct 步骤由 WS 推送。 */
 async function onSubmitMessage(text: string) {
@@ -31,7 +44,7 @@ async function onSubmitMessage(text: string) {
 
 <template>
   <div class="flex min-h-0 flex-1 flex-col bg-[#020c15]/40">
-    <div class="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-10">
+    <div ref="chatListRef" class="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-10">
       <div class="mx-auto max-w-3xl">
         <div
           v-if="!messages.length"

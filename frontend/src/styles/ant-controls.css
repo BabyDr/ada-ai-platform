@@ -117,3 +117,7 @@
 .icon-only-btn.ant-btn > svg {
   display: block;
 }
+
+textarea {
+  font-size: 14px;
+}

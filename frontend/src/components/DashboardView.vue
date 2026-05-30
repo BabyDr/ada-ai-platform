@@ -155,7 +155,7 @@ const { quickInput, goTo, handleQuickSend } = useQuickRoute();
       </div>
 
       <p class="text-xs text-[#acb5c9] mb-4">
-        输入任意文本片段，系统将自动判断并跳转到翻译或总结面板，并预填内容。
+        输入文本后自动路由：含「总结 / 提炼 / 要点」或超过 250 字 → 总结页；否则 → 翻译页。跳转后会预填内容并清空上次结果。
       </p>
 
       <form @submit.prevent="handleQuickSend" class="space-y-4">

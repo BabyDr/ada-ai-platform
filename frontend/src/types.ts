@@ -2,6 +2,13 @@
  * Linguist 工作台共享类型与常量（语言列表、语调、日志结构、默认模型）。
  */
 
+/** 总结模式：按要点提炼 或 按字数概要 */
+export type SummaryMode = "points" | "words";
+
+export const SUMMARY_MODES: { value: SummaryMode; label: string; description: string }[] = [
+  { value: "points", label: "按要点总结", description: "按要点数量提炼，字数控制每条要点长度" },
+  { value: "words", label: "按字数总结", description: "在字数上限内输出概要，不拆分要点" },
+];
 /** 单条 API 运行日志（翻译/总结任务） */
 export interface LogEntry {
   id: string;
@@ -16,6 +23,7 @@ export interface LogEntry {
   details?: {
     sourceLang?: string;
     targetLang?: string;
+    summaryMode?: SummaryMode;
     keyPointsCount?: number;
     wordLimit?: number;
     tone?: string;

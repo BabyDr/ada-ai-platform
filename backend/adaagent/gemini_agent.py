@@ -18,6 +18,7 @@ from google.genai import errors, types
 
 from adaagent.env_secrets import read_first_secret
 from adaagent.mock_agent import _insert_message
+from adaagent.services.prompt_security import CHAT_SYSTEM_PROMPT, build_gemini_chat_contents
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
@@ -73,19 +74,15 @@ async def run_gemini_agent(
         "AND role IN ('user', 'assistant') ORDER BY created_at ASC",
         (session_id,),
     ) as cur:
-        rows = await cur.fetchall()
+        rows = [(row["role"], row["content"]) for row in await cur.fetchall()]
 
+    gemini_turns = build_gemini_chat_contents(rows)
     contents: list[types.Content] = []
-    for row in rows:
-        role, content = row["role"], row["content"]
+    for role, content in gemini_turns:
         if role == "user":
-            contents.append(
-                types.UserContent(parts=[types.Part.from_text(text=content)]),
-            )
+            contents.append(types.UserContent(parts=[types.Part.from_text(text=content)]))
         else:
-            contents.append(
-                types.ModelContent(parts=[types.Part.from_text(text=content)]),
-            )
+            contents.append(types.ModelContent(parts=[types.Part.from_text(text=content)]))
 
     if not contents:
         await hub.broadcast(session_id, "agent:error", {"message": "无有效对话内容"})
@@ -98,6 +95,7 @@ async def run_gemini_agent(
         stream = await client.aio.models.generate_content_stream(
             model=model_name,
             contents=contents,
+            config=types.GenerateContentConfig(system_instruction=CHAT_SYSTEM_PROMPT),
         )
         async for chunk in stream:
             piece = chunk.text or ""

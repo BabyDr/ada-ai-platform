@@ -10,6 +10,7 @@ from adaagent.api.validators import validate_text
 from adaagent.linguist_service import _LANG_NAMES
 
 ToneLiteral = Literal["Professional", "Conversational", "Technical", "Academic", "Creative"]
+SummaryModeLiteral = Literal["points", "words"]
 
 SOURCE_LANGS = frozenset(_LANG_NAMES.keys())
 TARGET_LANGS = frozenset(k for k in _LANG_NAMES if k != "auto")
@@ -41,6 +42,7 @@ class SummarizeParams(BaseModel):
     """总结任务 params。"""
 
     text: str
+    summaryMode: SummaryModeLiteral = "points"
     keyPointsCount: int = Field(3, ge=3, le=10)
     wordLimit: int = Field(250, ge=50, le=2000)
     tone: ToneLiteral = "Professional"

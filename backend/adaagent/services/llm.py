@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 from typing import AsyncIterator
 
 import httpx
@@ -24,15 +25,36 @@ from adaagent.api.validators import sanitize_upstream_message
 from adaagent.env_secrets import read_first_secret
 from adaagent.glm_agent import DEFAULT_GLM_BASE, DEFAULT_GLM_MODEL
 
-_MOCK_TRANSLATE = "This is a mock streaming translation generated locally without any API key. 这是本地模拟的逐字翻译流，用于零配置演示。"
+_MOCK_TRANSLATE_BY_TARGET: dict[str, str] = {
+    "Chinese (Simplified)": "这是本地模拟的逐字翻译流，用于零配置演示。",
+    "English": "This is a mock streaming translation generated locally without any API key.",
+    "Japanese": "これは API キーなしでローカル生成されるモック翻訳ストリームです。",
+    "Korean": "API 키 없이 로컬에서 생성되는 모의 번역 스트림입니다.",
+    "French": "Traduction simulée localement sans clé API.",
+    "Spanish": "Traducción simulada localmente sin clave API.",
+    "German": "Lokal simulierte Übersetzung ohne API-Schlüssel.",
+    "Russian": "Локальный имитационный перевод без API-ключа.",
+    "Italian": "Traduzione simulata localmente senza chiave API.",
+}
+_MOCK_TRANSLATE_DEFAULT = (
+    "This is a mock streaming translation generated locally without any API key. "
+    "这是本地模拟的逐字翻译流，用于零配置演示。"
+)
 _MOCK_SUMMARIZE = json.dumps(
     {
-        "overview": "This is a mock summary produced locally for demonstration without an API key.",
+        "overview": "这是本地模拟的概述摘要，用于零配置演示。",
         "keyPoints": [
-            "Mock mode streams tokens char by char to mimic real SSE.",
-            "No external network or API key is required.",
-            "Set LLM_MODE=real with a GLM key to call the real model.",
+            "Mock 模式逐字流式输出 token，模拟真实 SSE。",
+            "无需外部网络或 API 密钥即可联调。",
+            "配置 LLM_MODE=real 与 GLM 密钥后可调用真实模型。",
         ],
+    },
+    ensure_ascii=False,
+)
+_MOCK_SUMMARIZE_WORDS = json.dumps(
+    {
+        "overview": "这是本地模拟的字数概要总结，用于零配置演示，无需 API 密钥。",
+        "keyPoints": [],
     },
     ensure_ascii=False,
 )
@@ -66,15 +88,18 @@ class LLMService:
     async def stream(self, system: str, user: str, *, task_type: str = "translate") -> AsyncIterator[str]:
         self.last_finish_reason = None
         if effective_mode() == "mock":
-            async for token in self._mock_stream(task_type):
+            async for token in self._mock_stream(task_type, system):
                 yield token
         else:
             async for token in self._real_stream(system, user):
                 yield token
 
-    async def _mock_stream(self, task_type: str) -> AsyncIterator[str]:
+    async def _mock_stream(self, task_type: str, system: str) -> AsyncIterator[str]:
         """逐字返回预设文本，模拟真实 SSE 节奏。"""
-        text = _MOCK_SUMMARIZE if task_type == "summarize" else _MOCK_TRANSLATE
+        if task_type == "summarize":
+            text = _MOCK_SUMMARIZE_WORDS if "no bullet points" in system else _MOCK_SUMMARIZE
+        else:
+            text = _mock_translate_text(system)
         for char in text:
             yield char
             await asyncio.sleep(0.02)
@@ -154,6 +179,13 @@ class LLMService:
                         piece = (ch.get("delta") or {}).get("content") or ""
                         if piece:
                             yield str(piece)
+
+
+def _mock_translate_text(system: str) -> str:
+    """从翻译 system prompt 提取目标语言，返回对应 mock 译文。"""
+    match = re.search(r"to '([^']+)'", system)
+    target = match.group(1) if match else ""
+    return _MOCK_TRANSLATE_BY_TARGET.get(target, _MOCK_TRANSLATE_DEFAULT)
 
 
 llm_service = LLMService()

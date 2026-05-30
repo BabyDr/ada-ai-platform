@@ -4,6 +4,7 @@
  * 任务流、日志、导出逻辑分别见 useTask / useLinguistTaskLog / useExportActions。
  */
 import { computed, onMounted, ref } from "vue";
+import { useAutoScroll } from "../composables/useAutoScroll";
 import {
   Sparkles,
   Copy,
@@ -35,6 +36,12 @@ const apiConnected = computed(() => workspace.apiConnected);
 /** 流式输出：result 即逐 token 追加的译文。 */
 const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 
+/** 输出区域容器，用于自动滚动到底部。 */
+const outputRef = ref<HTMLElement | null>(null);
+const scrollTick = computed(() => result.value);
+useAutoScroll(outputRef, scrollTick);
+
+const MAX_INPUT_CHARS = 5000;
 const inputText = ref("");
 const sourceLang = ref("auto");
 const targetLang = ref("zh");
@@ -56,7 +63,15 @@ const targetLanguageOptions = SUPPORTED_LANGUAGES.filter((l) => l.code !== "auto
   label: l.name,
 }));
 
-useQuickTextPrefill(inputText);
+/** 清空输出区（快捷预填时复用，不清输入框）。 */
+function resetOutputState(): void {
+  if (isStreaming.value) cancelCurrentTask();
+  result.value = "";
+  error.value = "";
+  elapsedTime.value = "--";
+}
+
+useQuickTextPrefill(inputText, resetOutputState);
 
 onMounted(async () => {
   const msg = await recoverPersistedTask("translate");
@@ -75,12 +90,10 @@ function handleDownload(): void {
   downloadTextFile(result.value, `linguist-translation-${targetLang.value}.txt`);
 }
 
-/** 清空输入、结果与错误状态。 */
+/** 清空输入、结果与错误状态；若正在生成则一并中止。 */
 function handleClear(): void {
+  resetOutputState();
   inputText.value = "";
-  result.value = "";
-  error.value = "";
-  elapsedTime.value = "--";
 }
 
 /** 交换源/目标语言；若有结果则回填到输入框。 */
@@ -241,11 +254,11 @@ async function handleTranslate(): Promise<void> {
           </a-button>
         </div>
 
-        <div class="p-5 flex-1 min-h-75 flex flex-col">
+        <div class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col">
           <textarea
             v-model="inputText"
             placeholder="在此输入待翻译文本或原始文档…"
-            maxlength="50000"
+            :maxlength="MAX_INPUT_CHARS"
             :disabled="isStreaming"
             class="resize-none w-full flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-[#bccac2]/35 leading-relaxed custom-scrollbar outline-none focus:ring-0 disabled:opacity-60"
           />
@@ -255,7 +268,7 @@ async function handleTranslate(): Promise<void> {
           class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between gap-3 text-xs text-[#acb5c9] font-mono"
         >
           <span class="shrink min-w-0 truncate"
-            >{{ inputText.length }} / 50,000 字符</span
+            >{{ inputText.length }} / {{ MAX_INPUT_CHARS.toLocaleString() }} 字符</span
           >
           <div class="flex shrink-0 items-center gap-2">
             <a-button
@@ -322,7 +335,7 @@ async function handleTranslate(): Promise<void> {
             <a-button
               type="default"
               size="small"
-              class="action-btn !text-xs"
+              class="action-btn text-xs!"
               @click="handleCopy"
             >
               <template #icon>
@@ -344,7 +357,7 @@ async function handleTranslate(): Promise<void> {
           </div>
         </div>
 
-        <div class="p-5 flex-1 min-h-75 flex flex-col bg-[#020c15]/40">
+        <div ref="outputRef" class="p-5 h-87.5 overflow-y-auto custom-scrollbar flex flex-col bg-[#020c15]/40">
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
@@ -366,7 +379,7 @@ async function handleTranslate(): Promise<void> {
 
           <div
             v-else-if="result"
-            class="text-white text-sm leading-relaxed flex-1 select-text selection:bg-[#00a67e]/40 custom-scrollbar overflow-y-auto"
+            class="text-white text-sm leading-relaxed select-text selection:bg-[#00a67e]/40 whitespace-pre-wrap wrap-break-word"
           >
             <TruncatedText :text="result" />
             <span

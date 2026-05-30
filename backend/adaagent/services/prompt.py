@@ -8,6 +8,21 @@
 from __future__ import annotations
 
 from adaagent.linguist_service import lang_display
+from adaagent.services.prompt_security import (
+    SUMMARIZE_ANTI_INJECTION,
+    TRANSLATE_ANTI_INJECTION,
+    detect_output_language,
+    language_output_rule,
+    wrap_source_document,
+    wrap_source_text,
+)
+
+# 供 summary_parser 等模块沿用
+__all__ = [
+    "build_translate_messages",
+    "build_summarize_messages",
+    "detect_output_language",
+]
 
 
 def build_translate_messages(
@@ -25,10 +40,12 @@ Translate the user input text from '{source_text}' to '{target_text}'.
 The tone of translation must be '{tone}'.
 Strict rules:
 1. Translate only. Do not add any conversational context, meta text, or chat responses.
-2. Maintain technical terms, punctuation, layout, and line breaks where appropriate.
-3. If the input is in the target language already, optimize it slightly or return it as-is."""
+2. Output MUST be written entirely in '{target_text}'. Never output in any other language.
+3. Maintain technical terms, punctuation, layout, and line breaks where appropriate.
+4. If the input is already in '{target_text}', return it as-is without translating to another language.
+{TRANSLATE_ANTI_INJECTION}"""
 
-    return system, text
+    return system, wrap_source_text(text)
 
 
 def build_summarize_messages(
@@ -36,22 +53,49 @@ def build_summarize_messages(
     key_points_count: int = 3,
     word_limit: int = 250,
     tone: str = "Professional",
+    summary_mode: str = "points",
 ) -> tuple[str, str]:
     """构建总结的 (system, user)，与 SummarizationView 参数对齐。"""
-    system = f"""You are a high-level technical analyst and document compression system.
-Summarize the provided content into a cohesive overview and an ordered list of precisely key insights.
-Respond strictly in JSON format with keys "overview" (string) and "keyPoints" (array of strings).
-Use a '{tone}' style when summarizing. Output must match the text's dominant language.
-The overview must be at most {word_limit} words.
-Provide exactly {key_points_count} key points in keyPoints."""
+    output_lang = detect_output_language(text)
+    lang_rule = language_output_rule(output_lang)
+    wrapped = wrap_source_document(text)
 
-    user = f"""Perform summarization under these parameters:
-- Key points count: exactly {key_points_count} bullet points.
+    if summary_mode == "words":
+        system = f"""You are a high-level technical analyst and document compression system.
+Summarize the provided content into a single cohesive overview (no bullet points).
+Respond strictly in JSON format with keys "overview" (string) and "keyPoints" (empty array).
+Use a '{tone}' style when summarizing.
+{lang_rule}
+The overview must be at most {word_limit} words.
+{SUMMARIZE_ANTI_INJECTION}"""
+
+        user = f"""Perform summarization under these parameters:
+- Mode: overview-only summary within a word budget.
 - Word limit for overview: maximum {word_limit} words.
 - Tone style: {tone}
 
-Here is the text to summarize:
-{text}
+{wrapped}
+
+Respond with valid JSON only: {{"overview": "...", "keyPoints": []}}"""
+        return system, user
+
+    system = f"""You are a high-level technical analyst and document compression system.
+Summarize the provided content into a concise overview and an ordered list of key insights.
+Respond strictly in JSON format with keys "overview" (string) and "keyPoints" (array of strings).
+Use a '{tone}' style when summarizing.
+{lang_rule}
+Provide exactly {key_points_count} key points in keyPoints.
+Each key point must be at most {word_limit} words.
+The overview should be a brief lead-in (2–3 sentences).
+{SUMMARIZE_ANTI_INJECTION}"""
+
+    user = f"""Perform summarization under these parameters:
+- Mode: key points summary.
+- Key points count: exactly {key_points_count} bullet points.
+- Word limit per key point: maximum {word_limit} words each.
+- Tone style: {tone}
+
+{wrapped}
 
 Respond with valid JSON only: {{"overview": "...", "keyPoints": ["...", ...]}}"""
 

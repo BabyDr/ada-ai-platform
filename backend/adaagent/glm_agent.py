@@ -21,6 +21,7 @@ import httpx
 
 from adaagent.env_secrets import read_first_secret
 from adaagent.mock_agent import _insert_message
+from adaagent.services.prompt_security import build_glm_chat_messages
 
 if TYPE_CHECKING:
     import aiosqlite
@@ -74,17 +75,11 @@ async def run_glm_agent(
         "AND role IN ('user', 'assistant') ORDER BY created_at ASC",
         (session_id,),
     ) as cur:
-        rows = await cur.fetchall()
+        rows = [(row["role"], row["content"]) for row in await cur.fetchall()]
 
-    messages: list[dict[str, str]] = []
-    for row in rows:
-        role, content = row["role"], row["content"]
-        if role == "user":
-            messages.append({"role": "user", "content": content})
-        else:
-            messages.append({"role": "assistant", "content": content})
+    messages = build_glm_chat_messages(rows)
 
-    if not messages:
+    if len(messages) <= 1:
         await hub.broadcast(session_id, "agent:error", {"message": "无有效对话内容"})
         return
 

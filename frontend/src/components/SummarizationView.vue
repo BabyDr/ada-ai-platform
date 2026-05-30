@@ -4,6 +4,7 @@
  * 任务/日志/导出/文件导入分别见对应 composables。
  */
 import { computed, onMounted, ref } from "vue";
+import { useAutoScroll } from "../composables/useAutoScroll";
 import {
   Sparkles,
   Copy,
@@ -18,7 +19,7 @@ import {
   FileText,
   Square,
 } from "lucide-vue-next";
-import { TONE_STYLES } from "../types";
+import { TONE_STYLES, SUMMARY_MODES, type SummaryMode } from "../types";
 import { useWorkspaceStore } from "../stores/workspace";
 import { useTask } from "../composables/useTask";
 import { useQuickTextPrefill } from "../composables/useQuickTextPrefill";
@@ -41,6 +42,7 @@ const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 const inputText = ref("");
 const overviewText = ref("");
 const keyPoints = ref<string[]>([]);
+const summaryMode = ref<SummaryMode>("points");
 const keyPointsCount = ref(3);
 const wordLimit = ref(250);
 const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">(
@@ -49,10 +51,28 @@ const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Acad
 const elapsedTime = ref("--");
 const recoveryNotice = ref("");
 
+/** 输出区域容器，用于自动滚动到底部。 */
+const outputRef = ref<HTMLElement | null>(null);
+const scrollTick = computed(() => {
+  if (isStreaming.value) return `s:${result.value.length}`;
+  return `d:${overviewText.value.length}:${keyPoints.value.join("|").length}`;
+});
+useAutoScroll(outputRef, scrollTick);
+
 const { copied, copyText } = useCopyFeedback();
 const toneOptions = TONE_STYLES.map((t) => ({ value: t.value, label: t.label }));
 
-useQuickTextPrefill(inputText);
+/** 清空输出区（快捷预填时复用，不清输入框）。 */
+function resetOutputState(): void {
+  if (isStreaming.value) cancelCurrentTask();
+  overviewText.value = "";
+  keyPoints.value = [];
+  result.value = "";
+  error.value = "";
+  elapsedTime.value = "--";
+}
+
+useQuickTextPrefill(inputText, resetOutputState);
 
 onMounted(async () => {
   const msg = await recoverPersistedTask("summarize");
@@ -85,14 +105,10 @@ function handleDownload(): void {
   downloadTextFile(content, "linguist-summary.txt");
 }
 
-/** 清空输入、结果与流式状态。 */
+/** 清空输入、结果与流式状态；若正在生成则一并中止。 */
 function handleClear(): void {
+  resetOutputState();
   inputText.value = "";
-  overviewText.value = "";
-  keyPoints.value = [];
-  result.value = "";
-  error.value = "";
-  elapsedTime.value = "--";
 }
 
 /** 中止当前 SSE 任务。 */
@@ -111,6 +127,7 @@ async function handleSummarize(): Promise<void> {
       elapsedTime.value = "--";
 
       const activeLog = await createProcessingLog("summarization", inputText.value.substring(0, 500), {
+        summaryMode: summaryMode.value,
         keyPointsCount: keyPointsCount.value,
         wordLimit: wordLimit.value,
         tone: selectedTone.value,
@@ -126,6 +143,7 @@ async function handleSummarize(): Promise<void> {
         "summarize",
         {
           text: inputText.value,
+          summaryMode: summaryMode.value,
           keyPointsCount: keyPointsCount.value,
           wordLimit: wordLimit.value,
           tone: selectedTone.value,
@@ -137,6 +155,7 @@ async function handleSummarize(): Promise<void> {
               const summary = (payload.result as { overview?: string; keyPoints?: string[] } | undefined) ?? {};
               overviewText.value = summary.overview || "";
               keyPoints.value = summary.keyPoints || [];
+              result.value = "";
             }
             logCallbacks.onDone?.(payload);
           },
@@ -175,22 +194,54 @@ async function handleSummarize(): Promise<void> {
       description="请在 backend/.env 中配置 GLM_API_KEY 或 ZHIPU_API_KEY 以启用总结功能。"
     />
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded">
-      <div id="cfg-word-limit">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-[#08121e]/40 border border-[#26384d]/60 rounded">
+      <div id="cfg-summary-mode" class="md:col-span-2 lg:col-span-1">
+        <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">总结方式</label>
+        <a-radio-group
+          v-model:value="summaryMode"
+          size="small"
+          button-style="solid"
+          class="tone-radio-group"
+          :disabled="isStreaming"
+        >
+          <a-radio-button
+            v-for="mode in SUMMARY_MODES"
+            :key="mode.value"
+            :value="mode.value"
+          >
+            {{ mode.label }}
+          </a-radio-button>
+        </a-radio-group>
+        <p class="text-[10px] text-[#bccac2]/60 mt-1.5 leading-relaxed">
+          {{ SUMMARY_MODES.find((m) => m.value === summaryMode)?.description }}
+        </p>
+      </div>
+
+      <div v-if="summaryMode === 'words'" id="cfg-word-limit">
         <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
-          <span>概述字数上限</span>
+          <span>概要字数上限</span>
           <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
         </div>
         <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
       </div>
 
-      <div id="cfg-points-count">
-        <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
-          <span>要点数量</span>
-          <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ keyPointsCount }} 条</span>
+      <template v-else>
+        <div id="cfg-points-count">
+          <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
+            <span>要点数量</span>
+            <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ keyPointsCount }} 条</span>
+          </div>
+          <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
         </div>
-        <input v-model.number="keyPointsCount" type="range" min="3" max="10" step="1" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
-      </div>
+
+        <div id="cfg-point-word-limit">
+          <div class="flex items-center justify-between text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">
+            <span>每条要点字数</span>
+            <span class="text-white bg-[#122131] px-1.5 py-0.5 rounded border border-[#26384d]/60 font-semibold">{{ wordLimit }} 字</span>
+          </div>
+          <input v-model.number="wordLimit" type="range" min="50" max="800" step="50" :disabled="isStreaming" class="w-full h-1.5 bg-[#122131] rounded appearance-none cursor-pointer accent-[#00a67e] disabled:opacity-50" />
+        </div>
+      </template>
 
       <div id="cfg-tone-style">
         <label class="block text-[10px] font-mono text-[#acb5c9] uppercase tracking-wider mb-2">摘要语气风格</label>
@@ -231,7 +282,7 @@ async function handleSummarize(): Promise<void> {
           @dragleave="handleDragLeave"
           @drop="handleDrop"
           :class="[
-            'p-5 flex-1 min-h-87.5 flex flex-col transition-all duration-150 relative',
+            'p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col transition-all duration-150 relative',
             dragActive ? 'bg-[#00a67e]/5 border-2 border-dashed border-[#00a67e]/60' : '',
           ]"
         >
@@ -285,7 +336,7 @@ async function handleSummarize(): Promise<void> {
           </div>
         </div>
 
-        <div class="p-5 flex-1 min-h-87.5 flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
+        <div ref="outputRef" class="p-5 h-[350px] overflow-y-auto custom-scrollbar flex flex-col bg-[#020c15]/40">
           <div
             v-if="recoveryNotice"
             class="p-4 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs leading-relaxed flex items-start gap-2.5 mb-3"
@@ -326,17 +377,17 @@ async function handleSummarize(): Promise<void> {
             </div>
           </div>
 
-          <div v-else-if="overviewText || keyPoints.length > 0" class="space-y-6 text-sm">
+          <div v-else-if="!isStreaming && (overviewText || keyPoints.length > 0)" class="space-y-6 text-sm">
             <div v-if="overviewText">
               <span class="flex items-center gap-1.5 text-[10px] text-[#00a67e] font-mono tracking-wider uppercase font-semibold mb-2">
                 <Sparkle class="w-3 h-3 fill-current" />
-                概述摘要
+                {{ summaryMode === "words" ? "概要总结" : "概述摘要" }}
               </span>
               <p class="text-white bg-[#0e1b2b]/40 border border-[#26384d]/30 p-4 rounded leading-relaxed selection:bg-[#00a67e]/40">
                 <TruncatedText :text="overviewText" />
               </p>
             </div>
-            <div v-if="keyPoints.length > 0">
+            <div v-if="summaryMode === 'points' && keyPoints.length > 0">
               <span class="flex items-center gap-1.5 text-[10px] text-sky-400 font-mono tracking-wider uppercase font-semibold mb-3">
                 <Sparkle class="w-3 h-3 fill-current" />
                 核心要点提炼
