@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { Settings, AlertTriangle, CheckCircle2, Cpu, Lock, ShieldAlert } from "lucide-vue-next";
 import { TONE_STYLES, DEFAULT_GLM_MODEL } from "../types";
+import { useWorkspaceStore } from "../stores/workspace";
 
-interface Props {
-  apiConnected: boolean;
-}
-
-defineProps<Props>();
+const workspace = useWorkspaceStore();
+const apiConnected = computed(() => workspace.apiConnected);
 
 const defaultTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">("Professional");
 const preferredModel = ref(DEFAULT_GLM_MODEL);

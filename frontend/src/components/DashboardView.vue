@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import {
   Sparkles,
   Languages,
@@ -12,27 +13,21 @@ import {
   Cpu,
   Sparkle,
 } from "lucide-vue-next";
-import type { LogEntry, WorkspaceViewId } from "../types";
 import { DEFAULT_GLM_MODEL } from "../types";
+import { useWorkspaceStore } from "../stores/workspace";
 
-interface Props {
-  logs: LogEntry[];
-  apiConnected: boolean;
-}
+const router = useRouter();
+const workspace = useWorkspaceStore();
 
-const props = defineProps<Props>();
-
-const emit = defineEmits<{
-  (e: "update:activeView", view: WorkspaceViewId): void;
-  (e: "update:quickText", text: string): void;
-}>();
-
+const apiConnected = computed(() => workspace.apiConnected);
 const quickInput = ref("");
 
-const totalProcessed = computed(() => props.logs.filter((l) => l.status === "success" || l.status === "failed").length);
+const totalProcessed = computed(
+  () => workspace.logs.filter((l) => l.status === "success" || l.status === "failed").length,
+);
 
 const avgLatency = computed(() => {
-  const successfulLogs = props.logs.filter((l) => l.status === "success");
+  const successfulLogs = workspace.logs.filter((l) => l.status === "success");
   if (successfulLogs.length > 0) {
     const sum = successfulLogs.reduce((acc, curr) => {
       const val = parseFloat(curr.duration);
@@ -43,11 +38,13 @@ const avgLatency = computed(() => {
   return "1.8s";
 });
 
+const goTo = (name: "translation" | "summarization") => router.push({ name });
+
 const handleQuickSend = () => {
   if (!quickInput.value.trim()) return;
 
   const text = quickInput.value.trim();
-  emit("update:quickText", text);
+  workspace.setQuickText(text);
 
   const lowercaseInput = text.toLowerCase();
   const isProbablySummary =
@@ -58,7 +55,7 @@ const handleQuickSend = () => {
     lowercaseInput.includes("要点") ||
     text.length > 250;
 
-  emit("update:activeView", isProbablySummary ? "summarization" : "translation");
+  router.push({ name: isProbablySummary ? "summarization" : "translation" });
   quickInput.value = "";
 };
 </script>
@@ -150,7 +147,7 @@ const handleQuickSend = () => {
         <button
           id="btn-nav-translation"
           type="button"
-          @click="emit('update:activeView', 'translation')"
+          @click="goTo('translation')"
           class="mt-6 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#26384d] bg-[#0c1622] text-white hover:bg-[#00a67e] hover:text-white hover:border-[#00a67e] text-xs font-semibold transition-all duration-200 cursor-pointer"
         >
           进入翻译面板
@@ -176,7 +173,7 @@ const handleQuickSend = () => {
         <button
           id="btn-nav-summarization"
           type="button"
-          @click="emit('update:activeView', 'summarization')"
+          @click="goTo('summarization')"
           class="mt-6 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#26384d] bg-[#0c1622] text-white hover:bg-[#00a67e] hover:text-white hover:border-[#00a67e] text-xs font-semibold transition-all duration-200 cursor-pointer"
         >
           进入总结工作区

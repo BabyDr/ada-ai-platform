@@ -1,161 +1,218 @@
-# AdaAgent
+# AdaAgent · Linguist AI / AI TextFlow
 
-本地运行的对话型智能体示例：**Vue 3 前端**通过 HTTP + WebSocket 与 **Python Sidecar（FastAPI）** 通信；Sidecar 负责会话持久化（SQLite）、调用大模型（智谱 GLM / Google Gemini，或 Mock），并以**流式**事件把生成过程推给浏览器。
+面向 [AI Native 开发工程师笔试](docs/ai-navitve/ai-requirement.md) 的 AI 文本处理应用：在现有 **Linguist AI** 工作区上增量演进，提供多语言翻译、智能要点总结、SSE 流式输出与任务取消，并附带 Agent 对话、调用记录与 CLI/Agent 工具链。
 
-适合边做边学：**前端状态与网络分层**、**异步 Web 框架**、**流式 SSE / 异步迭代器**、**环境变量与密钥管理**等。
-
-**界面**：对话页采用薄荷绿主色（约 `#00A67E`）、浅灰绿画布（`#F7F9F8`）、深绿文案（`#004D3D`）与 **Think / Act / Observe** 分块样式；主题色与 Tailwind 扩展见 `frontend/tailwind.config.js` 中的 `arch.*` 色板与 `frontend/src/views/ChatView.vue` 布局。
+> 详细方案见 [`docs/ai-navitve/plan.md`](docs/ai-navitve/plan.md) · 规范见 [`spec/`](spec/) · Agent 协作见 [`agent.md`](agent.md)
 
 ---
 
-## 一、仓库顶层目录
+## 项目介绍
 
-| 路径 | 作用 |
+**AdaAgent** 是一个全栈 AI 文本处理平台，包含两条能力线：
+
+| 模块 | 说明 |
 |------|------|
-| `package.json` | 根级 npm 脚本：一键同时启动 Sidecar + Vite（`dev:all`） |
-| `scripts/sidecar.mjs` | 用 Node 拉起 `uvicorn`：指定 `backend` 为工作目录、端口 `18765` |
-| `frontend/` | **Vue 3 + Vite + TypeScript + Pinia + Ant Design Vue** 单页应用 |
-| `backend/` | **Python 3.11+** Sidecar：`requirements.txt`、`adaagent` 包、单测 |
-| `docs/` | 需求与设计文档（如 `spec.md`），与可运行代码相互对照阅读 |
-| `data/db/` | 默认 SQLite 文件目录（运行时自动创建，勿把含隐私的 `.db` 提交仓库） |
+| **文本处理主线** | 工作台 → 翻译 / 总结 → 流式结果 → 停止生成 → 历史记录 |
+| **Agent Chat（加分）** | WebSocket 多轮对话，ReAct 步骤展示，与会话持久化 |
 
----
+### 功能一览
 
-## 二、后端模块 `backend/adaagent/`
+- **工作台**：双卡片入口（文本翻译、智能要点总结）+ 快捷输入智能跳转
+- **文本翻译**：10 种源/目标语言、5 种语调、双栏对照、SSE 打字机 + 停止生成
+- **智能要点总结**：要点数 / 字数上限 / 语调、文件导入、概述 + 要点结构化展示
+- **运行日志**：记录每次调用的输入、输出、耗时与状态
+- **智能体对话**：GLM/Gemini/Mock Agent，WebSocket 流式回复
+- **CLI + skill.md**：`ai-app translate` / `summarize` / `list`，供 Claude Code 等 Agent 调用
 
-| 文件 | 功能说明 |
-|------|----------|
-| `main.py` | **应用入口**：`create_app()` 注册路由；`lifespan` 里连接数据库、挂载 `ChatHub`；`POST /api/chat` 写入用户消息后**异步**启动 `run_glm_agent` / `run_gemini_agent` / `run_mock_agent`；`GET /api/health` 返回当前 LLM 模式（`glm` / `gemini` / `mock`） |
-| `db.py` | **SQLite**：`connect()` 建表；`sessions` / `messages` 表结构；`row_to_session` / `row_to_message` 把查询行转成 API 用的字典 |
-| `ws_hub.py` | **WebSocket 房间**：按 `session_id` 维护连接列表；`broadcast()` 向该会话所有客户端发送 `{ type, payload }` JSON 文本帧 |
-| `bootstrap_env.py` | **环境变量**：依次加载仓库根 `.env` 与 `backend/.env`（后者覆盖同名键），便于密钥放在任意一层 |
-| `env_secrets.py` | **密钥解析**：支持 `KEY="[\"a\",\"b\"]"` 形式把多段拼成一条字符串，兼容整条密钥 |
-| `glm_agent.py` | **智谱 GLM**：OpenAI 兼容 `POST .../chat/completions`，`stream: true` 解析 **SSE**，逐段 `agent:delta`，结束 `agent:final` 并落库 |
-| `gemini_agent.py` | **Google Gemini**：`google-genai` 异步 `generate_content_stream`，逐块 `chunk.text` → `agent:delta`，结束 `agent:final` 并落库 |
-| `mock_agent.py` | **无 API Key 时**：模拟 ReAct 步骤（think/act/observe），最终回答也拆成多段 `agent:delta` 便于体验流式 UI |
-
-**WebSocket 事件约定（与前端 `applyAgentEvent` 对齐）**
-
-- `agent:delta`：增量正文 `{ "content": "..." }`
-- `agent:final`：本轮流式结束，前端会重新拉取消息列表与 SQLite 对齐
-- `agent:error`：错误说明
-- `agent:think` / `agent:act` / `agent:observe`：主要由 Mock 使用
-
----
-
-## 三、前端模块 `frontend/src/`（摘要）
-
-| 路径 | 功能说明 |
-|------|----------|
-| `main.ts` | 应用入口：创建 Vue 应用、Pinia、路由、Ant Design Vue |
-| `services/api.ts` | **HTTP**：`fetch` 调用 Sidecar 的 `/api/sessions`、`/api/chat` 等；`VITE_API_BASE` 指向 `http://127.0.0.1:18765/api` |
-| `services/websocket.ts` | **纯函数**：根据 `VITE_WS_BASE` 拼出 `ws://.../ws/chat/{sessionId}` |
-| `composables/useChatStream.ts` | **订阅 WebSocket**：随当前会话 ID 变化重连；`onmessage` 解析 JSON 后交给 Pinia |
-| `stores/chat.ts` | **Pinia 状态**：会话列表、消息列表、`agent:delta` 拼接到同一条 assistant 气泡、`agent:final` 后 `loadMessages` |
-| `types/chat.ts` | TypeScript 类型：会话、消息角色、API 请求/响应形状 |
-
----
-
-## 四、启动手册
-
-### 4.1 环境要求
-
-- **Node.js** 18+（用于 Vite、npm 脚本）
-- **Python** 3.11+（Sidecar；推荐在 `backend/` 下使用虚拟环境）
-
-### 4.2 安装依赖
-
-在仓库根目录 `AdaAgent/`：
+### CLI 演示
 
 ```bash
-npm install
-npm run install
+$ ai-app list
+  translate            文本翻译 - 多语言翻译，支持源/目标语言与语调
+  summarize            智能要点总结 - 长文本总结，支持要点数/字数上限/语调
+
+$ ai-app translate --text "Hello world" --from en --to zh
+# mock 模式下本地流式输出译文
+
+$ ai-app summarize --text "长文本..." --max-points 3
+# 流式输出 JSON 总结
 ```
 
-首次使用 Python 依赖（在 `backend` 创建 `.venv` 并安装包）：
+---
+
+## 技术栈
+
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 前端 | Vue 3 + TypeScript + Vite | Composition API、useSSE / useTask |
+| UI | Ant Design Vue + Tailwind CSS v4 | ConfigProvider 明暗主题 |
+| 状态 | Pinia | `workspace`（跨页）+ `chat`（Agent） |
+| 导航 | Vue Router 4 | `/dashboard` `/translation` `/summarization` 等 |
+| 后端 | Python FastAPI + Uvicorn | Sidecar 端口 **18765** |
+| LLM | 智谱 GLM / Gemini / Mock | `LLM_MODE=mock\|real`；密钥 `GLM_*` |
+| 持久化 | SQLite + 内存日志 | Agent 会话 SQLite；翻译/总结日志内存 |
+| CLI | Python Click + httpx | `cli/ai_app.py` |
+| 测试 | pytest + vitest | `make test` 一键运行 |
+
+### 仓库结构
+
+```
+AdaAgent/
+├── frontend/src/
+│   ├── components/          # DashboardView, TranslationView, SummarizationView, ...
+│   ├── composables/         # useSSE.ts, useTask.ts, useChatStream.ts
+│   ├── services/            # linguistApi.ts（SSE task）, api.ts（Chat REST）
+│   ├── stores/              # workspace.ts, chat.ts
+│   └── router/
+├── backend/adaagent/
+│   ├── main.py              # FastAPI 入口
+│   ├── api/                 # functions, task, schemas
+│   └── services/            # llm, prompt, task_manager
+├── cli/                     # ai-app CLI
+├── .claude/skills/skill.md  # Agent 技能描述
+├── spec/                    # 需求、API、页面、任务拆分
+├── agent.md                 # AI Agent 协作记录
+└── scripts/sidecar.mjs
+```
+
+---
+
+## 本地运行指南
+
+### 环境要求
+
+- **Node.js** ≥ 18
+- **Python** ≥ 3.10
+
+### 1. 安装
 
 ```bash
+git clone <your-repo-url> AdaAgent
+cd AdaAgent
+
+npm install --registry https://registry.npmjs.org/
 npm run sidecar:setup
 ```
 
-或手动：
+### 2. 环境变量
 
 ```bash
-cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp backend/.env.example backend/.env
 ```
 
-### 4.3 配置密钥（二选一或同时配置，优先级见下）
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `LLM_MODE` | `mock` 本地流 / `real` 真实 GLM | `mock` |
+| `GLM_API_KEY` | 智谱 API Key（与 Agent Chat 共用） | 空 |
+| `GLM_MODEL` | GLM 模型 ID | `glm-4-flash` |
+| `GLM_API_BASE` | OpenAI 兼容网关 | 智谱默认 |
+| `GEMINI_API_KEY` | Gemini（GLM 未配置时 Chat 使用） | 空 |
+| `TASK_TIMEOUT_SECONDS` | 单任务超时 | `60` |
 
-在 **`backend/.env`** 或 **仓库根目录 `.env`** 中配置（详见 `backend/.env.example`）：
-
-- **智谱 GLM（优先）**：`GLM_API_KEY` 或 `ZHIPU_API_KEY`
-- **Gemini（未配置 GLM 时）**：`GEMINI_API_KEY` 或 `GOOGLE_API_KEY`
-
-未配置任何密钥时，走 **Mock**，无需外网即可联调 UI。
-
-### 4.4 启动开发环境
-
-在仓库根目录：
+### 3. 一键启动
 
 ```bash
 npm run dev:all
 ```
 
-- 前端：<http://localhost:1420/>（Vite 默认端口，见 `frontend/vite.config.ts`）
-- Sidecar：<http://127.0.0.1:18765>
+| 服务 | 地址 |
+|------|------|
+| 前端 Web UI | http://localhost:1420 |
+| 后端 Sidecar | http://127.0.0.1:18765 |
+| 健康检查 | http://127.0.0.1:18765/api/health |
 
-**仅启动后端**（调试 API）：
-
-```bash
-npm run sidecar
-```
-
-**仅启动前端**（需 Sidecar 已在别处运行）：
+### 4. CLI
 
 ```bash
-npm run dev
+cd cli && pip install -e .
+ai-app --help
+ai-app translate --text "你好" --from zh --to en
 ```
 
-### 4.5 自检
-
-浏览器或命令行访问：
-
-```text
-http://127.0.0.1:18765/api/health
-```
-
-期望 JSON 中含 `"status":"ok"`，且 `"llm"` 为 `glm`、`gemini` 或 `mock`。
-
-### 4.6 生产构建（前端静态资源）
+### 5. 测试与构建
 
 ```bash
-npm run build
+make test                    # 后端 pytest + CLI + 前端 vitest
+npm run build --prefix frontend
+cd backend && .venv/bin/pytest
+npm run test --prefix frontend
 ```
 
 ---
 
-## 五、边做边学：建议阅读顺序
+## API 接口文档
 
-1. `README.md`（本文）→ 建立全局地图  
-2. `backend/adaagent/main.py` → 路由与异步任务如何触发模型  
-3. `frontend/src/services/api.ts` + `useChatStream.ts` → HTTP 发消息与 WebSocket 收流式事件如何分工  
-4. `backend/adaagent/glm_agent.py` 或 `gemini_agent.py` → 流式响应如何变成 `agent:delta`  
-5. `docs/spec.md` → 产品层需求与当前实现的差距（扩展功能时的清单）
+完整规范见 [`spec/api-design.md`](spec/api-design.md)。
 
-单测（后端）在 `backend/tests/`，可在 `backend` 目录执行：
+Base URL：`http://127.0.0.1:18765`
+
+### GET /api/functions
 
 ```bash
-.venv/bin/pytest tests/ -q
+curl http://127.0.0.1:18765/api/functions
 ```
+
+### POST /api/task（SSE）
+
+```bash
+curl -N -X POST http://127.0.0.1:18765/api/task \
+  -H "Content-Type: application/json" \
+  -d '{"type":"translate","params":{"text":"你好","sourceLang":"zh","targetLang":"en","tone":"Professional"}}'
+```
+
+SSE 事件：`task_start` → `token`（多次）→ `task_done` / `task_error`
+
+### DELETE /api/task/{taskId}
+
+```bash
+curl -X DELETE http://127.0.0.1:18765/api/task/{taskId}
+```
+
+### 辅助接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/health` | 健康检查 |
+| GET | `/api/logs` | 翻译/总结内存日志 |
+
+### Agent Chat
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET/POST | `/api/sessions` | 会话 CRUD |
+| POST | `/api/chat` | 发送消息 |
+| WebSocket | `/ws/chat/{session_id}` | 流式 Agent 事件 |
+
+> 旧的 `POST /api/translate`、`POST /api/summarize` 已移除，统一使用 SSE task 契约。
 
 ---
 
-## 六、常见问题
+## Mock / Real 模式
 
-| 现象 | 可能原因 |
-|------|----------|
-| 前端能开但发消息失败 | Sidecar 未启动或端口不是 `18765`；检查 `frontend/.env.development` 里 `VITE_API_BASE` / `VITE_WS_BASE` |
-| `/api/health` 一直是 `mock` | `.env` 未加载或变量名写错；修改后需**重启** Sidecar |
-| 改代码后模型行为没变 | Python 进程未重启；`npm run dev:all` 需整段 Ctrl+C 再启动 |
+```bash
+# backend/.env
+LLM_MODE=mock    # 零配置演示，本地预设逐字流
+LLM_MODE=real    # 需 GLM_API_KEY
+```
 
-祝学习愉快。
+| 模式 | 需要 Key | 适用场景 |
+|------|----------|----------|
+| `mock` | 否 | 联调、CI、笔试演示 |
+| `real` | 是 | 真实模型输出 |
+
+---
+
+## 相关文档
+
+| 文档 | 说明 |
+|------|------|
+| [agent.md](agent.md) | AI Agent 角色与协作决策 |
+| [spec/](spec/) | 需求、API、页面原型、任务拆分 |
+| [.claude/skills/skill.md](.claude/skills/skill.md) | CLI Agent 技能 |
+| [docs/ai-navitve/](docs/ai-navitve/) | 笔试需求与实现方案 |
+
+---
+
+## License
+
+Private / 笔试作品 — 提交后可按题目要求删除仓库。

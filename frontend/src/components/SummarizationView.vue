@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import {
   Sparkles,
   Copy,
@@ -12,22 +12,17 @@ import {
   Sparkle,
   Sliders,
   FileText,
+  Square,
 } from "lucide-vue-next";
 import { TONE_STYLES, type LogEntry } from "../types";
-import * as api from "../services/linguistApi";
+import { useWorkspaceStore } from "../stores/workspace";
+import { useTask } from "../composables/useTask";
 
-interface Props {
-  quickText: string;
-  apiConnected: boolean;
-  onAddLog: (log: Omit<LogEntry, "id" | "timestamp" | "date">) => Promise<LogEntry>;
-  onUpdateLog: (id: string, updates: Partial<LogEntry>) => void;
-}
+const workspace = useWorkspaceStore();
+const apiConnected = computed(() => workspace.apiConnected);
 
-const props = defineProps<Props>();
-
-const emit = defineEmits<{
-  (e: "update:quickText", text: string): void;
-}>();
+// result：总结流式阶段的原始 JSON 文本；task_done 后解析为结构化 overview/keyPoints。
+const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 
 const inputText = ref("");
 const overviewText = ref("");
@@ -36,20 +31,18 @@ const keyPointsCount = ref(5);
 const wordLimit = ref(250);
 const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">("Professional");
 
-const isProcessing = ref(false);
 const copied = ref(false);
-const errorText = ref("");
 const elapsedTime = ref("--");
 const dragActive = ref(false);
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
 watch(
-  () => props.quickText,
+  () => workspace.quickText,
   (newVal) => {
     if (newVal) {
       inputText.value = newVal;
-      emit("update:quickText", "");
+      workspace.setQuickText("");
     }
   },
   { immediate: true },
@@ -91,7 +84,8 @@ const handleClear = () => {
   inputText.value = "";
   overviewText.value = "";
   keyPoints.value = [];
-  errorText.value = "";
+  result.value = "";
+  error.value = "";
   elapsedTime.value = "--";
 };
 
@@ -130,19 +124,17 @@ const loadFile = (file: File) => {
   reader.readAsText(file);
 };
 
+const handleStop = () => cancelCurrentTask();
+
 const handleSummarize = async () => {
   if (!inputText.value.trim()) return;
-
-  isProcessing.value = true;
-  errorText.value = "";
   overviewText.value = "";
   keyPoints.value = [];
   elapsedTime.value = "--";
-  const startTime = Date.now();
 
   let activeLog: LogEntry | null = null;
   try {
-    activeLog = await props.onAddLog({
+    activeLog = await workspace.addLog({
       type: "summarization",
       input: inputText.value.substring(0, 500),
       output: "...",
@@ -158,42 +150,51 @@ const handleSummarize = async () => {
     console.warn("Log creation failed: ", e);
   }
 
-  try {
-    const data = await api.summarize({
+  await submitTask(
+    "summarize",
+    {
       text: inputText.value,
       keyPointsCount: keyPointsCount.value,
       wordLimit: wordLimit.value,
       tone: selectedTone.value,
-    });
-
-    const duration = data.duration || `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
-    elapsedTime.value = duration;
-
-    const summaryData = data.result || { overview: "", keyPoints: [] as string[] };
-    overviewText.value = summaryData.overview || "";
-    keyPoints.value = summaryData.keyPoints || [];
-
-    if (activeLog) {
-      props.onUpdateLog(activeLog.id, {
-        status: "success",
-        output: JSON.stringify(summaryData),
-        duration,
-      });
-    }
-  } catch (err: unknown) {
-    const errMessage = err instanceof Error ? err.message : "总结处理失败。";
-    errorText.value = errMessage;
-    if (activeLog) {
-      props.onUpdateLog(activeLog.id, {
-        status: "failed",
-        output: errMessage,
-        duration: "0s",
-        error: errMessage,
-      });
-    }
-  } finally {
-    isProcessing.value = false;
-  }
+    },
+    {
+      onDone: (payload) => {
+        elapsedTime.value = payload.duration || elapsedTime.value;
+        if (payload.status === "cancelled") {
+          if (activeLog) {
+            workspace.updateLog(activeLog.id, {
+              status: "failed",
+              output: result.value || "已取消",
+              duration: elapsedTime.value,
+              error: "用户已停止生成",
+            });
+          }
+          return;
+        }
+        const summary = (payload.result as { overview?: string; keyPoints?: string[] } | undefined) ?? {};
+        overviewText.value = summary.overview || "";
+        keyPoints.value = summary.keyPoints || [];
+        if (activeLog) {
+          workspace.updateLog(activeLog.id, {
+            status: "success",
+            output: JSON.stringify({ overview: overviewText.value, keyPoints: keyPoints.value }),
+            duration: elapsedTime.value,
+          });
+        }
+      },
+      onError: (message) => {
+        if (activeLog) {
+          workspace.updateLog(activeLog.id, {
+            status: "failed",
+            output: message,
+            duration: "0s",
+            error: message,
+          });
+        }
+      },
+    },
+  );
 };
 </script>
 
@@ -211,7 +212,7 @@ const handleSummarize = async () => {
       </div>
       <div class="flex items-center gap-2">
         <span
-          v-if="isProcessing"
+          v-if="isStreaming"
           class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded-full flex items-center gap-1.5"
         >
           <span class="animate-spin rounded-full h-2 w-2 border-2 border-t-transparent border-[#00a67e]"></span>
@@ -312,9 +313,19 @@ const handleSummarize = async () => {
         <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between text-xs text-[#acb5c9] font-mono">
           <span>已加载 {{ inputText.length.toLocaleString() }} 字符</span>
           <button
+            v-if="isStreaming"
+            type="button"
+            @click="handleStop"
+            class="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold text-xs transition-all cursor-pointer"
+          >
+            <Square class="w-3.5 h-3.5 fill-current" />
+            停止生成
+          </button>
+          <button
+            v-else
             type="button"
             @click="handleSummarize"
-            :disabled="isProcessing || !inputText.trim() || !apiConnected"
+            :disabled="!inputText.trim()"
             class="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00a67e] hover:bg-[#008f6c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs transition-all cursor-pointer"
           >
             <Sparkles class="w-3.5 h-3.5" />
@@ -326,7 +337,7 @@ const handleSummarize = async () => {
       <div class="rounded-2xl border border-[#26384d] bg-[#0c1622] flex flex-col justify-between overflow-hidden">
         <div class="px-5 py-3 border-b border-[#26384d] bg-[#08121e] flex items-center justify-between">
           <span class="text-xs font-semibold text-[#acb5c9]">执行摘要与要点</span>
-          <div v-if="overviewText || keyPoints.length > 0" class="flex items-center gap-1.5">
+          <div v-if="(overviewText || keyPoints.length > 0) && !isStreaming" class="flex items-center gap-1.5">
             <button type="button" @click="handleCopy" class="p-1.5 rounded bg-[#122131] hover:bg-[#26384d] text-white border border-[#26384d]/60 text-xs flex items-center gap-1 transition-colors cursor-pointer">
               <Check v-if="copied" class="w-3.5 h-3.5 text-[#00a67e]" />
               <Copy v-else class="w-3.5 h-3.5" />
@@ -339,7 +350,26 @@ const handleSummarize = async () => {
         </div>
 
         <div class="p-5 flex-1 min-h-[350px] flex flex-col bg-[#020c15]/40 overflow-y-auto custom-scrollbar">
-          <div v-if="isProcessing" class="my-auto flex flex-col justify-center items-center gap-3">
+          <div
+            v-if="error"
+            class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
+          >
+            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <span class="font-semibold text-white block">分析失败</span>
+              <span>{{ error }}</span>
+            </div>
+          </div>
+
+          <div v-else-if="isStreaming && result" class="text-xs text-[#bccac2] font-mono leading-relaxed whitespace-pre-wrap break-words">
+            <span class="flex items-center gap-1.5 text-[10px] text-[#00a67e] tracking-wider uppercase font-semibold mb-2">
+              <span class="animate-spin rounded-full h-2.5 w-2.5 border-2 border-t-transparent border-[#00a67e]"></span>
+              流式生成中…
+            </span>
+            {{ result }}<span class="inline-block w-1.5 h-3.5 ml-0.5 align-middle bg-[#00a67e] animate-pulse"></span>
+          </div>
+
+          <div v-else-if="isStreaming" class="my-auto flex flex-col justify-center items-center gap-3">
             <div class="relative flex h-10 w-10">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a67e] opacity-40"></span>
               <div class="relative rounded-full h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center">
@@ -348,18 +378,7 @@ const handleSummarize = async () => {
             </div>
             <div class="text-center">
               <span class="text-xs font-medium text-white block">正在综合提炼要点…</span>
-              <span class="text-[10px] text-[#bccac2]/70 font-mono">正在运行 glm-4-flash 约束总结</span>
-            </div>
-          </div>
-
-          <div
-            v-else-if="errorText"
-            class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
-          >
-            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <span class="font-semibold text-white block">分析失败</span>
-              <span>{{ errorText }}</span>
+              <span class="text-[10px] text-[#bccac2]/70 font-mono">流式连接已建立，等待首个 token</span>
             </div>
           </div>
 

@@ -35,34 +35,36 @@ export async function updateLogStatus(id: string, updates: Record<string, unknow
   });
 }
 
-export async function translate(payload: {
-  text: string;
-  sourceLang: string;
-  targetLang: string;
-  tone: string;
-}): Promise<{ text: string; duration: string }> {
-  const res = await fetch(apiUrl("/translate"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || data.error || "Translation failed");
-  return data;
+// ---- SSE task 契约（取代旧的非流式 /translate、/summarize）----
+
+export interface FunctionItem {
+  id: string;
+  name: string;
+  description: string;
+  params?: Record<string, unknown> | null;
 }
 
-export async function summarize(payload: {
-  text: string;
-  keyPointsCount: number;
-  wordLimit: number;
-  tone: string;
-}): Promise<{ result: { overview: string; keyPoints: string[] }; duration: string }> {
-  const res = await fetch(apiUrl("/summarize"), {
+/** GET /api/functions —— 供 CLI / Agent 发现能力（前端工作台不依赖）。 */
+export async function getFunctions(): Promise<{ functions: FunctionItem[] }> {
+  const res = await fetch(apiUrl("/functions"));
+  if (!res.ok) throw new Error("Failed to load functions");
+  return res.json();
+}
+
+/** POST /api/task —— 提交任务，返回原始流式 Response（由 useSSE 解析）。 */
+export function createTaskSSE(
+  body: { type: string; params: Record<string, unknown> },
+  signal?: AbortSignal,
+): Promise<Response> {
+  return fetch(apiUrl("/task"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
+    signal,
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || data.error || "Summarization failed");
-  return data;
+}
+
+/** DELETE /api/task/{taskId} —— 取消正在执行的任务。 */
+export async function cancelTask(taskId: string): Promise<void> {
+  await fetch(apiUrl(`/task/${taskId}`), { method: "DELETE" });
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import {
   Sparkles,
   Copy,
@@ -11,49 +11,42 @@ import {
   Languages,
   Clock,
   Sparkle,
+  Square,
 } from "lucide-vue-next";
 import { SUPPORTED_LANGUAGES, TONE_STYLES, type LogEntry } from "../types";
-import * as api from "../services/linguistApi";
+import { useWorkspaceStore } from "../stores/workspace";
+import { useTask } from "../composables/useTask";
 
-interface Props {
-  quickText: string;
-  apiConnected: boolean;
-  onAddLog: (log: Omit<LogEntry, "id" | "timestamp" | "date">) => Promise<LogEntry>;
-  onUpdateLog: (id: string, updates: Partial<LogEntry>) => void;
-}
+const workspace = useWorkspaceStore();
+const apiConnected = computed(() => workspace.apiConnected);
 
-const props = defineProps<Props>();
-
-const emit = defineEmits<{
-  (e: "update:quickText", text: string): void;
-}>();
+// 流式输出：result 即逐 token 追加的译文（打字机效果）。
+const { result, isStreaming, error, submitTask, cancelCurrentTask } = useTask();
 
 const inputText = ref("");
-const outputText = ref("");
 const sourceLang = ref("auto");
 const targetLang = ref("zh");
 const selectedTone = ref<"Professional" | "Conversational" | "Technical" | "Academic" | "Creative">("Professional");
 
-const isProcessing = ref(false);
 const copied = ref(false);
-const errorText = ref("");
 const elapsedTime = ref("--");
 
+// 工作台快捷输入 → 预填（消费一次）。
 watch(
-  () => props.quickText,
+  () => workspace.quickText,
   (newVal) => {
     if (newVal) {
       inputText.value = newVal;
-      emit("update:quickText", "");
+      workspace.setQuickText("");
     }
   },
   { immediate: true },
 );
 
 const handleCopy = async () => {
-  if (!outputText.value) return;
+  if (!result.value) return;
   try {
-    await navigator.clipboard.writeText(outputText.value);
+    await navigator.clipboard.writeText(result.value);
     copied.value = true;
     setTimeout(() => (copied.value = false), 2000);
   } catch (err) {
@@ -62,9 +55,9 @@ const handleCopy = async () => {
 };
 
 const handleDownload = () => {
-  if (!outputText.value) return;
+  if (!result.value) return;
   const element = document.createElement("a");
-  const file = new Blob([outputText.value], { type: "text/plain;charset=utf-8" });
+  const file = new Blob([result.value], { type: "text/plain;charset=utf-8" });
   element.href = URL.createObjectURL(file);
   element.download = `linguist-translation-${targetLang.value}.txt`;
   document.body.appendChild(element);
@@ -74,8 +67,8 @@ const handleDownload = () => {
 
 const handleClear = () => {
   inputText.value = "";
-  outputText.value = "";
-  errorText.value = "";
+  result.value = "";
+  error.value = "";
   elapsedTime.value = "--";
 };
 
@@ -88,25 +81,21 @@ const handleSwapLanguages = () => {
     sourceLang.value = targetLang.value;
     targetLang.value = temp;
   }
-  if (outputText.value && !isProcessing.value) {
-    const tempText = inputText.value;
-    inputText.value = outputText.value;
-    outputText.value = tempText;
+  if (result.value && !isStreaming.value) {
+    inputText.value = result.value;
+    result.value = "";
   }
 };
 
+const handleStop = () => cancelCurrentTask();
+
 const handleTranslate = async () => {
   if (!inputText.value.trim()) return;
-
-  isProcessing.value = true;
-  errorText.value = "";
-  outputText.value = "";
   elapsedTime.value = "--";
-  const startTime = Date.now();
 
   let activeLog: LogEntry | null = null;
   try {
-    activeLog = await props.onAddLog({
+    activeLog = await workspace.addLog({
       type: "translation",
       input: inputText.value.substring(0, 500),
       output: "...",
@@ -122,39 +111,42 @@ const handleTranslate = async () => {
     console.warn("Log creation failed: ", e);
   }
 
-  try {
-    const data = await api.translate({
+  await submitTask(
+    "translate",
+    {
       text: inputText.value,
       sourceLang: sourceLang.value,
       targetLang: targetLang.value,
       tone: selectedTone.value,
-    });
-
-    const duration = data.duration || `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
-    outputText.value = data.text;
-    elapsedTime.value = duration;
-
-    if (activeLog) {
-      props.onUpdateLog(activeLog.id, {
-        status: "success",
-        output: data.text,
-        duration,
-      });
-    }
-  } catch (err: unknown) {
-    const errMessage = err instanceof Error ? err.message : "翻译处理失败。";
-    errorText.value = errMessage;
-    if (activeLog) {
-      props.onUpdateLog(activeLog.id, {
-        status: "failed",
-        output: errMessage,
-        duration: "0s",
-        error: errMessage,
-      });
-    }
-  } finally {
-    isProcessing.value = false;
-  }
+    },
+    {
+      onDone: (payload) => {
+        elapsedTime.value = payload.duration || elapsedTime.value;
+        if (!activeLog) return;
+        if (payload.status === "cancelled") {
+          workspace.updateLog(activeLog.id, {
+            status: "failed",
+            output: result.value || "已取消",
+            duration: elapsedTime.value,
+            error: "用户已停止生成",
+          });
+          return;
+        }
+        const out = (payload.result as { text?: string } | undefined)?.text ?? result.value;
+        workspace.updateLog(activeLog.id, { status: "success", output: out, duration: elapsedTime.value });
+      },
+      onError: (message) => {
+        if (activeLog) {
+          workspace.updateLog(activeLog.id, {
+            status: "failed",
+            output: message,
+            duration: "0s",
+            error: message,
+          });
+        }
+      },
+    },
+  );
 };
 </script>
 
@@ -172,11 +164,11 @@ const handleTranslate = async () => {
       </div>
       <div class="flex items-center gap-2">
         <span
-          v-if="isProcessing"
+          v-if="isStreaming"
           class="px-2.5 py-1 text-[10px] font-mono font-semibold bg-[#00a67e]/10 text-[#00a67e] border border-[#00a67e]/35 rounded-full flex items-center gap-1.5"
         >
           <span class="animate-spin rounded-full h-2 w-2 border-2 border-t-transparent border-[#00a67e]"></span>
-          GLM 翻译中...
+          流式翻译中...
         </span>
       </div>
     </div>
@@ -252,15 +244,27 @@ const handleTranslate = async () => {
 
         <div class="px-5 py-3 border-t border-[#26384d] bg-[#08121e] flex items-center justify-between text-xs text-[#acb5c9] font-mono">
           <span>{{ inputText.length }} / 10,000 字符</span>
-          <button
-            type="button"
-            @click="handleTranslate"
-            :disabled="isProcessing || !inputText.trim() || !apiConnected"
-            class="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00a67e] hover:bg-[#008f6c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs transition-all cursor-pointer"
-          >
-            <Sparkles class="w-3.5 h-3.5" />
-            开始翻译
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="isStreaming"
+              type="button"
+              @click="handleStop"
+              class="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold text-xs transition-all cursor-pointer"
+            >
+              <Square class="w-3.5 h-3.5 fill-current" />
+              停止生成
+            </button>
+            <button
+              v-else
+              type="button"
+              @click="handleTranslate"
+              :disabled="!inputText.trim()"
+              class="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00a67e] hover:bg-[#008f6c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs transition-all cursor-pointer"
+            >
+              <Sparkles class="w-3.5 h-3.5" />
+              开始翻译
+            </button>
+          </div>
         </div>
       </div>
 
@@ -287,7 +291,7 @@ const handleTranslate = async () => {
               </option>
             </select>
           </div>
-          <div v-if="outputText" class="flex items-center gap-1.5">
+          <div v-if="result" class="flex items-center gap-1.5">
             <button
               type="button"
               @click="handleCopy"
@@ -308,7 +312,25 @@ const handleTranslate = async () => {
         </div>
 
         <div class="p-5 flex-1 min-h-[300px] flex flex-col bg-[#020c15]/40">
-          <div v-if="isProcessing" class="flex-1 flex flex-col justify-center items-center gap-3">
+          <div
+            v-if="error"
+            class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
+          >
+            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <span class="font-semibold text-white block">执行失败</span>
+              <span>{{ error }}</span>
+            </div>
+          </div>
+
+          <div
+            v-else-if="result"
+            class="text-white text-sm leading-relaxed whitespace-pre-wrap flex-1 select-text selection:bg-[#00a67e]/40 custom-scrollbar overflow-y-auto"
+          >
+            {{ result }}<span v-if="isStreaming" class="inline-block w-1.5 h-4 ml-0.5 align-middle bg-[#00a67e] animate-pulse"></span>
+          </div>
+
+          <div v-else-if="isStreaming" class="flex-1 flex flex-col justify-center items-center gap-3">
             <div class="relative flex h-10 w-10">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a67e] opacity-40"></span>
               <div class="relative rounded-full h-10 w-10 bg-[#00a67e]/20 border border-[#00a67e]/40 flex items-center justify-center">
@@ -317,26 +339,8 @@ const handleTranslate = async () => {
             </div>
             <div class="text-center">
               <span class="text-xs font-medium text-white block">正在思考并翻译…</span>
-              <span class="text-[10px] text-[#bccac2]/70">正在调用 glm-4-flash 模型</span>
+              <span class="text-[10px] text-[#bccac2]/70">流式连接已建立，等待首个 token</span>
             </div>
-          </div>
-
-          <div
-            v-else-if="errorText"
-            class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs leading-relaxed flex items-start gap-2.5"
-          >
-            <AlertTriangle class="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <span class="font-semibold text-white block">执行失败</span>
-              <span>{{ errorText }}</span>
-            </div>
-          </div>
-
-          <div
-            v-else-if="outputText"
-            class="text-white text-sm leading-relaxed whitespace-pre-wrap flex-1 select-text selection:bg-[#00a67e]/40 custom-scrollbar overflow-y-auto"
-          >
-            {{ outputText }}
           </div>
 
           <div v-else class="flex-1 flex flex-col justify-center items-center text-center text-[#bccac2]/35">

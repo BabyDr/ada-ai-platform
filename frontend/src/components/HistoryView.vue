@@ -15,13 +15,9 @@ import {
   Database,
 } from "lucide-vue-next";
 import type { LogEntry } from "../types";
+import { useWorkspaceStore } from "../stores/workspace";
 
-interface Props {
-  logs: LogEntry[];
-  onClearHistory: () => void;
-}
-
-const props = defineProps<Props>();
+const workspace = useWorkspaceStore();
 
 const filterType = ref<"all" | "translation" | "summarization">("all");
 const filterLabels: Record<typeof filterType.value, string> = {
@@ -77,7 +73,7 @@ const formatLogOutput = (log: LogEntry) => {
 };
 
 const filteredLogs = computed(() =>
-  props.logs.filter((l) => {
+  workspace.logs.filter((l) => {
     const matchesType = filterType.value === "all" || l.type === filterType.value;
     const query = searchQuery.value.trim().toLowerCase();
     const matchesSearch = !query
@@ -102,9 +98,9 @@ const filteredLogs = computed(() =>
       </div>
 
       <button
-        v-if="logs.length > 0"
+        v-if="workspace.logs.length > 0"
         type="button"
-        @click="onClearHistory"
+        @click="workspace.clearHistory()"
         class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-semibold select-none transition-colors ml-auto md:ml-0 cursor-pointer"
       >
         <Trash2 class="w-3.5 h-3.5" />

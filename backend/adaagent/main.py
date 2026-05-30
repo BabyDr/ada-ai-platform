@@ -26,14 +26,13 @@ from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from adaagent.api.router import api_router
 from adaagent.db import connect, row_to_message, row_to_session
 from adaagent.gemini_agent import gemini_api_key_configured, run_gemini_agent
 from adaagent.glm_agent import DEFAULT_GLM_MODEL, glm_api_key_configured, run_glm_agent
 from adaagent.linguist_service import (
     add_log,
     list_logs,
-    summarize_text,
-    translate_text,
     update_log,
 )
 from adaagent.mock_agent import run_mock_agent
@@ -62,20 +61,6 @@ class ChatRequestBody(BaseModel):
     session_id: str = Field(..., description="会话 ID")
     message: str = Field(..., description="用户消息")
     model_id: str = Field(..., description="当前模型 ID")
-
-
-class TranslateRequest(BaseModel):
-    text: str
-    sourceLang: str = "auto"
-    targetLang: str = "zh"
-    tone: str = "Professional"
-
-
-class SummarizeRequest(BaseModel):
-    text: str
-    keyPointsCount: int = 5
-    wordLimit: int = 250
-    tone: str = "Professional"
 
 
 class LogAddRequest(BaseModel):
@@ -261,41 +246,9 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Log not found")
         return updated
 
-    @app.post("/api/translate")
-    async def post_translate(body: TranslateRequest) -> dict[str, Any]:
-        """GLM 文本翻译。"""
-        if not body.text.strip():
-            raise HTTPException(status_code=400, detail="Input text is required")
-        if not glm_api_key_configured():
-            raise HTTPException(status_code=503, detail="GLM_API_KEY 未配置")
-        try:
-            text, duration = await translate_text(
-                body.text,
-                body.sourceLang,
-                body.targetLang,
-                body.tone,
-            )
-            return {"text": text, "duration": duration}
-        except Exception as e:  # noqa: BLE001
-            raise HTTPException(status_code=500, detail=str(e)[:800]) from e
-
-    @app.post("/api/summarize")
-    async def post_summarize(body: SummarizeRequest) -> dict[str, Any]:
-        """GLM 文档总结（结构化 JSON）。"""
-        if not body.text.strip():
-            raise HTTPException(status_code=400, detail="Input content is required")
-        if not glm_api_key_configured():
-            raise HTTPException(status_code=503, detail="GLM_API_KEY 未配置")
-        try:
-            result, duration = await summarize_text(
-                body.text,
-                body.keyPointsCount,
-                body.wordLimit,
-                body.tone,
-            )
-            return {"result": result, "duration": duration}
-        except Exception as e:  # noqa: BLE001
-            raise HTTPException(status_code=500, detail=str(e)[:800]) from e
+    # SSE 任务契约（GET /api/functions、POST /api/task、DELETE/GET /api/task/{id}）。
+    # 旧的非流式 /api/translate、/api/summarize 已由 task SSE 契约取代（见 docs 决策 B）。
+    app.include_router(api_router, prefix="/api")
 
     return app
 
