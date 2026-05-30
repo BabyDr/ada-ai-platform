@@ -1,5 +1,7 @@
 """
-AdaAgent Python Sidecar（FastAPI）。
+AdaAgent Python Sidecar（FastAPI）· Author: RenXiaodi
+
+职责概览：
 
 职责概览：
 - 提供 REST API：会话 CRUD、发消息、健康检查。

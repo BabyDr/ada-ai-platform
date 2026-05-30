@@ -308,4 +308,7 @@ curl -sf http://127.0.0.1:18765/api/functions
 
 ## License
 
-Private / 笔试作品 — 提交后可按题目要求删除仓库。
+© 2026 RenXiaodi. All rights reserved.
+
+本仓库为 AI Native 开发工程师笔试作品，仅供招聘方评估候选人能力使用。
+未经作者书面许可，禁止复制、修改、分发或用于任何商业目的。

@@ -1,4 +1,4 @@
-"""AI TextFlow CLI — 调用 Sidecar SSE 任务接口（translate / summarize / list）。"""
+"""AI TextFlow CLI — 调用 Sidecar SSE 任务接口（translate / summarize / list）。Author: RenXiaodi"""
 
 from __future__ import annotations
 

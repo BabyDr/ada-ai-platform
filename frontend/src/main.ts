@@ -1,5 +1,6 @@
 /**
  * 前端应用入口：挂载 Vue、Pinia、Router、Ant Design Vue。
+ * @author RenXiaodi
  */
 import { createApp } from "vue";
 import { createPinia } from "pinia";
