@@ -15,7 +15,7 @@
 ### 安装与启动
 
 ```bash
-git clone <repo-url> AdaWorks && cd AdaWorks
+git clone https://gitee.com/renxiaodr/ada-ai-platform.git AdaWorks && cd AdaWorks
 npm install
 npm run sidecar:setup          # 创建 backend/.venv 并安装依赖
 cp backend/.env.example backend/.env   # 或 cp .env.example .env
