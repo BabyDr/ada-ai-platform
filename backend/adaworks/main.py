@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 import uuid
 from contextlib import asynccontextmanager
@@ -25,6 +26,7 @@ load_app_dotenv()
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from adaworks.api.router import api_router
@@ -293,6 +295,19 @@ def create_app(db_path: Path | None = None) -> FastAPI:
 
     # SSE 任务契约：GET /api/functions、POST /api/task、DELETE/GET /api/task/{id}
     app.include_router(api_router, prefix="/api")
+
+    # --- 生产环境：当前端静态文件存在时，serve SPA ---
+    static_dir_env = os.environ.get("STATIC_DIR")
+    if static_dir_env and Path(static_dir_env).exists():
+        _static_dir = Path(static_dir_env)
+
+        @app.get("/{full_path:path}")
+        async def serve_spa(full_path: str):
+            """SPA fallback：文件存在则返回，否则返回 index.html 交给前端路由。"""
+            file = _static_dir / full_path
+            if full_path and file.is_file():
+                return FileResponse(str(file))
+            return FileResponse(str(_static_dir / "index.html"))
 
     return app
 

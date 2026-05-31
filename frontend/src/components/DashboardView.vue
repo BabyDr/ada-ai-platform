@@ -19,7 +19,7 @@ import { DEFAULT_GLM_MODEL } from "../types";
 import { useDashboardMetrics } from "../composables/useDashboardMetrics";
 import { useQuickRoute } from "../composables/useQuickRoute";
 
-const { apiConnected, llmMode, totalProcessed, avgLatency } =
+const { apiConnected, totalProcessed, avgLatency } =
   useDashboardMetrics();
 const { quickInput, goTo, handleQuickSend } = useQuickRoute();
 </script>

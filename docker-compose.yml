@@ -5,6 +5,7 @@ services:
       - "18765:18765"
     environment:
       LLM_MODE: mock
+      STATIC_DIR: /app/static
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18765/api/health')"]
       interval: 10s
