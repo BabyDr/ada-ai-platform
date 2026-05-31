@@ -14,6 +14,8 @@
 
 新增一种 AI 能力 → 前端零改动，后端只加一个 Prompt 函数。
 
+**在线演示**：[adaworks.site](http://adaworks.site)（Mock 模式，零配置体验）
+
 </div>
 
 ---
