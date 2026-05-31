@@ -14,7 +14,7 @@
 
 新增一种 AI 能力 → 前端零改动，后端只加一个 Prompt 函数。
 
-**在线演示**：[adaworks.site](http://adaworks.site)（Mock 模式，零配置体验）
+**在线演示**：[adaworks.site](http://121.43.112.178:18765)（Mock 模式，零配置体验）
 
 </div>
 
@@ -30,16 +30,16 @@
 
 ## ✨ 功能亮点
 
-| | 功能 | 说明 |
-|---|---|---|
-| 🌐 | **多语言翻译** | 10 种语言 × 5 种语调，双栏实时对照，SSE 逐 token 流式，支持中途停止、语言互换、结果导出 |
-| 📝 | **智能总结** | 长文一键提炼为概述 + 要点，LLM JSON Schema 校验 + 自动重试，保证结构化输出可靠 |
-| 🤖 | **Agent 对话** | 可视化观察 Think → Act → Observe 推理过程，WebSocket Room 广播支持多标签页 |
-| 🧭 | **智能路由** | 粘贴文本自动判断翻译 or 总结并跳转，关键词 + 长度启发式路由 |
-| 💻 | **CLI 工具** | 终端内 `ai-app translate/summarize` 直接调用，Click + httpx SSE 流式 |
-| 🎨 | **明暗主题** | 全局主题切换 + CSS 变量体系，响应式适配移动端 |
-| 🔒 | **安全防护** | XML 标签隔离 + Prompt 安全规则 + Pydantic 输出校验 + 四级错误分级 + 语言一致性检查 |
-| ⚡ | **流式性能** | 16ms 批量合并 token（60fps），协作式取消闭环，任务恢复 + 僵尸清理 |
+|     | 功能           | 说明                                                                                    |
+| --- | -------------- | --------------------------------------------------------------------------------------- |
+| 🌐  | **多语言翻译** | 10 种语言 × 5 种语调，双栏实时对照，SSE 逐 token 流式，支持中途停止、语言互换、结果导出 |
+| 📝  | **智能总结**   | 长文一键提炼为概述 + 要点，LLM JSON Schema 校验 + 自动重试，保证结构化输出可靠          |
+| 🤖  | **Agent 对话** | 可视化观察 Think → Act → Observe 推理过程，WebSocket Room 广播支持多标签页              |
+| 🧭  | **智能路由**   | 粘贴文本自动判断翻译 or 总结并跳转，关键词 + 长度启发式路由                             |
+| 💻  | **CLI 工具**   | 终端内 `ai-app translate/summarize` 直接调用，Click + httpx SSE 流式                    |
+| 🎨  | **明暗主题**   | 全局主题切换 + CSS 变量体系，响应式适配移动端                                           |
+| 🔒  | **安全防护**   | XML 标签隔离 + Prompt 安全规则 + Pydantic 输出校验 + 四级错误分级 + 语言一致性检查      |
+| ⚡  | **流式性能**   | 16ms 批量合并 token（60fps），协作式取消闭环，任务恢复 + 僵尸清理                       |
 
 ---
 
@@ -49,11 +49,11 @@
 
 ### 环境要求
 
-| 工具 | 版本 | 检查 |
-|---|---|---|
-| Node.js | >= 18 | `node -v` |
-| Python | >= 3.10 | `python3 --version` |
-| Git | 任意 | `git --version` |
+| 工具    | 版本    | 检查                |
+| ------- | ------- | ------------------- |
+| Node.js | >= 18   | `node -v`           |
+| Python  | >= 3.10 | `python3 --version` |
+| Git     | 任意    | `git --version`     |
 
 ### Step 1：克隆
 
@@ -71,10 +71,10 @@ npm install
 npm run sidecar:setup
 ```
 
-| 命令 | 作用 |
-|---|---|
-| `npm install` | 安装前端依赖（Vue、Ant Design Vue、Tailwind 等） |
-| `npm run sidecar:setup` | 在 `backend/` 下创建 Python 虚拟环境并安装依赖 |
+| 命令                    | 作用                                             |
+| ----------------------- | ------------------------------------------------ |
+| `npm install`           | 安装前端依赖（Vue、Ant Design Vue、Tailwind 等） |
+| `npm run sidecar:setup` | 在 `backend/` 下创建 Python 虚拟环境并安装依赖   |
 
 ### Step 3：启动
 
@@ -82,9 +82,9 @@ npm run sidecar:setup
 npm run dev:all
 ```
 
-| 服务 | 地址 |
-|---|---|
-| Web UI | http://localhost:1420 |
+| 服务         | 地址                              |
+| ------------ | --------------------------------- |
+| Web UI       | http://localhost:1420             |
 | API 健康检查 | http://127.0.0.1:18765/api/health |
 
 浏览器打开 http://localhost:1420 即可使用。**默认 Mock 模式**，无需密钥即可体验完整流式效果。
@@ -106,14 +106,14 @@ API Key 获取：[智谱开放平台](https://open.bigmodel.cn/) → 控制台 �
 
 ### 常见问题
 
-| 问题 | 解决 |
-|---|---|
-| `python3: command not found` | macOS：`brew install python@3.12` |
-| `npm run sidecar:setup` 报错 | 手动创建：`python3 -m venv backend/.venv`，然后重新运行 |
-| 侧栏显示"需配置密钥" | 正常——Mock 模式下功能完全可用 |
-| `.env` 改了不生效 | `Ctrl+C` 停止后重新 `npm run dev:all` |
-| 端口被占用 | 前端改 `frontend/vite.config.ts`；后端改 `--port` |
-| `npm install` 慢 | `npm config set registry https://registry.npmmirror.com` |
+| 问题                         | 解决                                                     |
+| ---------------------------- | -------------------------------------------------------- |
+| `python3: command not found` | macOS：`brew install python@3.12`                        |
+| `npm run sidecar:setup` 报错 | 手动创建：`python3 -m venv backend/.venv`，然后重新运行  |
+| 侧栏显示"需配置密钥"         | 正常——Mock 模式下功能完全可用                            |
+| `.env` 改了不生效            | `Ctrl+C` 停止后重新 `npm run dev:all`                    |
+| 端口被占用                   | 前端改 `frontend/vite.config.ts`；后端改 `--port`        |
+| `npm install` 慢             | `npm config set registry https://registry.npmmirror.com` |
 
 ---
 
@@ -196,17 +196,17 @@ flowchart LR
 
 ### 技术栈
 
-| 层 | 选型 | 理由 |
-|---|---|---|
-| 前端 | Vue 3 + TypeScript + Vite | Composition API + 类型安全 |
-| UI | Ant Design Vue + Tailwind CSS v4 | 复杂控件 + 自定义布局 |
-| 状态 | Pinia (setup store) | 按业务域划分，TypeScript 推断优 |
-| 后端 | FastAPI + Uvicorn | 原生 async + Pydantic 校验 |
-| 数据库 | SQLite (aiosqlite) | 单文件零运维，可迁移 |
-| 配置 | pydantic-settings | 类型安全环境变量 |
-| LLM | GLM / Gemini / Mock | 三 Provider 抽象，零配置联调 |
-| 实时 | SSE + WebSocket | 单向流式 + 双向实时 |
-| 测试 | pytest + Vitest | 后端异步 + 前端组件 |
+| 层     | 选型                             | 理由                            |
+| ------ | -------------------------------- | ------------------------------- |
+| 前端   | Vue 3 + TypeScript + Vite        | Composition API + 类型安全      |
+| UI     | Ant Design Vue + Tailwind CSS v4 | 复杂控件 + 自定义布局           |
+| 状态   | Pinia (setup store)              | 按业务域划分，TypeScript 推断优 |
+| 后端   | FastAPI + Uvicorn                | 原生 async + Pydantic 校验      |
+| 数据库 | SQLite (aiosqlite)               | 单文件零运维，可迁移            |
+| 配置   | pydantic-settings                | 类型安全环境变量                |
+| LLM    | GLM / Gemini / Mock              | 三 Provider 抽象，零配置联调    |
+| 实时   | SSE + WebSocket                  | 单向流式 + 双向实时             |
+| 测试   | pytest + Vitest                  | 后端异步 + 前端组件             |
 
 ### 目录结构
 
@@ -252,21 +252,21 @@ POST /api/task { type, params } → SSE Stream
   event: task_error   → { taskId, message }
 ```
 
-| 操作 | 方法 | 路径 |
-|---|---|---|
-| 提交任务 | `POST` | `/api/task` |
+| 操作     | 方法     | 路径                 |
+| -------- | -------- | -------------------- |
+| 提交任务 | `POST`   | `/api/task`          |
 | 取消任务 | `DELETE` | `/api/task/{taskId}` |
-| 查询状态 | `GET` | `/api/task/{taskId}` |
-| 能力发现 | `GET` | `/api/functions` |
-| 健康检查 | `GET` | `/api/health` |
+| 查询状态 | `GET`    | `/api/task/{taskId}` |
+| 能力发现 | `GET`    | `/api/functions`     |
+| 健康检查 | `GET`    | `/api/health`        |
 
 ### Agent 对话接口
 
-| 操作 | 方法 | 路径 |
-|---|---|---|
-| 会话管理 | `GET/POST/DELETE` | `/api/sessions[/{id}]` |
-| 发送消息 | `POST` | `/api/chat` |
-| 实时推送 | `WebSocket` | `/ws/chat/{session_id}` |
+| 操作     | 方法              | 路径                    |
+| -------- | ----------------- | ----------------------- |
+| 会话管理 | `GET/POST/DELETE` | `/api/sessions[/{id}]`  |
+| 发送消息 | `POST`            | `/api/chat`             |
+| 实时推送 | `WebSocket`       | `/ws/chat/{session_id}` |
 
 ---
 
@@ -319,13 +319,13 @@ docker compose up --build
 
 > 完整文档目录见 [**docs/README.md**](docs/README.md)，包含工程化设计思想、文档依赖关系和开发者快速索引。
 
-| 文档 | 说明 |
-|---|---|
-| [文档中心](docs/README.md) | 工程化设计思想 + 全量文档索引 |
-| [架构详解](docs/architecture.md) | 前端分层、后端模块、数据流图 |
-| [API 契约](docs/spec/api-design.md) | 统一 SSE 协议、请求/响应 Schema |
-| [开发规范](docs/spec/development-standards.md) | SRP 分层、注释、错误处理标准 |
-| [使用手册](docs/manual.md) | 功能说明、配置项、常见问题 |
+| 文档                                           | 说明                            |
+| ---------------------------------------------- | ------------------------------- |
+| [文档中心](docs/README.md)                     | 工程化设计思想 + 全量文档索引   |
+| [架构详解](docs/architecture.md)               | 前端分层、后端模块、数据流图    |
+| [API 契约](docs/spec/api-design.md)            | 统一 SSE 协议、请求/响应 Schema |
+| [开发规范](docs/spec/development-standards.md) | SRP 分层、注释、错误处理标准    |
+| [使用手册](docs/manual.md)                     | 功能说明、配置项、常见问题      |
 
 ---
 
